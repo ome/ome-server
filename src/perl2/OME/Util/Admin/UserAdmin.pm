@@ -111,6 +111,38 @@ sub addUser {
 				$username    = confirm_default("Username?",$username);
 			}
 			
+			# The user can be ldap-only or both local and ldap (though ldap takes precedence).
+			# If ldap-only, they do not have a password in the DB
+			# Either way, we check if they can log into ldap if we're using ldap.
+			# If they can login to ldap, we ask if they want local logins as well.
+			# If they do, we ask for a DB password since we don't want to mirror LDAP passwords.
+			# If ldap login fails, we ask for a DB password.
+			if ($ldap_conf->{use}) {
+				print "LDAP authentication is enabled.\n";
+				my $exper_hash = {};
+				my ($ldap_password,undef) = get_password   ("LDAP Password?",0,1);
+				if (OME::SessionManager->authenticate_LDAP ($ldap_conf,$username,$ldap_password,$exper_hash)) {
+					print "LDAP authentication successful\n";
+					($firstname,$lastname,$email,$directory) = (
+						$exper_hash->{FirstName},
+						$exper_hash->{LastName},
+						$exper_hash->{Email},
+						$exper_hash->{DataDirectory},
+						) if $exper_hash->{OMEName};
+					if ( y_or_n ('Allow local logins as well?','n') ) {
+						$password = get_password   ("Local Password?",6);
+					} else {
+						# No local password
+						$password = undef;
+					}
+				} else {
+					print "LDAP authentication failed - setting up a local user\n";
+					$password = get_password   ("Local Password?",6);
+				}
+			} else {
+				$password    = get_password   ("Local Password?",6);
+			}
+			
 			$firstname   = confirm_default("First Name?",$firstname);
 			$lastname    = confirm_default("Last Name?",$lastname);
 			while( (not defined $lastname) || ($lastname eq '') ) {
@@ -126,35 +158,6 @@ sub addUser {
 					  "a new one with that name will be made for you.\n";
 				$group_input = confirm_default("Group (Name or ID)?",$group_input);
 						
-			}
-			
-			# The user can be ldap-only or both local and ldap (though ldap takes precedence).
-			# If ldap-only, they do not have a password in the DB
-			# Either way, we check if they can log into ldap if we're using ldap.
-			# If they can login to ldap, we ask if they want local logins as well.
-			# If they do, we set their local password to the ldap password they used.
-			# If ldap login fails, we ask for a DB password.
-			if ($ldap_conf->{use}) {
-				print "LDAP authentication is enabled.\n";
-				my ($ldap_password,$crypt_passwd) = get_password   ("LDAP Password?");
-				if (OME::SessionManager->authenticate_LDAP ($ldap_conf,$username,$ldap_password)) {
-					print "LDAP authentication successful\n";
-					if ( y_or_n ('Allow local logins as well?','n') ) {
-						$password = $crypt_passwd;
-					} else {
-						# No local password
-						$password = undef;
-					}
-				} else {
-					print "LDAP authentication failed - setting up a local user\n";
-					if (length ($ldap_password) >= 6) {
-						$password = $crypt_passwd;
-					} else {
-						$password = get_password   ("Local Password?",6);
-					}
-				}
-			} else {
-				$password    = get_password   ("Local Password?",6);
 			}
 			
 	
