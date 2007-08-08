@@ -643,6 +643,7 @@ sub makeOrGetUserState {
 				or logdie ref($self)."->makeOrGetUserState:  could not find experimenter OMEName=".$flags{OMEName};
 	} elsif (exists $flags{session_key} and defined $flags{session_key}) {
 		$userState = $factory->findObject('OME::UserState', session_key => $flags{session_key});
+		return undef unless $userState;
 	} else {
 		logdie ref($self)."->makeOrGetUserState:  missing parameters"
 	}
@@ -734,7 +735,7 @@ returns undef on error (failed server connection, etc).
 =cut
 
 sub authenticate_LDAP {
-	my ($proto,$ldap_conf,$username,$passwd) = @_;
+	my ($proto,$ldap_conf,$username,$passwd,$exper_hash) = @_;
     my $self = ref($proto) || $proto;
     if (not ($self and $ldap_conf and $username and $passwd)) {
     	$passwd = '***HIDDEN***' if $passwd;
@@ -766,8 +767,11 @@ sub authenticate_LDAP {
 				return 0;
 			} else {
 				# Authentication succeeded
-				# Don't forget to unbind + disconnect
 				logdbg "debug", $self."->authenticate_LDAP Bind success";
+				# Try to populate an experimenter hash from the LDAP entry
+				$self->get_Experimenter_from_LDAP ($ldap,$DN,$exper_hash);
+
+				# Don't forget to unbind + disconnect
 				$ldap->unbind ( );
 				$ldap->disconnect();
 				return 1;
@@ -783,6 +787,49 @@ sub authenticate_LDAP {
 		# Couldn't connect to LDAP server:  This counts as failure.
 		logdbg "debug", $self."->authenticate_LDAP no connection to server";
 		return undef;
+	}
+}
+
+sub get_Experimenter_from_LDAP {
+	my ($self,$ldap,$DN,$exper_hash) = @_;
+	logdbg "debug", $self."->get_Experimenter_from_LDAP";
+	return undef unless $exper_hash;
+	my $mesg;
+	eval {
+		$mesg = $ldap->search (
+			base   => $DN,
+			filter => '(objectclass=*)',
+		);
+	};
+	return undef unless $mesg;
+
+	logdbg "debug", $self."->get_Experimenter_from_LDAP search complete";
+	my ($entry,$firstName,$lastName,$cn,$sn,$email,$uid,$home);
+	foreach $entry ($mesg->all_entries) {
+		foreach my $attr ($entry->attributes()) {
+			$firstName = $entry->get_value ($attr) if $attr eq 'givenName';
+			$lastName = $entry->get_value ($attr) if $attr eq 'sn';
+			$cn = $entry->get_value($attr) if $attr eq 'cn';
+			$email = $entry->get_value($attr) if $attr eq 'mail';
+			$uid = $entry->get_value($attr) if $attr eq 'uid';
+			$home = $entry->get_value($attr) if $attr eq 'homeDirectory';
+		}
+	}
+	if (not (defined $firstName and defined $lastName) and defined $cn and defined $sn) {
+	# Get firstName from the cn/sn
+		$firstName = $1 if $cn =~ /(.+)\w$sn/;
+	}
+	if (not (defined $firstName and defined $lastName) and defined $cn) {
+	# Get it from the cn (no sn)
+		($firstName,$lastName) = split (' ',$cn,2);
+	}
+	logdbg "debug", $self."->get_Experimenter_from_LDAP: OMEName: $uid, FirstName: $firstName, LastName: $lastName, DataDirectory: $home, Email: $email";
+	if (defined $firstName and defined $lastName and defined $email and defined $uid) {
+		$exper_hash->{OMEName} = $uid;
+		$exper_hash->{FirstName} = $firstName;
+		$exper_hash->{LastName} = $lastName;
+		$exper_hash->{DataDirectory} = $home;
+		$exper_hash->{Email} = $email;
 	}
 }
 
