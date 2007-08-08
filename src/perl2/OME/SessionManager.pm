@@ -566,9 +566,17 @@ sub createWithPassword {
 	return undef if( $@ || not defined $experimenter);
 	
     ($experimenterID,$dbpass) = ($experimenter->ID,$experimenter->Password);
-	return undef unless $experimenter and $dbpass;
-
-	return undef if (crypt($password,$dbpass) ne $dbpass);
+	return undef unless $experimenter;
+	
+	# If LDAP is enabled, try to authenticate against LDAP
+	my $ldap_conf = $configuration->ldap_conf();
+	if (not ($ldap_conf->{use} and $self->authenticate_LDAP ($ldap_conf,$username,$password) ) ) {
+		# LDAP failed or not used.
+		# No dbpass - authentication failure.
+		return undef unless $dbpass and length ($dbpass) >= 1;
+		# Try authentication against the DB
+		return undef if (crypt($password,$dbpass) ne $dbpass);
+	}
 
 	
 	# if the user name and password indicate a guest user,
@@ -707,6 +715,75 @@ sub logout {
 # 	$userState->storeObject();
 # 	$session->commitTransaction();
 
+}
+
+#
+# authenticate_LDAP
+# --------------------
+
+=head2 logout
+
+	$manager->authenticate_LDAP ($ldap_conf,$username,$password);
+	OME::SessionManager->authenticate_LDAP ($ldap_conf,$username,$password);
+
+Attempts ldap authentication wether or not $ldap_conf->{use} flag is set.
+returns 1 if ldap authentication is successful.
+returns 0 if authentication failed.
+returns undef on error (failed server connection, etc).
+
+=cut
+
+sub authenticate_LDAP {
+	my ($proto,$ldap_conf,$username,$passwd) = @_;
+    my $self = ref($proto) || $proto;
+    if (not ($self and $ldap_conf and $username and $passwd)) {
+    	$passwd = '***HIDDEN***' if $passwd;
+		confess "Bad calling syntax to authenticate_LDAP";
+	}
+	my $ldap;
+	logdbg "debug", $self."->authenticate_LDAP";
+	# This is a quoted eval because we want this processed conditionally.
+	eval 'use Net::LDAP;';
+	# abort if we can't use Net::LDAP;
+	return undef if $@;
+	logdbg "debug", $self."->authenticate_LDAP Net::LDAP loaded";
+	eval { $ldap = Net::LDAP->new ( $ldap_conf->{hosts}, %{$ldap_conf->{options}},%{$ldap_conf->{ssl_opts}} ); };
+	if ($ldap) {
+		logdbg "debug", $self."->authenticate_LDAP Connected";
+		# Start TLS if requested (no point in checking now if the server supoprts it)
+		eval { $ldap->start_tls(%{$ldap_conf->{ssl_opts}}); }
+			if ( not $ldap->cipher() and $ldap_conf->{use_tls} );
+		# The only way we send credentials is over an encrypted connection or if use_tls is off
+		if ($username and $passwd and ($ldap->cipher() or not $ldap_conf->{use_tls}) ) {
+			my $DN = "uid=$username";
+			$DN .= ",$ldap_conf->{DN}" if $ldap_conf->{DN};
+			my $mesg;
+			logdbg "debug", $self."->authenticate_LDAP Binding $DN";
+			eval{$mesg = $ldap->bind ($DN, password => $passwd );};
+			if ($@ or not $mesg or $mesg->code != 0) {
+				# Authentication failed
+				logdbg "debug", $self."->authenticate_LDAP Bind failure";
+				return 0;
+			} else {
+				# Authentication succeeded
+				# Don't forget to unbind + disconnect
+				logdbg "debug", $self."->authenticate_LDAP Bind success";
+				$ldap->unbind ( );
+				$ldap->disconnect();
+				return 1;
+			}
+		} else {
+			# Authentication not attempted: no user/pass or unsecure.  This counts as failure.
+			logdbg "debug", $self."->authenticate_LDAP bind not attempted";
+			return undef;
+		}
+		# Don't forget to disconnect
+		$ldap->disconnect();
+	} else {
+		# Couldn't connect to LDAP server:  This counts as failure.
+		logdbg "debug", $self."->authenticate_LDAP no connection to server";
+		return undef;
+	}
 }
 
 
