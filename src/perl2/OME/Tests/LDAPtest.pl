@@ -97,7 +97,7 @@ my $LOGFILE = \*STDOUT;
  		base   => $DN,
  		filter => '(objectclass=*)',
  	);
-	my ($entry,$firstName,$lastName,$cn,$sn,$email);
+	my ($entry,$firstName,$lastName,$cn,$sn,$email,$uid,$home);
 	foreach $entry ($mesg->all_entries) {
 		$entry->dump;
 		foreach my $attr ($entry->attributes()) {
@@ -105,6 +105,8 @@ my $LOGFILE = \*STDOUT;
 			$lastName = $entry->get_value ($attr) if $attr eq 'sn';
 			$cn = $entry->get_value($attr) if $attr eq 'cn';
 			$email = $entry->get_value($attr) if $attr eq 'mail';
+			$uid = $entry->get_value($attr) if $attr eq 'uid';
+			$home = $entry->get_value($attr) if $attr eq 'homeDirectory';
 		}
 	}
 
@@ -117,12 +119,13 @@ my $LOGFILE = \*STDOUT;
 	# Get it from the cn (no sn)
 		($firstName,$lastName) = split (' ',$cn,2);
 	}
-	if (defined $firstName and defined $lastName and defined $email) {
+	if (defined $firstName and defined $lastName and defined $email and defined $uid) {
 		print "OME Experimenter:\n";
-		print "\tOMEName: $username\n";
+		print "\tOMEName: $uid\n";
 		print "\tFirstName: $firstName\n";
 		print "\tLastName: $lastName\n";
-		print "\temail: $email\n";
+		print "\tEmail: $email\n";
+		print "\tDataDirectory: $home\n";
 	} else {
 		print "Not enough metadata for user creation\n";
 	}
