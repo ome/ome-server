@@ -112,8 +112,8 @@ sub whereis {
 }
 
 sub get_password {
-    my ($text, $min_len) = @_;
-    my $input;
+    my ($text, $min_len, $no_verify) = @_;
+    my ($input,$input2);
 
     # Lets not choke if someone doesn't pass this parameter
     $min_len = 0 unless $min_len;
@@ -127,11 +127,15 @@ sub get_password {
 	
 	print "\n";  # Spacing
 
-	print "Verify: ";
-	my $input2 = ReadLine(0);
-	chomp($input2);
-
-	print "\n";  # Spacing
+	if ($no_verify) {
+		$input2 = $input;
+	} else {
+		print "Verify: ";
+		$input2 = ReadLine(0);
+		chomp($input2);
+	
+		print "\n";  # Spacing
+	}
 
 	if (length ($input) < $min_len ) {
 	    print "Password must be at least $min_len characters long.\n" and next;
