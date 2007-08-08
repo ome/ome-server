@@ -104,13 +104,15 @@ sub execute {
 		configure  => 0, # If set, a check will be made
 		configured => 0, # Only set when things check out
 		use        => 0, # Will be unset if check doesn't pass.
-		hosts      => [
-	#		'ldaps://lincon.grc.nia.nih.gov:636',
-	#		'ldaps://lincon2.grc.nia.nih.gov:636',
-	#		'ldap://lincon.grc.nia.nih.gov:389', # In this example, TLS will be attempted on only this server
-		],
+# 		hosts      => [
+# 			'ldaps://lincon.grc.nia.nih.gov:636',
+# 			'ldaps://lincon2.grc.nia.nih.gov:636',
+# 			'ldap://lincon.grc.nia.nih.gov:389', # In this example, TLS will be attempted on only this server
+# 		],
+		hosts       => guess_URIs(),
 		options    => {
-			debug     => undef,
+# Unless this becomes necessary, I don't think we need this as a setting (IGG)
+#			debug     => undef,
 			version   => 3,
 			timeout   => 10,
 			onerror   => 'die', # Not user configurable at this time
@@ -128,9 +130,8 @@ sub execute {
 			clientcert => undef,
 			clientkey  => undef,
 		},
-		OU       => 'ou=people',
-#		DC       => 'ou=nia,o=nih,c=us',
-		DC       => undef,
+		DN       => guess_DN(),
+#		DN       => 'ou=people,ou=nia,o=nih,c=us',
 		
 	};
 # 	my $LDAP_CONF_DEF = {
@@ -157,7 +158,11 @@ sub execute {
 # 
 # 	};
 	$LDAP = defined $environment->ldap_conf()  ? $environment->ldap_conf()  : $LDAP_CONF_DEF;
-	
+	# for testing of bind()
+	my ($username,$passwd);
+	# This will hold the LDAP_EXTENSION_START_TLS constant from the quoted eval once we have the pre-reqs
+	my $can_tls;
+
 	print "\n";
 	print_header ("Optional LDAP installation");
 	print "If configured for authentication, all OME users will initially be authenticated by LDAP.\n";
@@ -178,10 +183,9 @@ sub execute {
 			print BOLD,"LDAP Configuration:\n",RESET;
 			print "               Configure LDAP?: ", BOLD, $LDAP->{configure} ? 'yes':'no', RESET, "\n";
 			print "  Use LDAP for Authentication?: ", BOLD, $LDAP->{use} ? 'yes':'no', RESET, "\n";
-			print "                  OME Users OU: ", BOLD, $LDAP->{OU} ? $LDAP->{OU} : 'undefined', RESET, "\n";
-			print "                  OME Users DC: ", BOLD, $LDAP->{DC} ? $LDAP->{DC} : 'undefined', RESET, "\n";
+			print "           OME Users DN Suffix: ", BOLD, $LDAP->{DN} ? $LDAP->{DN} : 'undefined', RESET, "\n";
 			print "       LDAP connection timeout: ", BOLD, $LDAP->{options}->{timeout}, RESET, "\n";
-			print "              LDAP debug level: ", BOLD, $LDAP->{options}->{debug} ? $LDAP->{options}->{debug} : 'undefined', RESET, "\n";
+#			print "              LDAP debug level: ", BOLD, $LDAP->{options}->{debug} ? $LDAP->{options}->{debug} : 'undefined', RESET, "\n";
 			print "           LDAP server version: ", BOLD, $LDAP->{options}->{version}, RESET, "\n";
 			print "        Use TLS when possible?: ", BOLD, $LDAP->{use_tls} ? 'yes':'no', RESET, "\n";
 			print BOLD,"Global SSL options",RESET," (TLS or ldaps:// host URIs):\n",RESET;
@@ -200,18 +204,20 @@ sub execute {
 		
 		print "To make an option un-defined, enter '-' (without quotes). To leave an option as is, press return\n";
 		if (y_or_n ("Configure LDAP?",'y') and check_LDAP_packages()) {
-			my $can_tls;
 			# This is a string eval so we don't use/require these packages until we've run check_LDAP_packages
 			eval 'use Net::LDAP; use Net::LDAP::Constant qw(LDAP_EXTENSION_START_TLS); $can_tls = LDAP_EXTENSION_START_TLS;';
 
 			$LDAP->{configure} = 1;
 			if (y_or_n ("Use LDAP for authentication?",$LDAP->{use} ? 'y' : 'n') ) {$LDAP->{use} = 1;}
 			else {$LDAP->{use} = 0;}
-			$LDAP->{OU} = confirm_default ("LDAP OU for OME users:", $LDAP->{OU});
-			$LDAP->{DC} = confirm_default ("LDAP DC for OME users:", $LDAP->{DC});
+			print "A DN suffix is used to identify all OME users on the LDAP server\n";
+			print "The DN for authentication (LDAP bind) consists of 'uid=', the username, a ',' and the DN suffix\n";
+			print "Typical DN suffixes may be 'ou=people,ou=nia,o=nih,c=us' or 'ou=people,dc=vanderbilt,dc=edu'\n";
+			$LDAP->{DN} = confirm_default ("LDAP DN suffix for OME users:", $LDAP->{DN});
+			$LDAP->{DN} = undef if $LDAP->{DN} and $LDAP->{DN} eq '-';
 			$LDAP->{options}->{timeout} = confirm_default ("LDAP connection timeout:", $LDAP->{options}->{timeout});
-			$LDAP->{options}->{debug} = confirm_default ("Net::LDAP debug level (output to Apache error log):", $LDAP->{options}->{debug});
-			$LDAP->{options}->{debug} = undef if $LDAP->{options}->{debug} and $LDAP->{options}->{debug} eq '-';
+#			$LDAP->{options}->{debug} = confirm_default ("Net::LDAP debug level (output to Apache error log):", $LDAP->{options}->{debug});
+#			$LDAP->{options}->{debug} = undef if $LDAP->{options}->{debug} and $LDAP->{options}->{debug} eq '-';
 			$LDAP->{options}->{version} = confirm_default ("LDAP protocol version:", $LDAP->{options}->{version});
 			if (y_or_n ("Use Transport Layer Security (TLS) when possible and appropriate?",'y') ) {$LDAP->{use_tls} = 1;}
 			else {$LDAP->{use_tls} = 0;}
@@ -233,14 +239,15 @@ sub execute {
 			$LDAP->{ssl_opts}->{clientkey} = confirm_default ("Path to client certificate key (clientkey):", $LDAP->{ssl_opts}->{clientkey});
 			$LDAP->{ssl_opts}->{clientkey} = undef if $LDAP->{ssl_opts}->{clientkey} and $LDAP->{ssl_opts}->{clientkey} eq '-';
 
-			print BOLD,"LDAP Host Configuration:\n",RESET;
-			print "Each LDAP host is listed as a URI, specifying ldap:// or ldaps://, and an optional port.  Examples:\n";
+			print BOLD,"LDAP Server Configuration:\n",RESET;
+			print "Each LDAP server is listed as a URI, specifying ldap:// or ldaps://, and an optional port.  Examples:\n";
 			print "\tldaps://ldap.foo.org\n";
 			print "\tldap://ldap2.foo.org:636\n";
-			print "The URIs will be tested for functionality as you enter them.\n";
-			print "For a proper test, enter a username and password that will authenticate with your LDAP server list\n";
-			my $username = confirm_default("LDAP username to test: ", $USERNAME);
-			my ($passwd,undef) = get_password ('Password: ');
+			print "During LDAP authentication, the URIs in the list will be tried in order until a connection is made.\n";
+			print "During this setup, the URIs will be tested for functionality as you enter them.\n";
+			print "Enter a username and password that will authenticate with your LDAP server(s)\n";
+			$username = confirm_default("LDAP username to test: ", $USERNAME);
+			($passwd,undef) = get_password ('Password: ');
 			my @URIs;
 			my $num=0;
 			while (1) {
@@ -252,7 +259,7 @@ sub execute {
 				last if $uri eq '-';
 				my $ldap;
 				eval {
-					$ldap = Net::LDAP->new ( $uri, %{$LDAP->{options}},%{$LDAP->{ssl_opts}});
+					$ldap = Net::LDAP->new ( $uri, %{$LDAP->{options}},%{$LDAP->{ssl_opts}} );
 				};
 				if ($ldap) {
 					print "Connected to URI $uri\n";
@@ -261,7 +268,7 @@ sub execute {
 					print $LOGFILE "cypher: ",$ldap->cipher ( ) ? $ldap->cipher ( ) : 'NONE',"\n";
 					if (not $ldap->cipher()
 						and $ldap->root_dse()->supported_extension ($can_tls)
-						and $LDAP->{use_tls}) {
+						) {
 							print "Trying TLS... ";
 							print $LOGFILE "Trying TLS... ";
 							eval {
@@ -270,31 +277,56 @@ sub execute {
 							if ($ldap->cipher ( )) {
 								print BOLD, "[SUCCESS]", RESET, ". Cypher: ".$ldap->cipher ( )."\n";
 								print $LOGFILE "Success.  Cypher: ".$ldap->cipher ( )."\n";
+								if (not $LDAP->{use_tls}) {
+									print "This server supports TLS, but you have not enabled this option.  It is highly recommended to do so.\n";
+									$LDAP->{use_tls} = 1 if y_or_n( "Enable 'Use TLS' so that passwords are not sent as clear text?",'y');
+									print $LOGFILE "Enabled use_tls.\n" if $LDAP->{use_tls};								
+								}
 							} else {
-								print BOLD, "[FAILURE]", RESET, ".\n";
-								print $LOGFILE "Failure.\n";
+								print BOLD, "[FAILURE]", RESET, ":\n$@\n";
+								print $LOGFILE "Failure:\n$@\n";								
+								if ($LDAP->{use_tls}) {
+									print $LOGFILE "The Use TLS option is enabled, TLS is supported by the server, but could not be established.\n";
+									print "The Use TLS option is enabled, TLS is supported by the server, but could not be established.\n";
+									print "You will need to fix the SSL options, disable 'Use TLS', or remove this server from the list.\n";
+									print "LDAP authentication *WILL NOT BE ATTEMPTED* to this server using the current configuration.\n";
+								}
 							}
+					} elsif (not $ldap->cipher() and $LDAP->{use_tls}) {
+					# We can't use a server that does not support TLS if Use TLS is enabled.
+						print $LOGFILE "The Use TLS option is enabled, but the server does not support it.\n";
+						print "The 'Use TLS' option is enabled, but this server does not support it.\n";
+						print "LDAP authentication *WILL NOT BE ATTEMPTED* to this server, and it should not be on the list.\n";
 					}
-					# Give a last chance not to send a clear-text password
-					next if (not $ldap->cipher ( ) and y_or_n ("This host uses clar-text passowrds. Try another host?",'y') );
-
-					# Try to bind to the host
-					print "Authenticating $username to $uri...";
-					my $DN = "uid=$username,$LDAP->{OU},$LDAP->{DC}";
-					my $mesg;
-					eval{$mesg = $ldap->bind ($DN, password => $passwd );};
-					if ($@ or not $mesg or $mesg->code != 0) {
-						print BOLD, "[FAILURE]", RESET, ".\n";
-						print $LOGFILE "Failed bind '$DN' to '$uri'\n";
+					# The only way we attempt a bind is either over an encrypted connection or if the user
+					# specified to not use TLS.
+					if ($username and $passwd and ($ldap->cipher() or not $LDAP->{use_tls}) ) {
+						# Try to bind to the host
+						print "Authenticating $username to $uri...";
+						my $DN = "uid=$username";
+						$DN .= ",$LDAP->{DN}" if $LDAP->{DN};
+						my $mesg;
+						eval{$mesg = $ldap->bind ($DN, password => $passwd );};
+						if ($@ or not $mesg or $mesg->code != 0) {
+							print BOLD, "[FAILURE]", RESET, "\n$@\n";
+							print $LOGFILE "Failed bind '$DN' to '$uri':\n$@\n";
+						} else {
+							print BOLD, "[SUCCESS]", RESET, ".\n";
+							print $LOGFILE "Successful bind '$DN' to '$uri'\n";
+							$ldap->unbind ( );
+						}
+					} elsif ($username and $passwd) {
+						print "Authentication test skipped over an unencrypted connection\n";
+						print "If this is the only active server in the URI list, LDAP authentication will not work!\n";
+						print $LOGFILE "Authentication test skipped over an unsecure connection\n";
 					} else {
-						print BOLD, "[SUCCESS]", RESET, ".\n";
-						print $LOGFILE "Successful bind '$DN' to '$uri'\n";
-						$ldap->unbind ( );
+						print "Authentication test skipped  - no username/password supplied\n";
+						print $LOGFILE "Authentication test skipped over an unsecure connection\n";
 					}
 					$ldap->disconnect();
 				} else {
-					print "Failed to connect to URI $uri\n";
-					print $LOGFILE "Failed to connect to URI $uri\n";
+					print "Failed to connect to URI $uri:\n$@\n";
+					print $LOGFILE "Failed to connect to URI $uri:\n$@\n";
 				}
 
 				push (@URIs,$uri) if (y_or_n ("Keep $uri in URI list?",'y') );
@@ -318,7 +350,120 @@ sub execute {
 		print "\n";  # Spacing
 		$confirm_all = 1;
 	}
+	
+	# Test the LDAP configuration for inconsistencies
+	# We can't use it if its not configured
+	$LDAP->{use} = 0 if ($LDAP->{use} and not $LDAP->{configured});
 
+	# We can't use it if we can't load Net::LDAP
+	eval 'use Net::LDAP; use Net::LDAP::Constant qw(LDAP_EXTENSION_START_TLS); $can_tls = LDAP_EXTENSION_START_TLS;';
+	if ($@) {
+		print "Net::LDAP could not be loaded - LDAP authentication will not be used\n";
+		$LDAP->{use} = 0;
+		$LDAP->{configured} = 0;
+	}
+
+	# If we intend to use it, see if we can connect
+	if ($LDAP->{use}) {
+		print "Testing LDAP configuration... ";
+		my $ldap;
+		eval {
+			$ldap = Net::LDAP->new ( $LDAP->{hosts}, %{$LDAP->{options}},%{$LDAP->{ssl_opts}} );
+		};
+		if ($ldap) {
+			print BOLD, "[CONNECTED]", RESET,"\n";
+			if (not $ldap->cipher()
+				and $ldap->root_dse()->supported_extension ($can_tls)
+				and $LDAP->{use_tls}
+				) {
+					print "Starting TLS... ";
+					eval {
+						$ldap->start_tls(%{$LDAP->{ssl_opts}});
+					};
+					if ($ldap->cipher()) {
+						print BOLD, "[SUCCESS]", RESET,"\n";
+						print $LOGFILE "TLS successful\n";
+					} else {
+						print BOLD, "[FAILED]", RESET,":\n$@\n";
+						print "LDAP authentication will be attempted, but is not likely to work!\n";
+						print $LOGFILE "TLS failed:\n$@\n";
+					}
+				} elsif (not $ldap->cipher() and $LDAP->{use_tls}) {
+					print BOLD, "[TLS UNSUPPORTED!]", RESET,"\n";
+					print "LDAP authentication will be attempted, but is not likely to ever work!\n";
+					print $LOGFILE "TLS is requested but not supported!!\n";
+				}
+			if ($username and $passwd and ($ldap->cipher() or not $LDAP->{use_tls}) ) {
+				# try the bind
+				print "Attempting to bind to LDAP server...";
+				my $DN = "uid=$username";
+				$DN .= ",$LDAP->{DN}" if $LDAP->{DN};
+				my $mesg;
+				eval{$mesg = $ldap->bind ($DN, password => $passwd );};
+				if ($@ or not $mesg or $mesg->code != 0) {
+					print BOLD, "[FAILURE]", RESET, ":\n$@.\n";
+					print $LOGFILE "Failed bind '$DN': $@\n";
+				} else {
+					print BOLD, "[SUCCESS]", RESET, ".\n";
+					print $LOGFILE "Successful bind '$DN'\n";
+					$ldap->unbind ( );
+				}
+			} elsif ($username and $passwd) {
+				print "Authentication test skipped over an unencrypted connection\n";
+				print "LDAP authentication will be attempted, but it is not likely to ever work!\n";
+				print $LOGFILE "Authentication test skipped over an unsecure connection\n";
+			} else {
+				print "Authentication test skipped  - no username/password supplied\n";
+				print $LOGFILE "Authentication test skipped over an unsecure connection\n";
+			}
+			$ldap->disconnect();
+		} else {
+			print BOLD, "[FAILED TO CONNECT]", RESET,"\n";
+			print $LOGFILE "Could not connect to any LDAP host\n";
+		}
+	}
+	# The reader's digest of the above connection logic.
+	# This is what's used in OME::SessionManager::authenticate_LDAP()
+# 	my ($username,$passwd);
+# 	my $can_tls;
+# 	if ($LDAP->{use}) {
+# 		# This is a quoted eval because we wnat this processed only if $LDAP->{use}
+# 		eval 'use Net::LDAP;';
+# 		if ($@) {
+# 			# Can't use Net::LDAP - abort!
+# 		}
+# 		eval { $ldap = Net::LDAP->new ( $LDAP->{hosts}, %{$LDAP->{options}},%{$LDAP->{ssl_opts}} ); };
+# 		if ($ldap) {
+# 			# Start TLS if requested (no point in checking now if the server supoprts it)
+# 			eval { $ldap->start_tls(%{$LDAP->{ssl_opts}}); }
+# 				if ( not $ldap->cipher() and $LDAP->{use_tls} );
+# 			# The only way we send credentials is over an encrypted connection or if use_tls is off
+# 			if ($username and $passwd and ($ldap->cipher() or not $LDAP->{use_tls}) ) {
+# 				my $DN = "uid=$username";
+# 				$DN .= ",$LDAP->{DN}" if $LDAP->{DN};
+# 				my $mesg;
+# 				eval{$mesg = $ldap->bind ($DN, password => $passwd );};
+# 				if ($@ or not $mesg or $mesg->code != 0) {
+# 					# Authentication failed
+# 					#...
+# 				} else {
+# 					# Authentication succeeded
+# 					#...
+# 					# Don't forget to unbind
+# 					$ldap->unbind ( );
+# 				}
+# 			} else {
+# 				# Authentication not attempted: no user/pass or unsecure.  This counts as failure.
+# 			}
+# 			# Don't forget to disconnect
+# 			$ldap->disconnect();
+# 		} else {
+# 			# Couldn't connect to LDAP server:  This counts as failure.
+# 		}
+# 	}
+
+	
+	
 	# Store the ldap conf in the environment
 	$environment->ldap_conf($LDAP);
 	$environment->store_to();
@@ -404,6 +549,36 @@ sub check_LDAP_packages {
 	@OME::Install::PerlModuleTask::modules = @saved_modules;
 	
 	return $result;
+}
+
+sub guess_DN {
+	my $DN = `grep -i base /etc/ldap.conf 2>/dev/null`;
+	$DN = undef if $DN =~ /^\s*#/;
+	$DN = `grep -i base /etc/openldap/ldap.conf 2>/dev/null` unless $DN;
+	return undef unless $DN;
+	return undef if $DN =~ /^\s*#/;
+
+	$DN = $1 if $DN =~ /base\s+(.*)$/i;
+	$DN =~ s/\s+$// if $DN;
+	$DN = "ou=people,$DN" if $DN and not $DN =~ /^ou=people/;
+
+	return $DN
+}
+
+
+sub guess_URIs {
+	my @grepURIs = `grep -i uri /etc/ldap.conf 2>/dev/null`;
+	my @grep2URIs = `grep -i uri /etc/openldap/ldap.conf 2>/dev/null`;
+	push (@grepURIs,@grep2URIs);
+	my @URIs;
+	foreach my $URI (@grepURIs) {
+		next if $URI =~ /^\s*#/;
+		$URI = $1 if $URI =~ /uri\s+(.*)$/i;
+		$URI =~ s/\s+$// if $URI;
+		push (@URIs,split (/\s+/,$URI)) if $URI;
+	}
+
+	return \@URIs;
 }
 
 sub rollback {
