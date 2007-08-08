@@ -99,6 +99,7 @@ sub addUser {
     
     my $session = $self->getSession();
     my $factory = $session->Factory();
+    my $ldap_conf = $session->Configuration()->ldap_conf();
     
     # correct user properties till OME system is happy
 	while (1) {
@@ -126,7 +127,36 @@ sub addUser {
 				$group_input = confirm_default("Group (Name or ID)?",$group_input);
 						
 			}
-			$password    = get_password   ("Password?",6);
+			
+			# The user can be ldap-only or both local and ldap (though ldap takes precedence).
+			# If ldap-only, they do not have a password in the DB
+			# Either way, we check if they can log into ldap if we're using ldap.
+			# If they can login to ldap, we ask if they want local logins as well.
+			# If they do, we set their local password to the ldap password they used.
+			# If ldap login fails, we ask for a DB password.
+			if ($ldap_conf->{use}) {
+				print "LDAP authentication is enabled.\n";
+				my ($ldap_password,$crypt_passwd) = get_password   ("LDAP Password?");
+				if (OME::SessionManager->authenticate_LDAP ($ldap_conf,$username,$ldap_password)) {
+					print "LDAP authentication successful\n";
+					if ( y_or_n ('Allow local logins as well?','n') ) {
+						$password = $crypt_passwd;
+					} else {
+						# No local password
+						$password = undef;
+					}
+				} else {
+					print "LDAP authentication failed - setting up a local user\n";
+					if (length ($ldap_password) >= 6) {
+						$password = $crypt_passwd;
+					} else {
+						$password = get_password   ("Local Password?",6);
+					}
+				}
+			} else {
+				$password    = get_password   ("Local Password?",6);
+			}
+			
 	
 			print BOLD,"\nConfirm New User's Properties:\n",RESET;
 			print      "      Username: ", BOLD, $username, RESET, "\n";
@@ -456,11 +486,15 @@ sub changePassword {
     my $self = shift;
 
     my $user_input = "";
-    my $password = "";
+    my $password = '';
+    my $ldap_only;
     my $result;
 
-    $result = GetOptions('user|u=s' => \$user_input,
-                         'password|p=s' => \$password);
+    $result = GetOptions(
+    	'user|u=s' => \$user_input,
+		'password|p=s' => \$password,
+		'ldap|l' => \$ldap_only,
+	);
 
     exit(1) unless $result;
 
@@ -478,13 +512,22 @@ sub changePassword {
         exit 1;
     }
 
-    print "Changing password for ",
-      $user->FirstName()," ",$user->LastName(),"\n";
+	if ($ldap_only) {
+		$password = undef;
+	} elsif (length ($password) < 6) {
+    	$password = get_password("Password? ",6);
+    } else { # Command-line password has to be encrypted before storing in DB
+    	$password = encrypt($password);
+    }
 
-    my $new_password = get_password("Password? ",6);
+	if ($password) {
+		print "Changing password for ",$user->FirstName()," ",$user->LastName(),"\n";
+	} else {
+		print "Un-setting password, making ",$user->FirstName()," ",$user->LastName()," LDAP-only\n";
+	}
 
     eval {
-        $user->Password($new_password);
+        $user->Password($password);
         $user->storeObject();
         $session->commitTransaction();
     };
@@ -508,13 +551,19 @@ Usage:
     $script $command_name \[<options>]
 
 Changes the password for an existing OME user.  Prompts for the new
-password if it is not specific on the command line via the --pasword
-option.  Note that you must specify exactly one of the -i or -u
-options.
+password if it is not specific on the command line via the -p/--pasword
+option, or if its too short.
+
+Can be used to disable local login for users (-l/--ldap option).
 
 Note that you might first be prompted to log into OME as an
 administrative user.  This is *not* the user whose password you want
 to change.
+
+This utility only changes the local password for local authentication against the OME DB.
+If LDAP authentication is being used, this will not change the passowrd on the LDAP server!
+To make the user ldap-only or disable local login, use the -l option.
+To enable or change local authentication, assign a local password interactively or with -p
 
 Options:
     -u, --user (<username> | <ID>)
@@ -522,9 +571,11 @@ Options:
 
     -p, --password <password>
         Supplies the new password on the command line rather than
-        prompting for it.  This is pretty insecure, since the
-        command-line is publicly available to other processes, but we
-        still provide it for convenience.
+        prompting for it.  This is insecure, since the
+        command-line is publicly available to other processes.
+
+    -l, --ldap
+        Supplying the -l option un-sets the local password, making the user LDAP-only.
 CMDS
 }
  
