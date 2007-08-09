@@ -26,15 +26,10 @@
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
-# Written by:    Arpun Nagaraja <arpun@mit.edu>
+# Written by:     Tom Macura <tmacura@nih.gov> (Category/CategoryGroup, Project/Dataset/Image, HTML rendering)
+#				  Josiah Johnston, Harry Hochheiser (Semantic Types)
 #
-#                Tom Macura <tmacura@nih.gov>
-#                - Code tidying. Refactored outputing so there is command line and HTML
-#                  output. Wrote HTML output. ++ descriptions to all produced objects
-#                  ++ support for Projects and Dataset annotations. ++ error checking. 
-#                  ++ the ability to "comment-out" columns by prepending the pound
-#                  character '#'
-#
+# 			based on Arpun Nagaraja's code
 #-------------------------------------------------------------------------------
 
 package OME::Util::Annotate::SpreadsheetReader;
@@ -86,7 +81,7 @@ The format can be found at http://www.openmicroscopy.org/custom-annotations/spre
 =cut
 
 sub processFile {
- 	my ($self, $fileToParse) = @_;
+ 	my ($self, $fileToParse,$noop) = @_;
  	my $session= $self->Session();
     my $factory = $session->Factory();
     my @ERRORoutput;
@@ -121,12 +116,11 @@ sub processFile {
 	
 	# $newCGs:  If a category group referenced in the column headers isn't already
 	# in the database make a new category group with that name 
-	#
-	# $CategoryGroups: need this later when making new categories in order to be
+
+	# $CGCols gets filled with CategoryGroups. Used later when making new categories in order to be
 	# able to associate categories with CGs
-	my ($newCGs,$CategoryGroups) = 
-	    $self->getCategoryGroups($columnHeadings,$CGCols,$fileToParse,$global_mex,
-	                             $timestr);
+	my ($newCGs) = $self->getCategoryGroups($columnHeadings,$CGCols,$fileToParse,$global_mex,
+	                             $timestr,$noop);
 	my $file;
 	if ($type ne EXCEL) {
 		open (FILE, "< $fileToParse");
@@ -142,6 +136,9 @@ sub processFile {
 	my $newProjDataset;
 	my %images;
 	
+	# Image.Name or Image.id etc.
+	my $imageIdentifier_type = $$columnHeadings[$imgCol];
+
 	for (my $row = 1; $row <= $maxRow; $row++) {
 		my $imageIdentifier;
 		my $projName;
@@ -149,6 +146,8 @@ sub processFile {
 		my @cats;
 		my @seVals;
 
+		# Separate out the row from image,project,datasets
+		# category groups and STs
 		($imageIdentifier,$projName) = 
 		    $self->parseRow($type,$row,$imgCol,$projCol,\@datasetNames,
 				    \@cats,\@seVals,$DatasetCols,$CGCols,$STCols,
@@ -158,13 +157,15 @@ sub processFile {
 		my $image;
 		if ($imageIdentifier) {
 		    $image =
-			$self->loadImage($imageIdentifier,\%images,$imgCol,$columnHeadings,
+			$self->loadImage($imageIdentifier,$imageIdentifier_type, \%images,
 					 \@ERRORoutput);
 		}
-		$self->processCategoryGroups($image,$CGCols,$CategoryGroups,
+
+		# Use @cats, along with $CGcols to make new classifications for $image
+		$self->processCategoryGroups($image,$CGCols,
 					     $columnHeadings,\@cats,
 					     $newCategories,$global_mex,
-					     $fileToParse,$timestr);
+					     $fileToParse,$timestr,$noop);
 
 		$newGlobalSTSE = $self->processSTs($STCols,\@seVals,$columnHeadings,
 				  $image,$newGlobalSTSE,
@@ -179,7 +180,7 @@ sub processFile {
 		# Process Projects
 		$self->processProjects($projCol,$projName,\@datasets,\@newProjs,$newProjDataset,$fileToParse,$timestr);
 	
-		$session->commitTransaction();
+		$session->commitTransaction() unless $noop;
 	}
 	close FILE unless $type eq EXCEL;
 	$INPUT_RECORD_SEPARATOR = ''; # probably don't need to do
@@ -190,7 +191,7 @@ sub processFile {
 	    $global_mex->error_message($errorMsg); 
 	}
 	$global_mex->storeObject();
-	$session->commitTransaction();
+	$session->commitTransaction() unless $noop;
 	
 	# package up outputs and return
 	# some one-else will be create some human understandable output
@@ -304,10 +305,9 @@ sub getCategoryGroups {
     my $self= shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($columnHeadings,$CGCols,$fileToParse,$global_mex,$timestr) = @_;
+    my ($columnHeadings,$CGCols,$fileToParse,$global_mex,$timestr,$noop) = @_;
 
     my @newCGs;
-    my %CategoryGroups;
 
     foreach my $index (keys(%$CGCols)) {
 		my $CGName = $$columnHeadings[$index];
@@ -321,10 +321,10 @@ sub getCategoryGroups {
 						  }) or die "could not make new CG attribute $CGName";
 			push (@newCGs, $CG); # record the creation of new CG to generate HTML/command-line output later
 		}
-		$CategoryGroups{ $CGName } = $CG;
+		$CGCols->{$index} = $CG;
     }
-    $session->commitTransaction();
-    return (\@newCGs,\%CategoryGroups);
+    $session->commitTransaction() unless $noop;
+    return (\@newCGs);
 }
 
 sub parseRow {
@@ -367,26 +367,26 @@ sub loadImage {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
-    my ($imageIdentifier,$images,$imgCol,$columnHeadings,$ERRORoutput) = @_;
+    my ($imageIdentifier,$imageIdentifier_type,$images,$ERRORoutput) = @_;
 
     if ( not $$images{$imageIdentifier} ) {
 		my @objects;
 		my @originalFiles;
 		
-		if ($$columnHeadings[$imgCol] eq 'Image.Name') {
+		if ($imageIdentifier_type eq 'Image.Name') {
 			@objects = $factory->findObjects 
 				( 'OME::Image', { name => "$imageIdentifier" } );
-		} elsif ($$columnHeadings[$imgCol] eq 'Image.id') {
+		} elsif ($imageIdentifier_type eq 'Image.id') {
 			@objects = $factory->findObjects
 				( 'OME::Image', { id => "$imageIdentifier" } );
 		# Image.OriginalFile is deprecated.  Please use Image.FilePath
-		} elsif ($$columnHeadings[$imgCol] eq 'Image.OriginalFile') {
+		} elsif ($imageIdentifier_type eq 'Image.OriginalFile') {
 			@originalFiles = $session->Factory->
 				  findAttributes("OriginalFile", {Path => "$imageIdentifier"});
-		} elsif ($$columnHeadings[$imgCol] eq 'Image.FilePath') {
+		} elsif ($imageIdentifier_type eq 'Image.FilePath') {
 			@originalFiles = $session->Factory->
 				  findAttributes("OriginalFile", {Path => "$imageIdentifier"});
-		} elsif ($$columnHeadings[$imgCol] eq 'Image.FileSHA1') {
+		} elsif ($imageIdentifier_type eq 'Image.FileSHA1') {
 			@originalFiles = $session->Factory->
 				  findAttributes("OriginalFile", {SHA1 => "$imageIdentifier"});
 		}
@@ -420,19 +420,20 @@ sub processCategoryGroups {
     my $session= $self->Session();
     my $factory = $session->Factory();
 
-    my ($image,$CGCols,$CategoryGroups,$columnHeadings,$cats,$newCategories,$global_mex,$fileToParse,$timestr) = @_; 
+    my ($image,$CGCols,$columnHeadings,$cats,$newCategories,$global_mex,$fileToParse,
+    	$timestr,$noop) = @_; 
 
 
-    foreach my $index(sort keys %$CGCols) { 
-		my $CGName = $$columnHeadings[$index] or
-			die "ColumnHeading for column $index is undefined \n";
+    foreach my $index (sort {$a <=> $b} keys %$CGCols) { 
+    	my $CG = $CGCols->{$index} or
+			die "CategoryGroup for column $index is undefined \n";
+		my $CGName = $CG->Name();
 		my $categoryName = shift(@$cats);
 		
 		# skip 'Null' cells. i.e. cells that contain only white-space
 		# characters
 		next unless defined $categoryName and $categoryName =~ m/\S+/;
 	
-		my $CG = $$CategoryGroups{$CGName}; 
 		my $category = $factory->findObject ('@Category', { Name =>
 						$categoryName, CategoryGroup => $CG });
 		if (not $category) { 
@@ -445,7 +446,8 @@ sub processCategoryGroups {
 			   # record the creation of new category to generate
 		   # HTML/command-line output later
 		}
-		OME::Tasks::CategoryManager->classifyImage($image->{Image}, $category); 
+		OME::Tasks::CategoryManager->classifyImage($image->{Image}, $category)
+			unless ($noop);
 		# record the new image classification for later
 		$image->{ $CGName } = $category; 
     } 
@@ -463,7 +465,7 @@ sub processSTs {
     my %STs; 
     # Extract the Semantic type data in column order. Index it for attribute 
     # creation below  
-    foreach my $index ( sort keys %$STCols )  { 
+    foreach my $index (sort {$a <=> $b} keys %$STCols)  { 
 		my $columnHeader = $$columnHeadings[$index] or 
 			die "ColumnHeading for column $index is undefined\n"; 
 		$columnHeader =~ m/(\w+)\.(\w+)/
@@ -561,7 +563,7 @@ sub processDatasets{
 
     my ($datasets,$DatasetCols,$datasetNames,$image,$imageIdentifier,$newDatasets,$fileToParse,$timestr) = @_;
 
-    foreach my $index (sort keys %$DatasetCols) {
+    foreach my $index (sort {$a <=> $b} keys %$DatasetCols) {
 		# $columnHeadings[$index] is 'Dataset'
 		my $datasetManager = new OME::Tasks::DatasetManager;
 		my $datasetName = shift (@$datasetNames);
@@ -705,7 +707,7 @@ sub printSpreadsheetAnnotationResultsCL {
 				my $haveClassifications = 0;
 				foreach my $key (sort keys %$image) {
 					if( $key =~ m/^ST:(.*)$/ ) {
-						$output .= "\t\t".$1.": id:".$image->{$key}->id();
+						$output .= "\t\t".$1.": id:".$image->{$key}->id()."'\n";
 					} else {
 						$haveClassifications = 1;
 						$classificationMsg .= "		\\_ '".$key."' : '".$image->{$key}->Name()."'\n";

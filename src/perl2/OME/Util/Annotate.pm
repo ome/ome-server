@@ -80,14 +80,13 @@ sub spreadsheet_importer {
     GetOptions('f|file=s' => \$file,
    			   'n|noop!'   => \$noop);
    			   
-    die "Flag not supported. Inform Tom Macura\n" if $noop;
 	die "Specify the input filename with the -f flag\n" unless $file;
 	
 	$file = $ARGV[0] if (scalar @ARGV);
 	$self->spreadsheet_importer_help($commands) and return if (not defined $file);
 	
 	my $session = $self->getSession();
-	my $results = OME::Util::Annotate::SpreadsheetReader->processFile($file);
+	my $results = OME::Util::Annotate::SpreadsheetReader->processFile($file,$noop);
 	my $output;
 	if (!ref $results) {
 		$output .= "Error annotating: \n";
