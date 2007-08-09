@@ -73,7 +73,10 @@ public class OMENode extends OMEXMLNode {
     "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
     "xsi:schemaLocation=\"" +
     "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd " +
     "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd " +
     "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd\"/>";
 
   /** Element name for storing extra path information. */
