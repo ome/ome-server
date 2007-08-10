@@ -121,6 +121,10 @@ sub processFile {
 	# able to associate categories with CGs
 	my ($newCGs) = $self->getCategoryGroups($columnHeadings,$CGCols,$fileToParse,$global_mex,
 	                             $timestr,$noop);
+	                             
+	# $STCols gets filled with SEs. Used later when making new attributes
+	$self->getSTs($columnHeadings,$STCols,$fileToParse);
+
 	my $file;
 	if ($type ne EXCEL) {
 		open (FILE, "< $fileToParse");
@@ -161,15 +165,13 @@ sub processFile {
 					 \@ERRORoutput);
 		}
 
-		# Use @cats, along with $CGcols to make new classifications for $image
-		$self->processCategoryGroups($image,$CGCols,
-					     $columnHeadings,\@cats,
+		# Process Category Groups
+		$self->processCategoryGroups($image,$CGCols,\@cats,
 					     $newCategories,$global_mex,
 					     $fileToParse,$timestr,$noop);
-
-		$newGlobalSTSE = $self->processSTs($STCols,\@seVals,$columnHeadings,
-				  $image,$newGlobalSTSE,
-				  $global_mex,\@ERRORoutput);
+		# Process Semantic Types
+		$newGlobalSTSE = $self->processSTs($image,$STCols,\@seVals,
+				  $newGlobalSTSE,$global_mex,\@ERRORoutput);
 
 		# Process Datasets
 		my @datasets; # @datasets is at this scope so it can be passed to projects
@@ -327,6 +329,30 @@ sub getCategoryGroups {
     return (\@newCGs);
 }
 
+sub getSTs {
+    my $self= shift;
+    my $session= $self->Session();
+    my $factory = $session->Factory();
+    my ($columnHeadings,$STCols,$fileToParse) = @_;
+
+    foreach my $index (keys(%$STCols)) {
+    
+    my $columnHeader = $$columnHeadings[$index] or 
+			die "ColumnHeading for column $index is undefined\n"; 
+		$columnHeader =~ m/(\w+)\.(\w+)/
+			or die "Could not parse column header: $columnHeader.";
+		my $STName = $1; 
+		my $SEName = $2; 
+		my $ST = $factory->findObject('OME::SemanticType', { name => $STName })
+			or die "Could not find a Semantic Type named $STName";
+
+		my $SE = $factory->findObject('OME::SemanticType::Element', {name=> $SEName, semantic_type=> $ST} )
+			or die "Could not find a Semantic Element named $SEName under the Semantic Type $STName";
+			
+		$STCols->{$index} = $SE;
+    }
+}
+
 sub parseRow {
     my $self=shift;
     my ($type,$row,$imgCol,$projCol,$datasetNames,$cats,$seVals,
@@ -415,12 +441,13 @@ sub loadImage {
     return $$images{$imageIdentifier};
 }
 
+# Use @cats, along with $CGcols to make new classifications for $image
 sub processCategoryGroups {
     my $self = shift;
     my $session= $self->Session();
     my $factory = $session->Factory();
 
-    my ($image,$CGCols,$columnHeadings,$cats,$newCategories,$global_mex,$fileToParse,
+    my ($image,$CGCols,$cats,$newCategories,$global_mex,$fileToParse,
     	$timestr,$noop) = @_; 
 
 
@@ -460,33 +487,23 @@ sub processSTs {
     my $session = $self->Session();	
     my $factory = $session->Factory();
     
-    my ($STCols,$seVals,$columnHeadings,$image,$newGlobalSTSE,$global_mex,$ERRORoutput)  = @_;
+    my ($image,$STCols,$seVals,$newGlobalSTSE,$global_mex,$ERRORoutput) = @_;
+
     my %ST_data_hash; 
     my %STs; 
     # Extract the Semantic type data in column order. Index it for attribute 
     # creation below  
     foreach my $index (sort {$a <=> $b} keys %$STCols)  { 
-		my $columnHeader = $$columnHeadings[$index] or 
-			die "ColumnHeading for column $index is undefined\n"; 
-		$columnHeader =~ m/(\w+)\.(\w+)/
-			or die "Could not parse column header: $columnHeader.";
-		my $STName = $1; 
-		my $SEName = $2; 
-		my $ST = $factory->findObject('OME::SemanticType', { name => $STName })
-			or die "Could not find a Semantic Type named $STName";
-		$STs{ $STName } = $ST; 
-	
-		my $granularity = $ST->granularity; 
-		my $SEValue = shift(@$seVals); 
 
-		# ok. here's what we have to do to find the reference
-		# look up the semantic element for the type - with name
-		# $SEName
-		my $SE = $factory->findObject('OME::SemanticType::Element', {name=> $SEName, semantic_type=> $ST} )
-			or die "Could not find a Semantic Element named $SEName under the Semantic Type $STName";
-		# get its column
+		my $SE = $STCols->{$index};
+		my $ST = $SE->semantic_type();
+		my $SEName = $SE->name();
+		my $STName = $ST->name();
+		my $granularity = $ST->granularity; 
 		my $col = $SE->data_column();
-	
+
+		$STs{ $STName } = $ST;
+		my $SEValue = shift(@$seVals); 
 		if ($col->sql_type() eq 'reference') {
 			# if it's a reference, then find what it refers to.
 			eval {
@@ -512,7 +529,8 @@ sub processSTs {
 						$SEValue = $obj;
 					}
 				}
-			}
+			};
+			# print $@ if $@; #uncomment for debugging info
 		}
 	
 		# skip 'Null' cells. i.e. cells that contain only white-space 
@@ -520,9 +538,9 @@ sub processSTs {
 		next unless defined $SEValue and $SEValue =~ m/\S+/; 
 		$ST_data_hash{ $STName }->{ $SEName } = $SEValue; 
 	
-			# There's an Image ST but there's no image to annotate!  
+		# There's an Image ST but there's no image to annotate!  
 		if ( $granularity eq 'I' and not exists $image->{ Image }) { 
-			push(@$ERRORoutput, "You must specify an image for $columnHeader because it's an Image SemanticType. Did not annotate."); 
+			push(@$ERRORoutput, "You must specify an image for $STName because it's an Image SemanticType. Did not annotate."); 
 			next; 
 		} 
     } 
@@ -533,8 +551,14 @@ sub processSTs {
 		my $data_hash = $ST_data_hash{ $STName }; 
 		my $granularity = $ST->granularity; 
 	
+#debug	print "Image ".$image->{ Image }->name()."\n";
+#		print "ST: ".$STName."\n";
+#		print "values: ".join( "\n\t", map( $_." => ".$data_hash->{$_}, 
+#						 keys %$data_hash ) )."\n\n\n";
+
 		# Granularity is Image, so do image annotation  
-		if ($granularity eq 'I') { 
+		if ($granularity eq 'I') {
+			$data_hash->{image_id} = $image->{ Image }->ID();
 			my $attr = $factory->maybeNewAttribute ($STName, $image->{ Image }, 
 						$global_mex, $data_hash) or 
 				die "could not make new (I) $STName\n\t". 
