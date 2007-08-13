@@ -70,14 +70,14 @@ class signatures
 //    signatures(sample *one_sample, int sigs_count);
     void Add(char *name, double value);
     void Clear();
-    void compute(ImageMatrix *matrix);
+    void compute(ImageMatrix *matrix, int compute_colors);
     void CompGroupA(ImageMatrix *matrix, char *transform_label);
     void CompGroupB(ImageMatrix *matrix, char *transform_label);
     void CompGroupC(ImageMatrix *matrix, char *transform_label);
     void CompGroupD(ImageMatrix *matrix, char *transform_label);
-    void ComputeGroups(ImageMatrix *matrix);
+    void ComputeGroups(ImageMatrix *matrix, int compute_colors);
     void normalize(void *TrainSet);                /* normalize the signatures based on the values of the training set */
-    void ComputeFromDouble(double *data, int height, int width);  /* compute the feature values from an array of doubles */
+    void ComputeFromDouble(double *data, int height, int width, int compute_color);  /* compute the feature values from an array of doubles */
     FILE *FileOpen(char *path, int tile_x, int tile_y);
     void FileClose(FILE *value_file);
     int SaveToFile(FILE *value_file);

@@ -113,7 +113,7 @@ int signatures::IsNeeded(long start_index, long group_length)
    input - an image matrix structure.
 */
 
-void signatures::compute(ImageMatrix *matrix)
+void signatures::compute(ImageMatrix *matrix, int compute_colors)
 {  char buffer[80];
    double vec[72];
    int a,b,c;
@@ -429,6 +429,9 @@ void signatures::compute(ImageMatrix *matrix)
      }
    }
 
+   if (compute_colors) 
+     CompGroupD(matrix,"");
+	 
    return;
    /* basic statistics (signatures 1025 - 1049) */
 
@@ -754,7 +757,7 @@ void signatures::CompGroupD(ImageMatrix *matrix, char *transform_label)
    compute the image features
    input - an image matrix structure.
 */
-void signatures::ComputeGroups(ImageMatrix *matrix)
+void signatures::ComputeGroups(ImageMatrix *matrix, int compute_colors)
 {
   ImageMatrix *TempMatrix;
   ImageMatrix *FourierTransform,*ChebyshevTransform,*ChebyshevFourierTransform,*WaveletSelector,*FourierWaveletSelector;
@@ -789,7 +792,7 @@ void signatures::ComputeGroups(ImageMatrix *matrix)
   CompGroupA(matrix,"");
   CompGroupB(matrix,"");
   CompGroupC(matrix,"");
-//  CompGroupD(matrix,"");
+  if (compute_colors) CompGroupD(matrix,"");
 
   CompGroupB(FourierTransform,"Fourier");
   CompGroupC(FourierTransform,"Fourier");
@@ -817,7 +820,7 @@ void signatures::ComputeGroups(ImageMatrix *matrix)
 
   CompGroupB(EdgeWavelet,"Edge Wavelet Transform");
   CompGroupC(EdgeWavelet,"Edge Wavelet Transform");
-  
+
   delete FourierTransform;
   delete WaveletSelector;
   delete ChebyshevTransform;
@@ -866,14 +869,14 @@ void signatures::normalize(void *TrainSet)
            height - the image height
            width - the image width
 */
-void signatures::ComputeFromDouble(double *data, int height, int width)
+void signatures::ComputeFromDouble(double *data, int height, int width,int compute_color)
 {  ImageMatrix *matrix;
    int x,y;
    matrix=new ImageMatrix(width,height);
    for (x=0;x<width;x++)
      for (y=0;y<height;y++)
        matrix->data[x][y].intensity=data[x*height+y];
-   compute(matrix);
+   compute(matrix,compute_color);
    delete matrix;
 }
 

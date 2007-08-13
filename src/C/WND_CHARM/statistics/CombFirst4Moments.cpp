@@ -56,11 +56,6 @@ double skewness(double *vec, double avg, double std, int length)
 
    if (s2==0) return(0);
    else return(m3/pow(s2,1.5));
-//   for (a=0;a<length;a++)
-//     sum=sum+pow((vec[a]-avg)/std,3.0);
-//return(sum*(length/((length-1)*(length-2))));
-//   return(sum/(length*pow(std,3)));
-
 }
 //---------------------------------------------------------------------------
 

@@ -226,23 +226,23 @@ int ImageMatrix::LoadTIFF(char *filename)
 		 { unsigned char byte_data;
 		   unsigned short short_data;
 		   double val;
-		   byte_data=buf8[col];
-           short_data=buf16[col];
-		   int sample_index;	   
+		   int sample_index;	
 		   for (sample_index=0;sample_index<spp;sample_index++)
-		   {  if (bits==8) val=(double)byte_data;
+		   {  byte_data=buf8[col+sample_index];
+              short_data=buf16[col+sample_index];
+ 		      if (bits==8) val=(double)byte_data;
 		      else val=(double)(short_data);
 			  if (spp==3)  /* RGB image */
-			  {  if (sample_index==0) data[x][y].clr.RGB.red=(unsigned char)(val/max_val);
-			     if (sample_index==1) data[x][y].clr.RGB.green=(unsigned char)(val/max_val);
- 				 if (sample_index==2) data[x][y].clr.RGB.blue=(unsigned char)(val/max_val);
+			  {  if (sample_index==0) data[x][y].clr.RGB.red=(unsigned char)(255*(val/max_val));
+			     if (sample_index==1) data[x][y].clr.RGB.green=(unsigned char)(255*(val/max_val));
+				 if (sample_index==2) data[x][y].clr.RGB.blue=(unsigned char)(255*(val/max_val));
 			  }
 		   }
 		   if (spp==3) data[x][y].intensity=COLOR2GRAY(RGB2COLOR(data[x][y].clr.RGB));
 		   if (spp==1)	  
-           {  data[x][y].clr.RGB.red=(unsigned char)(val/max_val);
-              data[x][y].clr.RGB.green=(unsigned char)(val/max_val);
-              data[x][y].clr.RGB.blue=(unsigned char)(val/max_val);
+           {  data[x][y].clr.RGB.red=(unsigned char)(255*(val/max_val));
+              data[x][y].clr.RGB.green=(unsigned char)(255*(val/max_val));
+              data[x][y].clr.RGB.blue=(unsigned char)(255*(val/max_val));
 		      data[x][y].intensity=val;
 		   }	  
 		   x++;
@@ -965,8 +965,15 @@ void ImageMatrix::ChebyshevStatistics(double *coeff, int N, int bins_num)
 */
 int ImageMatrix::CombFirstFourMoments(double *vec)
 {  int count;
-   count=CombFirst4Moments(this, vec);   
+   ImageMatrix *matrix;
+   if (bits==16) 
+   {  matrix=this->duplicate();
+      matrix->to8bits();
+   }
+   else matrix=this;
+   count=CombFirst4Moments(matrix, vec);   
    vd_Comb4Moments(vec);   
+   if (bits==16) delete matrix;
    return(count);
 }
 

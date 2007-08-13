@@ -1,6 +1,6 @@
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*                                                                               */
-/*    Copyright (C) 2003 Open Microscopy Environment                             */
+/*    Copyright (C) 2007 Open Microscopy Environment                             */
 /*         Massachusetts Institue of Technology,                                 */
 /*         National Institutes of Health,                                        */
 /*         University of Dundee                                                  */
@@ -62,7 +62,7 @@ public:
    ~TrainingSet();                                                 /* destructor                                */
    int LoadImages(char *filename, int log);                        /* load a set of images (paths are in the text file) */
    int AddAllSignatures(char *filename);                           /* load the image feature values from all files */
-   int LoadFromDir(char *filename, int log, int print_to_screen, int tiles, int multi_processor, int large_set);  /* load images from a root directory   */
+   int LoadFromDir(char *filename, int log, int print_to_screen, int tiles, int multi_processor, int large_set, int compute_colors, int downsample);  /* load images from a root directory   */
    double Test(TrainingSet *TestSet, int method, unsigned short *confusion_matrix, double *similarity_matrix,int tiles);     /* test      */
    int SaveToFile(char *filename);                                 /* save the training set values to a file    */
    int ReadFromFile(char *filename);                               /* read the training set values from a file  */
@@ -72,8 +72,9 @@ public:
    void SetFisherScores(double used_signatures, char *sorted_feature_names);   /* compute the fisher scores for the signatures */
    long WNNclassify(signatures *test_sample, double *probabilities);/* classify a sample using weighted nearest neighbor */
    long classify2(signatures *test_sample, double *probabilities); /* classify using -5                          */
+   long classify3(signatures *test_sample, double *probabilities);
    long PrintConfusion(unsigned short *confusion_matrix, double *similarity_matrix, unsigned short dend_file, unsigned short method);  /* print a confusion or similarity matrix */
-   long report(char *data_set_name, data_split *splits, unsigned short split_num);  /* report on few splits */
+   long report(char *data_set_name, data_split *splits, unsigned short split_num, int tiles);  /* report on few splits */
 };
 
 

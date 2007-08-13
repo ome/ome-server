@@ -1,15 +1,3 @@
-//---------------------------------------------------------------------------
-#ifndef cmatrixH
-#define cmatrixH
-//---------------------------------------------------------------------------
-
-#ifdef WIN32
-  #include <vcl.h>
-#else  
-  #include "colors/FuzzyCalc.h"
-  #define min(a,b) (((a) < (b)) ? (a) : (b))
-  #define max(a,b) (((a) < (b)) ? (b) : (a))
-#endif
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*                                                                               */
 /* Copyright (C) 2007 Open Microscopy Environment                                */
@@ -39,6 +27,19 @@
 /* Written by:  Lior Shamir <shamirl [at] mail [dot] nih [dot] gov>              */
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+
+//---------------------------------------------------------------------------
+#ifndef cmatrixH
+#define cmatrixH
+//---------------------------------------------------------------------------
+
+#ifdef WIN32
+  #include <vcl.h>
+#else  
+  #include "colors/FuzzyCalc.h"
+  #define min(a,b) (((a) < (b)) ? (a) : (b))
+  #define max(a,b) (((a) < (b)) ? (b) : (a))
+#endif
 
 #define cmRGB 1
 #define cmHSV 2
@@ -101,7 +102,7 @@ class ImageMatrix
    double Otsu();                                  /* Otsu grey threshold                  */
    void MultiScaleHistogram(double *out);
 //   double AverageEdge();
-   void EdgeTransform();
+   void EdgeTransform();                           /* gradient binarized using otsu threshold */
    double fft2();
    void ChebyshevTransform(int N);
    void ChebyshevFourierTransform(double *coeff);
