@@ -374,17 +374,12 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
       qsort(files_in_class,files_in_class_count,sizeof(files_in_class[0]), comp_strings);
 
 	  /* process the files in the directory */
-//      class_dir=opendir(buffer);
-//      while (ent = readdir(class_dir))
       for (file_index=0;file_index<files_in_class_count;file_index++)
       {  ImageMatrix *matrix;
          signatures *ImageSignatures;
-//         if (ent->d_name[0]=='.') continue;      /* ignore the '.' and '..' entries */
-//         if (strstr(ent->d_name,".bmp")==NULL && strstr(ent->d_name,".tif")==NULL && strstr(ent->d_name,".ppm")==NULL) continue;  /* process only image files */
          matrix=new ImageMatrix;
          strcpy(image_file_name,buffer);
          strcat(image_file_name,"/");
-//         strcat(image_file_name,ent->d_name);
          strcat(image_file_name,files_in_class[file_index]);
          if (print_to_screen) printf("Loading image %s\n",image_file_name);
          if (log)  /* write to a log file */
