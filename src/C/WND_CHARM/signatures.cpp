@@ -82,7 +82,6 @@ signatures *signatures::duplicate()
 */
 void signatures::Add(char *name,double value)
 {
-//printf("%s %f\n",name,value);
    if (strchr(name,'\n')) *(strchr(name,'\n'))='\0';  /* prevent end of lines inside the features names */
    if (name) strcpy(data[count].name,name);   
    if (value>INF) value=INF;        /* prevent error */
