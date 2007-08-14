@@ -117,9 +117,6 @@ double *Gabor(double f0, double sig2lam, double gamma, double theta, double fi, 
   tx=new double[nx+1];
   ty=new double[ny+1];
 
-//if mod(nx,2)>0,tx=-((nx-1)/2):(nx-1)/2;else,tx=-(nx/2):(nx/2-1);end;
-//if mod(ny,2)>0,ty=-((ny-1)/2):(ny-1)/2;else,ty=-(ny/2):(ny/2-1);end;
-
   if (nx%2>0)
   {  tx[0]=-((nx-1)/2);
      for (x=1;x<nx;x++)
@@ -159,9 +156,9 @@ double *Gabor(double f0, double sig2lam, double gamma, double theta, double fi, 
     }
 
    /* normalize */
-    for (y=0;y<n;y++)
-      for (x=0;x<n*2;x+=1)
-        Gex[y*n*2+x]=Gex[y*n*2+x]/sum;
+   for (y=0;y<n;y++)
+     for (x=0;x<n*2;x+=1)
+       Gex[y*n*2+x]=Gex[y*n*2+x]/sum;
 
   delete tx;
   delete ty;
@@ -219,11 +216,8 @@ void GaborTextureFilters(ImageMatrix *Im, double *ratios)
    double max;
    int x,y,ii;
    int originalScore=0;
-//   int mm=Im->height;
-//   int nn=Im->width;
 
    /* compute the original score befroe Gabor */
-
    e2LP=GaborEnergy(Im,f0LP,sig2lam,gamma,theta,n);
    max=-INF;
    for (x=0;x<Im->width*Im->height;x++)
@@ -240,15 +234,17 @@ void GaborTextureFilters(ImageMatrix *Im, double *ratios)
       for (x=0;x<Im->width*Im->height;x++)
         if (e2[x]>max) max=e2[x];
       for (x=0;x<Im->width*Im->height;x++)
-        e2[x]=e2[x]/max;
+        if (max>0) e2[x]=e2[x]/max;
+		else e2[x]=0;
 
       bw=Im->duplicate();
       for (y=0;y<bw->height;y++)
         for (x=0;x<bw->width;x++)
           bw->data[x][y].intensity=e2[y*bw->width+x]*(pow(2,Im->bits)-1);
+
       GRAYthr=bw->Otsu();
       for (x=0;x<Im->width*Im->height;x++)
-         if (e2[x]<GRAYthr) e2[x]=0;
+		if (e2[x]<GRAYthr) e2[x]=0;
       for (x=0;x<Im->width;x++)
         for (y=0;y<Im->height;y++)
         {  e2[y*Im->width+x]=Im->data[x][y].intensity*e2[y*Im->width+x];
