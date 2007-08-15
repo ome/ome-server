@@ -168,7 +168,7 @@ sub processFile {
 		# Process Category Groups
 		$self->processCategoryGroups($image,$CGCols,\@cats,
 					     $newCategories,$global_mex,
-					     $fileToParse,$timestr,$noop);
+					     $fileToParse,$timestr,\@ERRORoutput,$noop);
 		# Process Semantic Types
 		$newGlobalSTSE = $self->processSTs($image,$STCols,\@seVals,
 				  $newGlobalSTSE,$global_mex,\@ERRORoutput);
@@ -176,7 +176,7 @@ sub processFile {
 		# Process Datasets
 		my @datasets; # @datasets is at this scope so it can be passed to projects
 		$self->processDatasets(\@datasets,$DatasetCols,\@datasetNames,
-				       $image,$imageIdentifier,\@newDatasets,
+				       $image,\@newDatasets,
 				       $fileToParse,$timestr);
 
 		# Process Projects
@@ -448,7 +448,7 @@ sub processCategoryGroups {
     my $factory = $session->Factory();
 
     my ($image,$CGCols,$cats,$newCategories,$global_mex,$fileToParse,
-    	$timestr,$noop) = @_; 
+    	$timestr,$ERRORoutput,$noop) = @_; 
 
 
     foreach my $index (sort {$a <=> $b} keys %$CGCols) { 
@@ -473,8 +473,14 @@ sub processCategoryGroups {
 			   # record the creation of new category to generate
 		   # HTML/command-line output later
 		}
-		OME::Tasks::CategoryManager->classifyImage($image->{Image}, $category)
-			unless ($noop);
+		
+		if (exists $image->{ Image }) {
+			OME::Tasks::CategoryManager->classifyImage($image->{Image}, $category) unless $noop;
+		} else {
+			push(@$ERRORoutput, "You must specify an image for Category ".$CG->Name().".".$category->Name()." so did not annotate."); 
+			next;
+		}
+
 		# record the new image classification for later
 		$image->{ $CGName } = $category; 
     } 
@@ -482,7 +488,6 @@ sub processCategoryGroups {
 
 
 sub processSTs {
-
     my $self = shift;
     my $session = $self->Session();	
     my $factory = $session->Factory();
@@ -540,7 +545,7 @@ sub processSTs {
 	
 		# There's an Image ST but there's no image to annotate!  
 		if ( $granularity eq 'I' and not exists $image->{ Image }) { 
-			push(@$ERRORoutput, "You must specify an image for $STName because it's an Image SemanticType. Did not annotate."); 
+			push(@$ERRORoutput, "You must specify an image for $STName.$SEName ($SEValue) because it's an image granularity SemanticType so did not annotate."); 
 			next; 
 		} 
     } 
@@ -557,7 +562,7 @@ sub processSTs {
 #						 keys %$data_hash ) )."\n\n\n";
 
 		# Granularity is Image, so do image annotation  
-		if ($granularity eq 'I') {
+		if ($granularity eq 'I' and exists $image->{ Image }) {
 			$data_hash->{image_id} = $image->{ Image }->ID();
 			my $attr = $factory->maybeNewAttribute ($STName, $image->{ Image }, 
 						$global_mex, $data_hash) or 
@@ -566,9 +571,12 @@ sub processSTs {
 						 keys %$data_hash ) );
 	
 			$image->{"ST:".$STName} = $attr; 
-		}
+		} elsif ($granularity eq 'I' and exists $image->{ Image }) {
+		
+			# can't make image annotation without specifying the image
+			
 		# Granularity is Global, so do global  
-		elsif ( $granularity eq 'G' ) { 
+		} elsif ( $granularity eq 'G' ) { 
 			my $attr = $factory->maybeNewAttribute ($STName, undef, $global_mex, $data_hash) or
 				die "could not make new (G) $STName\n\t". 
 					join( "\n\t", map( $_." => ".$data_hash->{$_}, 
@@ -580,12 +588,11 @@ sub processSTs {
 }
 
 sub processDatasets{ 
-
     my $self = shift;
     my $session = $self->Session();	
     my $factory = $session->Factory();
 
-    my ($datasets,$DatasetCols,$datasetNames,$image,$imageIdentifier,$newDatasets,$fileToParse,$timestr) = @_;
+    my ($datasets,$DatasetCols,$datasetNames,$image,$newDatasets,$fileToParse,$timestr) = @_;
 
     foreach my $index (sort {$a <=> $b} keys %$DatasetCols) {
 		# $columnHeadings[$index] is 'Dataset'
@@ -603,7 +610,7 @@ sub processDatasets{
 			push (@$newDatasets, $dataset);
 		}
 				
-		$datasetManager->addToDataset($dataset, $image->{ Image }) if $imageIdentifier;
+		$datasetManager->addToDataset($dataset, $image->{ Image }) if exists $image->{ Image };
 		# record the new image classification for output purposes
 		$image->{'Dataset'} = $dataset;
 		push (@$datasets, $dataset); # pass it to projects
