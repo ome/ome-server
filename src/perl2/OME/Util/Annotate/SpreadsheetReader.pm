@@ -193,7 +193,11 @@ sub processFile {
 	    $global_mex->error_message($errorMsg); 
 	}
 	$global_mex->storeObject();
-	$session->commitTransaction() unless $noop;
+	if ($noop) {
+		$session->rollbackTransaction();
+	} else {
+		$session->commitTransaction();
+	}
 	
 	# package up outputs and return
 	# some one-else will be create some human understandable output
@@ -732,14 +736,25 @@ sub printSpreadsheetAnnotationResultsCL {
 				delete $image->{"Dataset"};
 			}
 			
-			# generic rendering e.g. for Category Group/Cateogrizations
+			# render attributes
+			if (scalar keys %$image) {
+				my $attributesMsg .= "	Attributes:\n";
+				my $haveAttributes = 0;
+				foreach my $key (sort keys %$image) {
+					if( $key =~ m/^ST:(.*)$/ ) {
+						$haveAttributes = 1;
+						$attributesMsg .= "		\\_ '".$1.": id:".$image->{$key}->id()."'\n";
+					}
+				}
+				$output .= $attributesMsg if $haveAttributes;
+			}
+			
+			# render Category Group/Cateogrizations
 			if (scalar keys %$image) {
 				my $classificationMsg .= "	Classifications:\n";
 				my $haveClassifications = 0;
 				foreach my $key (sort keys %$image) {
-					if( $key =~ m/^ST:(.*)$/ ) {
-						$output .= "\t\t".$1.": id:".$image->{$key}->id()."'\n";
-					} else {
+					unless( $key =~ m/^ST:(.*)$/ ) {
 						$haveClassifications = 1;
 						$classificationMsg .= "		\\_ '".$key."' : '".$image->{$key}->Name()."'\n";
 					}
