@@ -39,6 +39,9 @@ package OME::Web::SpreadsheetImporterPrompt;
 use strict;
 use Carp 'cluck';
 use vars qw($VERSION);
+use Log::Agent;
+
+use OME;
 use OME::Util::Annotate::SpreadsheetReader;
 
 use base qw(OME::Web::Authenticated);
@@ -77,31 +80,39 @@ sub getPageBody {
     
     if ($q->param( 'Annotate' )) {
     	my $fileToParse = $q->param( 'fileToParse' );
-	print STDERR "annotating $fileToParse\n";
-    	die "File $fileToParse is invalid\n" unless( $fileToParse );
-         
-	my $tmpFile = $session->getTemporaryFilename('import','xls');
-	print STDERR "temp file $tmpFile\n";
-	open TMP, ">$tmpFile";
-	while (<$fileToParse>) {
-	    print TMP $_;
-	}
-	close TMP;
-	$fileToParse= $tmpFile;
-
-		$output .= $q->p({class => 'ome_error'}, "Filepath $fileToParse is invalid.\n")
-			unless (-f $fileToParse);
-			
-		if (-f $fileToParse) {
-			my $results = OME::Util::Annotate::SpreadsheetReader->processFile( $fileToParse );
-			if (!ref $results) {
-				$output .= "Error annotating: <br><br>";
-				$output .= "<font color='red'>".$results."</font>";
-			} else {
-				$output .= "Finished annotating. ";
-				$output .= $self->printSpreadsheetAnnotationResultsHTML ($results);
+		
+		if (not $fileToParse) {
+			$output .= $q->p({class => 'ome_error'}, "Choose a File -- no file selected !\n")
+		} else  {
+			my $tmpFile = $session->getTemporaryFilename('import','xls');
+			open TMP, ">$tmpFile";
+			while (<$fileToParse>) {
+				print TMP $_;
 			}
-			unlink $fileToParse;
+			close TMP;
+			$fileToParse= $tmpFile;
+	
+			my $noop;
+			if ($q->param( 'noop' )) {
+				$noop = 1;
+			} else {
+				$noop = 0;
+			}
+
+			$output .= $q->p({class => 'ome_error'}, "Filepath $fileToParse is invalid.\n")
+				unless (-f $fileToParse);
+				
+			if (-f $fileToParse) {
+				my $results = OME::Util::Annotate::SpreadsheetReader->processFile( $fileToParse, $noop);
+				if (!ref $results) {
+					$output .= "Error annotating: <br><br>";
+					$output .= "<font color='red'>".$results."</font>";
+				} else {
+					$output .= "Finished annotating. ";
+					$output .= $self->printSpreadsheetAnnotationResultsHTML ($results);
+				}
+				unlink $fileToParse;
+			}
 		}
 	}
     
@@ -207,19 +218,33 @@ sub printSpreadsheetAnnotationResultsHTML {
 				delete $image->{"Dataset"};
 			}
 			
-			# generic rendering e.g. for Category Group/Cateogrizations
+			# render attributes
+			if (scalar keys %$image) {
+				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp  Attributes:<br>';
+				foreach my $key (sort keys %$image) {
+					if( $key =~ m/^ST:(.*)$/ ) {
+						my $STName = $1;
+						my $attribute = $factory->findObject('@'."$STName", {id => $image->{$key}->id()});
+						if (defined $attribute) {
+							$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ <a href="'.OME::Web->getObjDetailURL($attribute).'">'.$STName."</a>".
+								' : '.$image->{$key}->id().'<br>';
+						}
+					}
+				}
+				$output .= "<br>"; # spacing
+			}
+			
+			# render Category Group/Cateogrizations
 			if (scalar keys %$image) {
 				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp  Classifications:<br>';
 				foreach my $key (sort keys %$image) {
-
-				    my $CG = $factory->findObject
-					('@CategoryGroup', { Name =>
-								 $key });
-				    if (defined $CG) {
-					$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ <a href="'.OME::Web->getObjDetailURL($CG).'">'.$key."</a>".
-					    ' : <a
-					href='.OME::Web->getObjDetailURL($image->{$key}).'">'.$image->{$key}->Name().'</a><br>';
-				    }
+					unless( $key =~ m/^ST:(.*)$/ ) {
+						my $CG = $factory->findObject('@CategoryGroup', {Name => $key});
+						if (defined $CG) {
+							$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ <a href="'.OME::Web->getObjDetailURL($CG).'">'.$key."</a>".
+								' : <ahref='.OME::Web->getObjDetailURL($image->{$key}).'">'.$image->{$key}->Name().'</a><br>';
+						}
+					}
 				}
 				$output .= "<br>"; # spacing
 			}
