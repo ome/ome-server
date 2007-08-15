@@ -352,11 +352,11 @@ sub getRegexGroups {
 		my $filename = $file->getFilename();
 		my $parts;
 		while ( ($regex,$parts) = each %regexes ) {
-			logdbg "debug",  "Checking $filename for $regex\n";
+			logdbg "debug",  "Checking $filename for $regex";
 			if( $filename =~ $parts->{RE}) {
 				eval ('$name = "'.$parts->{Base}.'"');
 				die "When grouping files, Name capture failed with error: $@\n" if $@;
-				logdbg "debug",  "\t got name $name\n";
+				logdbg "debug",  "\t got name $name";
 				next unless $name;
 
 				($Z,$C,$T) = (undef,undef,undef);
@@ -364,19 +364,19 @@ sub getRegexGroups {
 					# Grab the Z from the file based on the regular expression
 					eval ('$Z = $'.$parts->{Z});
 					die "When grouping files, Z capture failed with error: $@\n" if $@;
-					logdbg "debug",  "\t got Z $Z\n";
+					logdbg "debug",  "\t got Z $Z";
 				}
 				if ( $parts->{C} ) {
 					# Grab the C from the file based on the regular expression
 					eval ('$C = $'.$parts->{C});
 					die "When grouping files, C capture failed with error: $@\n" if $@;
-					logdbg "debug",  "\t got C $C\n";
+					logdbg "debug",  "\t got C $C";
 				}
 				if ( $parts->{T} ) {
 					# Grab the T from the file based on the regular expression
 					eval ('$T = $'.$parts->{T});
 					die "When grouping files, T capture failed with error: $@\n" if $@;
-					logdbg "debug",  "\t got T $T\n";
+					logdbg "debug",  "\t got T $T";
 				}
 
 				$Z = '' unless defined $Z;
@@ -408,7 +408,7 @@ sub getRegexGroups {
 			$infoHash->{ $name }->{ nZfiles } = scalar (@Zs);
 			$infoHash->{ $name }->{ nCfiles } = scalar (@Cs);
 			$infoHash->{ $name }->{ nTfiles } = scalar (@Ts);
-			logdbg "debug",  "Group name $name Zs: @Zs Cs: @Cs Ts: @Ts\n";
+			logdbg "debug",  "Group name $name Zs: @Zs Cs: @Cs Ts: @Ts";
 
 			($z,$c,$t) = (0,0,0);
 			foreach $Z (@Zs) {
@@ -424,7 +424,7 @@ sub getRegexGroups {
 						};
 						logdbg "debug",  "\tFile ".
 							$pattern->{File}->{$Z.':-:'.$C.':-:'.$T}->getFilename().
-							", pattern $name (Z,C,T)=($Z,$C,$T) at z[$z],c[$c],t[$t]\n";
+							", pattern $name (Z,C,T)=($Z,$C,$T) at z[$z],c[$c],t[$t]";
 						$t++;
 					}
 					$c++;
