@@ -916,11 +916,22 @@ sub check_repository {
 
 	print $LOGFILE "Checking repository\n" and
 	print "Checking OMEIS repository ";
-    my $repository = $factory->
-    findObject('OME::SemanticType::BootstrapRepository',
+	
+	my $repository;
+	if ($ENVIRONMENT->omeis_url()) {
+		print $LOGFILE "ENVIRONMENT->omeis_url(): ".$ENVIRONMENT->omeis_url()."\n";
+		$repository = $factory->findObject('OME::SemanticType::BootstrapRepository',
+            {
+             ImageServerURL => $ENVIRONMENT->omeis_url(),
+             IsLocal        => 0,
+            });
+	} else {
+		print $LOGFILE "ENVIRONMENT->omeis_url(): *** UNDEFINED ***\n";
+		    $repository = $factory->findObject('OME::SemanticType::BootstrapRepository',
             {
              IsLocal        => 0,
             });
+	}
 	print $LOGFILE "Could not find remote repository object\n" and
 		croak "Could not find remote repository object (looking for omeis URL)"
 	unless $repository;
@@ -931,12 +942,6 @@ sub check_repository {
 	unless $repository_url;
 
 	print $LOGFILE "Repository URL: $repository_url\n";
-
-	if ($ENVIRONMENT->omeis_url()) {
-		print $LOGFILE "ENVIRONMENT->omeis_url(): ".$ENVIRONMENT->omeis_url()."\n";
-	} else {
-		print $LOGFILE "ENVIRONMENT->omeis_url(): *** UNDEFINED ***\n";
-	}
 
  	$ENVIRONMENT->omeis_url($repository_url);
  	OME::Install::ApacheConfigTask::omeis_test($ENVIRONMENT->omeis_url(), $LOGFILE );
