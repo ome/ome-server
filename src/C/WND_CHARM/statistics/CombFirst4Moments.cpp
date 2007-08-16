@@ -207,7 +207,7 @@ int CombFirst4Moments(ImageMatrix *Im, double *vec)
 
    /* major diag */
    matr4moments_index=0;
-   for (ii=1-m;ii<=m;ii=ii+round((double)m/10))
+   for (ii=1-m;ii<=m;ii=ii+(int)(round((double)m/10)))
    {  int count=0;
       for (y=0;y<m;y++)
         for (x=0;x<n;x++)
@@ -238,7 +238,7 @@ int CombFirst4Moments(ImageMatrix *Im, double *vec)
 //   matr4moments = [];
 
    matr4moments_index=0;
-   for (ii=1-m;ii<=m;ii=ii+round((double)m/10))
+   for (ii=1-m;ii<=m;ii=ii+(int)(round((double)m/10)))
    {  int count=0;
       for (y=0;y<m;y++)
         for (x=0;x<n;x++)
@@ -263,7 +263,7 @@ int CombFirst4Moments(ImageMatrix *Im, double *vec)
 
    /* vertical comb */
    matr4moments_index=0;
-   for (ii=1-n;ii<=n;ii=ii+round((double)n/10))
+   for (ii=1-n;ii<=n;ii=ii+(int)(round((double)n/10)))
    {  int count=0;
       for (y=0;y<m;y++)
         for (x=0;x<n;x++)
@@ -286,7 +286,7 @@ int CombFirst4Moments(ImageMatrix *Im, double *vec)
 
    /* horizontal comb */
    matr4moments_index=0;
-   for (ii=1-m;ii<=m;ii=ii+round((double)m/10))
+   for (ii=1-m;ii<=m;ii=ii+(int)(round((double)m/10)))
    {  int count=0;
       for (y=0;y<m;y++)
         for (x=0;x<n;x++)
