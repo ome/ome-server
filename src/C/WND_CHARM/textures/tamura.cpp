@@ -159,7 +159,7 @@ double directionality(ImageMatrix *image)
   phi->histogram(Hd,NBINS,0);
   delete phi;
 
-  int max=0;
+  double max=0.0;
   int fmx=0;
   for (a=0;a<NBINS;a++)
     if (Hd[a]>max)
@@ -172,7 +172,6 @@ double directionality(ImageMatrix *image)
     sum+=Hd[a]*pow(a+1-fmx,2);
 
   return(fabs(log(sum/sum_r+0.0000001)));
-//  return phi;
 
 }
 
