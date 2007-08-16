@@ -41,7 +41,7 @@ void haarlick(ImageMatrix *Im, double distance, double *out)
    }
 
    for (angle=0;angle<=135;angle=angle+45)
-   {  features=Extract_Texture_Features(distance, angle, p_gray,Im->height,Im->width, max_value);
+   {  features=Extract_Texture_Features((int)distance, angle, p_gray,Im->height,Im->width, (int)max_value);
       /*  (1) Angular Second Moment */
       sum[0]+=features->ASM;
       if (features->ASM<min[0]) min[0]=features->ASM;
