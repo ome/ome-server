@@ -197,11 +197,13 @@ int TrainingSet::ReadFromFile(char *filename)
     ratio -double- the ratio of the number of test set (e.g., 0.1 means 10% of the data are test data).
 	tiles -unsigned short- indicates the number of tiles to which each image was divided into. This means that
 	                       when splitting to train and test, all tiles of that one image will be either in the
-						   test set or training set.
+		     	       test set or training set.
+    max_train_samples -int- the maximum number of samples to use for training (0 to ignore and use the proportional part of the set)
 */
-void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet, unsigned short tiles)
+void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet, unsigned short tiles, int max_train_samples, int max_test_samples)
 {  long *class_samples;
    int class_index,tile_index;
+   int number_of_test_samples;
    class_samples = new long[count];
    if (tiles<1) tiles=1;    /* make sure the number of tiles is valid */
    TrainSet->class_num=TestSet->class_num=class_num;
@@ -213,17 +215,19 @@ void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet,
           class_samples[class_samples_count++]=sample_index;	  
       class_samples_count/=tiles;
       /* add the samples to the test set */
-      for (sample_index=0;sample_index<class_samples_count*ratio;sample_index++)
+      number_of_test_samples=(int)(class_samples_count*ratio);
+      if (max_test_samples>0 && number_of_test_samples>max_test_samples) number_of_test_samples=max_test_samples;
+      for (sample_index=0;sample_index<number_of_test_samples;sample_index++)
       {  int rand_index;
          rand_index=rand() % class_samples_count;            /* find a random sample  */
          for (tile_index=0;tile_index<tiles;tile_index++)    /* add all the tiles of that image */
            TestSet->AddSample(samples[class_samples[rand_index*tiles+tile_index]]->duplicate());   /* add the random sample */
          /* remove the index */
-//         memmove(&(class_samples[rand_index]),&(class_samples[rand_index+1]),sizeof(long)*(class_samples_count-rand_index));
          memmove(&(class_samples[rand_index*tiles]),&(class_samples[rand_index*tiles+tiles]),sizeof(long)*(tiles*(class_samples_count-rand_index)));
          class_samples_count--;
       }
       /* now add the remaining samples to the Train Set */
+	  if (max_train_samples>0 && class_samples_count>max_train_samples) class_samples_count=max_train_samples;
       for (sample_index=0;sample_index<class_samples_count*tiles;sample_index++)
         TrainSet->AddSample(samples[class_samples[sample_index]]->duplicate());
    }
@@ -352,21 +356,35 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
    FILE *log_file, *sig_file;
    char buffer[256],image_file_name[256];
    char files_in_class[2048][64];
+   char dirs_in_root[200][64];
+   int dirs_count=0;
    int res,samp_class=1;
    if (!(root_dir=opendir(filename))) return(0);
    if (tiles<1) tiles=1;    /* at least one tile */
    while (ent = readdir(root_dir))
-   {  int file_index,files_in_class_count=0;
-      if (strchr(ent->d_name,'.')) continue;         /* ignore the '.' and '..' entries or files     */
+   {  if (strchr(ent->d_name,'.')) continue;         /* ignore the '.' and '..' entries or files     */
       strcpy(class_labels[samp_class],ent->d_name);  /* the label of the class is the directory name */
+      samp_class++;
+   }
+   closedir(root_dir);
+   class_num=samp_class-1;   
+   qsort(&(class_labels[1]),class_num,sizeof(class_labels[1]),comp_strings);
+
+   samp_class=1;
+//   while (ent = readdir(root_dir))
+   while (samp_class<=class_num)
+   {  int file_index,files_in_class_count=0;
+//      if (strchr(ent->d_name,'.')) continue;         /* ignore the '.' and '..' entries or files     */
+//      strcpy(class_labels[samp_class],ent->d_name);  /* the label of the class is the directory name */
       /* constract the path of the class files */
       strcpy(buffer,filename);
       strcat(buffer,"/");
-      strcat(buffer,ent->d_name);
+//      strcat(buffer,ent->d_name);
+      strcat(buffer,class_labels[samp_class]);
       /* get the file names */
       class_dir=opendir(buffer);
       while (ent = readdir(class_dir))
-      {  if (ent->d_name[0]=='.') continue;      /* ignore the '.' and '..' entries */
+      {  if (ent->d_name[0]=='.') continue;          /* ignore the '.' and '..' entries */
          if (strstr(ent->d_name,".bmp")==NULL && strstr(ent->d_name,".tif")==NULL && strstr(ent->d_name,".ppm")==NULL) continue;  /* process only image files */
       	   strcpy(files_in_class[files_in_class_count++],ent->d_name);
       }
@@ -393,18 +411,18 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
          if (strstr(image_file_name,".bmp") || strstr(image_file_name,".BMP"))
            res=matrix->LoadBMP(image_file_name,cmHSV);
 #else
-   if (strstr(image_file_name,".bmp")) continue;    
+         if (strstr(image_file_name,".bmp")) continue;
          if (strstr(image_file_name,".tif") || strstr(image_file_name,".TIF"))
          {  res=matrix->LoadTIFF(image_file_name);
-// if (res && matrix->bits==16) matrix->to8bits();	 
+// if (res && matrix->bits==16) matrix->to8bits();
          }
 #endif
          if (strstr(image_file_name,".ppm") || strstr(image_file_name,".PPM"))
            res=matrix->LoadPPM(image_file_name,cmHSV);
          if (res)  /* add the image only if it was loaded properly */
          {  int tile_index_x,tile_index_y;
-		    if (downsample>0 && downsample<100)
-			  matrix->Downsample(((double)downsample)/100.0,((double)downsample)/100.0);   /* downsample the image */
+            if (downsample>0 && downsample<100)
+	      matrix->Downsample(((double)downsample)/100.0,((double)downsample)/100.0);   /* downsample the image */
             for (tile_index_y=0;tile_index_y<tiles;tile_index_y++)
 	        for (tile_index_x=0;tile_index_x<tiles;tile_index_x++)
 	        {  ImageMatrix *tile_matrix;
@@ -429,26 +447,25 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
                ImageSignatures->sample_class=samp_class;
                if (!multi_processor)
                  AddSample(ImageSignatures);
-	           if (tiles>1) delete tile_matrix;
+               if (tiles>1) delete tile_matrix;
                if (multi_processor)
                {  ImageSignatures->SaveToFile(sig_file);
                   ImageSignatures->FileClose(sig_file);
                   delete ImageSignatures;
                }
-	        }
+            }
          }
-		 else if (print_to_screen) printf("Could not open image '%s' \n",image_file_name);
+         else if (print_to_screen) printf("Could not open image '%s' \n",image_file_name);
          delete matrix;
       }
-//      closedir(class_dir);
       samp_class++;
    }
-   class_num=samp_class-1;
-   closedir(root_dir);
+//   class_num=samp_class-1;
+//   closedir(root_dir);
 
    if (multi_processor)
      AddAllSignatures(filename);
-	 
+
    return(1);
 }
 

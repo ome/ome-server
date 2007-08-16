@@ -82,6 +82,7 @@ signatures *signatures::duplicate()
 */
 void signatures::Add(char *name,double value)
 {
+//printf("%s %f\n",name,value);
    if (strchr(name,'\n')) *(strchr(name,'\n'))='\0';  /* prevent end of lines inside the features names */
    if (name) strcpy(data[count].name,name);   
    if (value>INF) value=INF;        /* prevent error */
@@ -160,7 +161,7 @@ void signatures::compute(ImageMatrix *matrix, int compute_colors)
       Add(buffer,vec[a]);
    }
    delete TempMatrix;
-   
+
    /* Comb4Moments (signatures 128 - 415) */
    char four_moments_names[80][80]={"Minus45_Mean_HistBin00","Minus45_Mean_HistBin01","Minus45_Mean_HistBin02","Minus45_Std_HistBin00","Minus45_Std_HistBin01","Minus45_Std_HistBin02",
            "Minus45_Skew_HistBin00","Minus45_Skew_HistBin01","Minus45_Skew_HistBin02","Minus45_Kurt_HistBin00","Minus45_Kurt_HistBin01","Minus45_Kurt_HistBin02",
@@ -200,7 +201,7 @@ void signatures::compute(ImageMatrix *matrix, int compute_colors)
    {  sprintf(buffer,"Comb4Orient4MomentsHistogram_WaveletFFT %s",four_moments_names[a]);
       Add(buffer,vec[a]);
    }
-    
+
    /* edge statistics (signatures 416 - 443) */
    {  long EdgeArea;
       double MagMean, MagMedian, MagVar, MagHist[8], DirecMean, DirecMedian, DirecVar, DirecHist[8], DirecHomogeneity, DiffDirecHist[4];
@@ -257,13 +258,14 @@ void signatures::compute(ImageMatrix *matrix, int compute_colors)
       Add("FeatureDistVar FeatureDistVar",DistVar);
       Add("FeatureEuler FeatureEuler",Euler);
    }  
+
    /* gabor filters (signatures 478 - 484) */
    matrix->GaborFilters(vec);
    for (a=0;a<7;a++)
    {  sprintf(buffer,"GaborTextures Gabor%02d",a+1);
       Add(buffer,vec[a]);
    }
-
+   
    /* haarlick textures (signatures 485 - 652) */
    char haarlick_names[80][80]={"CoOcMat_AngularSecondMoment","ASM","CoOcMat_Contrast","Contrast","CoOcMat_Correlation","Correlation","CoOcMat_Variance","Variance","CoOcMat_InverseDifferenceMoment","IDM","CoOcMat_SumAverage" ,"SumAvg",
            "CoOcMat_SumVariance","SumVar","CoOcMat_SumEntropy", "SumEntropy","CoOcMat_Entropy" ,"Entropy","CoOcMat_DifferenceEntropy","DiffEntropy","CoOcMat_DifferenceVariance","DiffVar","CoOcMat_FirstMeasureOfCorrelation","MeasCorr1",
@@ -430,8 +432,15 @@ void signatures::compute(ImageMatrix *matrix, int compute_colors)
 
    if (compute_colors) 
      CompGroupD(matrix,"");
-	 
+
+   delete FourierTransform;
+   delete ChebyshevTransform;
+   delete ChebyshevFourierTransform;
+   delete WaveletSelector;
+   delete WaveletFourierSelector;	 
    return;
+   
+   
    /* basic statistics (signatures 1025 - 1049) */
 
    /* basic image statistics */

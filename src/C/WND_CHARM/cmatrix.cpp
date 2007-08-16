@@ -813,7 +813,6 @@ void ImageMatrix::ColorTransform(RGBcolor rgb)
 void ImageMatrix::histogram(double *bins,unsigned short bins_num, int imhist)
 {  int x,y;
    double min=INF,max=-INF;
-
    /* find the minimum and maximum */
    if (imhist==1)
    {  min=0;
@@ -828,7 +827,6 @@ void ImageMatrix::histogram(double *bins,unsigned short bins_num, int imhist)
             min=data[x][y].intensity;
        }
    }
-
    /* initialize the bins */
    for (x=0;x<bins_num;x++)
      bins[x]=0;
@@ -836,10 +834,10 @@ void ImageMatrix::histogram(double *bins,unsigned short bins_num, int imhist)
    /* build the histogram */
    for (y=0;y<height;y++)
      for (x=0;x<width;x++)
-     { if (data[x][y].intensity==max) bins[bins_num-1]+=1;
+       if (data[x][y].intensity==max) bins[bins_num-1]+=1;
        else bins[(int)(((data[x][y].intensity-min)/(max-min))*bins_num)]+=1;
-     }
-
+	
+   return;
 }
 
 /* fft 2 dimensional transform */
@@ -1210,8 +1208,7 @@ double ImageMatrix::Otsu()
       mu[a]=mu[a-1]+(a+1)*hist[a]/(width*height);
    }
    for (a=0;a<256;a++)
-   {  if (omega[a]==0 || 1-omega[a]==0)
-         sigma_b2[a]=0;
+   {  if (omega[a]==0 || 1-omega[a]==0) sigma_b2[a]=0;
       else sigma_b2[a]=pow(mu[255]*omega[a]-mu[a],2)/(omega[a]*(1-omega[a]));
       if (sigma_b2[a]>maxval) maxval=sigma_b2[a];
    }
@@ -1221,7 +1218,7 @@ double ImageMatrix::Otsu()
      if (sigma_b2[a]==maxval)
      {  sum+=a;
         count++;
-     }
+     }	 
    return((pow(2,bits)/256.0)*((sum/count)/max));
 }
 
