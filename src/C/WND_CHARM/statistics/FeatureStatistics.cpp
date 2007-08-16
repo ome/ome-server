@@ -1,6 +1,6 @@
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 /*                                                                               */
-/*    Copyright (C) 2003 Open Microscopy Environment                             */
+/*    Copyright (C) 2007 Open Microscopy Environment                             */
 /*         Massachusetts Institue of Technology,                                 */
 /*         National Institutes of Health,                                        */
 /*         University of Dundee                                                  */
@@ -155,30 +155,6 @@ void GlobalCentroid(ImageMatrix *Im, double *x_centroid, double *y_centroid)
        }
    *x_centroid=x_mass/mass;
    *y_centroid=y_mass/mass;
-
-//   for (y=0;y<Im->height;y++)
-//     for (x=0;x<Im->width;x++)
-//       if (Im->data[x][y].intensity>0) mass++;
-
-   /* find the x coordinate of the centroid */
-//   for (x=0;x<Im->width;x++)
-//   {  for (y=0;y<Im->height;y++)
-//        x_mass=x_mass+Im->data[x][y].intensity;
-//      if (x_mass>=mass/2)
-//      {  *x_centroid=x;
-//         break;
-//      }
-//   }
-
-   /* find the y coordinate of the centroid */
-//   for (y=0;y<Im->height;y++)
-//   {  for (x=0;x<Im->width;x++)
-//        y_mass=y_mass+Im->data[x][y].intensity;
-//      if (y_mass>=mass/2)
-//      {  *y_centroid=y;
-//         break;
-//      }
-//   }
 }
 
 /* find the centroid of a certain feature
@@ -187,7 +163,7 @@ void GlobalCentroid(ImageMatrix *Im, double *x_centroid, double *y_centroid)
 */
 int FeatureCentroid(ImageMatrix *Im, double object_index,double *x_centroid, double *y_centroid)
 {  int x,y;
-   double x_mass=0,y_mass=0,mass=0;
+   int x_mass=0,y_mass=0,mass=0;
 
 
    for (y=0;y<Im->height;y++)
@@ -197,8 +173,8 @@ int FeatureCentroid(ImageMatrix *Im, double object_index,double *x_centroid, dou
           y_mass=y_mass+y+1;      /* the "+1" is only for compatability with matlab code (where index starts from 1) */
           mass++;
        }
-   *x_centroid=x_mass/mass;
-   *y_centroid=y_mass/mass;
+   *x_centroid=(double)x_mass/(double)mass;
+   *y_centroid=(double)y_mass/(double)mass;
    return(mass);
 
 
