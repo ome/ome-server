@@ -435,8 +435,11 @@ sub getObjectSelectionField {
 	if( $factory->countObjects( $to_formal_name ) < $threshold_Popup ) {
 		my @objects_to_select = $factory->findObjects( $to_formal_name );
 		my %object_names = map{ $_->id() => $self->Renderer()->getName($_) } @objects_to_select;
-		my $object_order = [ '', sort( { $object_names{$a} cmp $object_names{$b} } keys( %object_names ) ) ];
-		$object_names{''} = 'All';
+		my $object_order = [ sort( { $object_names{$a} cmp $object_names{$b} } keys( %object_names ) ) ];
+		if (not (exists $options->{ no_select_all } and $options->{ no_select_all }) ) {
+			unshift (@$object_order,'');
+			$object_names{''} = 'All'; # unless $options->{ no_select_all };
+		}
 		$htmlSnippet = 
 			$q->scrolling_list( 
 				-name     => $field_name,
