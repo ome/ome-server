@@ -47,6 +47,26 @@ AC_ARG_WITH(omeis-root,
 # Make OMEIS_ROOT available to all our makefiles
 AC_SUBST(OMEIS_ROOT)
 
+dnl Define our OMEBF_BIN as per configure settings or defaults
+AC_ARG_WITH(omebf-bin,
+			AC_HELP_STRING([--with-omebf-bin],
+						   [path to BioFormats omebf executable [defaults to PREFIX/bin/omebf]]),
+[
+	if test "$withval" != no ; then
+		AC_MSG_NOTICE(using omebf binary path... $withval)
+		OMEIS_ROOT=$withval
+	fi
+], [
+	if test "$prefix" = "NONE"; then
+		prefix="$ac_default_prefix";
+	fi
+		AC_MSG_NOTICE(using OMEIS root... $prefix/bin/omebf)
+		OMEIS_ROOT=$prefix/bin/omebf;
+])
+
+# Make OMEBF_BIN available to all our makefiles
+AC_SUBST(OMEBF_BIN)
+
 dnl Allow variable JPEG qualities
 AC_ARG_WITH(jpeg-quality,
 			AC_HELP_STRING([--with-jpeg-quality],
