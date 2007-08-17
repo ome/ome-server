@@ -78,20 +78,29 @@ sub getPageBody {
 	my $session= $self->Session();
     my $factory = $session->Factory();
     my %tmpl_data;
+    my $error;
 	
 	my @construct_requests = $q->param( 'selected_objects' );
 
-	# If the user selected "All", then @construct_requests will contain one entry
-	# that is blank. In the lines below, we will expand that to all the CategoryGroups
-	if( (scalar(@construct_requests) == 1 ) && ($construct_requests[0] eq '' ) ) {
-		my @categoryGroups = $factory->findObjects( '@CategoryGroup' );
-		@construct_requests = map( $_->id, @categoryGroups );
+#	 If the user selected "All", then @construct_requests will contain one entry
+#	 that is blank. In the lines below, we will expand that to all the CategoryGroups
+# IGG:  Disabled select all option.
+# If this get re-activated, make sure to deal with the case of the user selecting
+# All and one or more CGs
+#	if( (scalar(@construct_requests) == 1 ) && ($construct_requests[0] eq '' ) ) {
+# 		my @categoryGroups = $factory->findObjects( '@CategoryGroup' );
+# 		@construct_requests = map( $_->id, @categoryGroups );
+# 	}
+	# Check error: Template must have a name.
+	if (not $q->param( 'TemplateName' ) and scalar (@construct_requests)) {
+		$error = 'The template must have a name';
+		@construct_requests = ();
 	}
 
 	# Construct the object selection field if nothing has been selected
 	if (scalar(@construct_requests) == 0) {
 		$tmpl_data{ 'checkbox_and_cg' } = $self->SearchUtil()->getObjectSelectionField( 
-			'@CategoryGroup', 'selected_objects', { list_length => 10 } );
+			'@CategoryGroup', 'selected_objects', { list_length => 10, no_select_all => 1 } );
 	}
 		
 	# Create three new template files - annotate, browse, display
@@ -291,6 +300,10 @@ Images left to annotate:<br>
 		$tmpl->output().
 		$q->endform();
 
+	if ($error) {
+		$html .= $q->p({-class => 'ome_error', -align => 'center'}, $error); 
+	}
+	
 	return ('HTML',$html);
 
 }
