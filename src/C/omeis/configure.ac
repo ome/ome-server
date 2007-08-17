@@ -54,14 +54,14 @@ AC_ARG_WITH(omebf-bin,
 [
 	if test "$withval" != no ; then
 		AC_MSG_NOTICE(using omebf binary path... $withval)
-		OMEIS_ROOT=$withval
+		OMEBF_BIN=$withval
 	fi
 ], [
 	if test "$prefix" = "NONE"; then
 		prefix="$ac_default_prefix";
 	fi
 		AC_MSG_NOTICE(using omebf binary path... $prefix/bin/omebf)
-		OMEIS_ROOT=$prefix/bin/omebf;
+		OMEBF_BIN=$prefix/bin/omebf;
 ])
 
 # Make OMEBF_BIN available to all our makefiles
