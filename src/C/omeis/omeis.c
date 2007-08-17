@@ -66,6 +66,14 @@
 #define OMEIS_ROOT "."
 #endif
 
+/*
+* omebf is the bioformats utility, which is a separate binary
+* actually a shell script that launches a java program.
+*/
+#ifndef OMEBF_BIN
+#define OMEBF_BIN "omebf"
+#endif
+
 
 static
 int
@@ -834,7 +842,7 @@ dispatch (char **param)
 		/*
 		  omebf is responsible for reporting the error, including sending the http header.
 		*/
-			sprintf (file_path,"./omebf -test -http-response %s",theParam);
+			sprintf (file_path,"%s -test -http-response %s",OMEBF_BIN,theParam);
 			result = system (file_path);
 		/*
 		  The only error we get to report is failure to launch omebf, which is a return code of 127 in the lower 8 bits
