@@ -12,6 +12,6 @@ updateOMEIS_SOURCES = File.c Pixels.c OMEIS_Error.c auth.c cgi.c digest.c reposi
 				 update.c update.h File.h Pixels.h OMEIS_Error.h auth.h cgi.h digest.h \
 				 repository.h omeis.h sha1DB.h updateOMEIS.c
 patch_sha1DB_SOURCES = patch_sha1DB.c OMEIS_Error.c digest.c sha1DB.c
-AM_CPPFLAGS = -DOMEIS_ROOT=\"$(OMEIS_ROOT)\" -Izoom/include @LIBXML2_CFLAGS@
+AM_CPPFLAGS = -DOMEIS_ROOT=\"$(OMEIS_ROOT)\" -DOMEBF_BIN=\"$(OMEBF_BIN)\" -Izoom/include @LIBXML2_CFLAGS@
 SUBDIRS = zoom t
 LDADD = @LIBXML2_LIBS@ zoom/lib/libzoom.a zoom/lib/libpic.a
