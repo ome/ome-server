@@ -60,7 +60,7 @@ AC_ARG_WITH(omebf-bin,
 	if test "$prefix" = "NONE"; then
 		prefix="$ac_default_prefix";
 	fi
-		AC_MSG_NOTICE(using OMEIS root... $prefix/bin/omebf)
+		AC_MSG_NOTICE(using omebf binary path... $prefix/bin/omebf)
 		OMEIS_ROOT=$prefix/bin/omebf;
 ])
 
