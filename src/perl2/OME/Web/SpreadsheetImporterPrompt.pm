@@ -150,104 +150,114 @@ sub printSpreadsheetAnnotationResultsHTML {
 
 	if (scalar @ERRORoutput) {
 		foreach (@ERRORoutput) {
-			$output .= "<font color='red'>$_</font><br>";
+			$output .= "<font color='red'>$_</font><br>\n";
 		}
 	}	
 	if (scalar @newProjs) {
-		$output .= "New Projects:<br>";
-		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->name().'</a><br>'
+		$output .= "New Projects:<br>\n";
+		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->name()."</a><br>\n"
 			foreach (sort {$a->name() cmp $b->name()} @newProjs);
-		$output .= "<br>"; # spacing
+		$output .= "<br>\n"; # spacing
 	}
 	if (scalar (@newDatasets)) {
-		$output .= "New Datasets:<br>";
-		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->name().'</a><br>'
+		$output .= "New Datasets:<br>\n";
+		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->name()."</a><br>\n"
 			foreach (sort {$a->name() cmp $b->name()} @newDatasets);
-		$output .= "<br>"; # spacing
+		$output .= "<br>\n"; # spacing
 	}
 	if (scalar keys %$newProjDataset) {
-		$output .= "New Dataset/Project Associations: <br>";
+		$output .= "New Dataset/Project Associations:<br>\n";
 		foreach my $pn (sort keys %$newProjDataset) {
 			my $project = $factory->findObject ('OME::Project', { name => $pn });
-			$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($project).'">'.$pn.'</a><br>';
+			$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($project).'">'.$pn."</a><br>\n";
 			foreach my $dn (sort keys %{$newProjDataset->{$pn}}) {
 				my $dataset= $factory->findObject ('OME::Dataset', { name => $dn});
-				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_<a href="'.OME::Web->getObjDetailURL($dataset).'">'.$dn.'</a><br>';
+				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_<a href="'.OME::Web->getObjDetailURL($dataset).'">'.$dn."</a><br>\n";
 			}
 		}
-		$output .= "<br>"; # spacing
+		$output .= "<br>\n"; # spacing
 	}
 	if (scalar @newCGs) {
-		$output .= "New Category Groups:<br>";
-		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->Name().'</a><br>'
+		$output .= "New Category Groups:<br>\n";
+		$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($_).'">'.$_->Name()."</a><br>\n"
 			foreach (sort {$a->Name() cmp $b->Name()} @newCGs);
-		$output .= "<br>"; # spacing
+		$output .= "<br>\n"; # spacing
 	}
 	if (scalar keys %$newCategories) {
-		$output .= "New Categories:<br>";
+		$output .= "New Categories:<br>\n";
 		foreach my $CGName (sort keys %$newCategories) {
 			my $CG = $factory->findObject ('@CategoryGroup', { Name => $CGName });
-			$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($CG).'">'.$CGName.'</a><br>';
+			$output .= '&nbsp&nbsp&nbsp<a href="'.OME::Web->getObjDetailURL($CG).'">'.$CGName."</a><br>\n";
 			foreach my $categoryName (sort keys %{$newCategories->{$CGName}}) {
 				my $category = $factory->findObject ('@Category', { Name => $categoryName, CategoryGroup => $CG });
-				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_<a href="'.OME::Web->getObjDetailURL($category).'">'.$categoryName.'</a><br>';
+				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_<a href="'.OME::Web->getObjDetailURL($category).'">'.$categoryName."</a><br>/n";
 			}
 		}
-		$output .= "<br>"; # spacing
+		$output .= "<br>\n"; # spacing
 	}
 	if (scalar keys %$newGlobalSTSE) {
 		$output .= "New Global Attributes:<br>";
 		foreach my $STName (sort keys %$newGlobalSTSE) {
 			foreach my $SEName (sort keys %{$newGlobalSTSE->{$STName}}) {
-				$output .= "&nbsp&nbsp $STName:$SEName -> `".$newGlobalSTSE->{$STName}->{$SEName}."`<br>";
+				$output .= "&nbsp&nbsp $STName:$SEName -> `".$newGlobalSTSE->{$STName}->{$SEName}."`<br>\n";
 			}
 		}
-		$output .= "<br>"; # spacing
+		$output .= "<br>\n"; # spacing
 	}
-
 	if (scalar keys %$images) {
 		foreach my $imageIdentifier (sort keys %$images) {
 			my $image = $images->{$imageIdentifier};
 			$output .= '<img src="'. OME::Tasks::ImageManager->getThumbURL($image->{"Image"}).'">';
-			$output .= "  (Spreadsheet Identifier: '". $imageIdentifier."' )<br>";
+			$output .= "  (Spreadsheet Identifier: '". $imageIdentifier."' )<br>\n";
 			delete $image->{"Image"};
 
 			# specialised Rendering for Dataset association
 			if (exists $image->{"Dataset"}) {
-				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp  Dataset: <a href="'.OME::Web->getObjDetailURL($image->{"Dataset"}).'">'.$image->{"Dataset"}->name().'</a><br>';
+				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp  Dataset: <a href="'.OME::Web->getObjDetailURL($image->{"Dataset"}).'">'.$image->{"Dataset"}->name()."</a><br>\n";
 				delete $image->{"Dataset"};
 			}
 			
 			# render attributes
 			if (scalar keys %$image) {
-				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp  Attributes:<br>';
+				my $attributesMsg .= "&nbsp&nbsp&nbsp&nbsp&nbsp  Attributes:<br>\n";
+				my $haveAttributes = 0;
 				foreach my $key (sort keys %$image) {
 					if( $key =~ m/^ST:(.*)$/ ) {
+						$haveAttributes = 1;
 						my $STName = $1;
 						my $attribute = $factory->findObject('@'."$STName", {id => $image->{$key}->id()});
 						if (defined $attribute) {
-							$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ <a href="'.OME::Web->getObjDetailURL($attribute).'">'.$STName."</a>".
-								' : '.$image->{$key}->id().'<br>';
+							$attributesMsg .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ <a href="'.OME::Web->getObjDetailURL($attribute).'">'.$STName."</a>".
+								' : '.$image->{$key}->id()."<br>\n";
+						} else {
+							# the attribute can't be found because it was not written to the database (since --noop was selected)
+							$attributesMsg .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ '.$STName." : ".$image->{$key}->id()."<br>\n";
 						}
 					}
 				}
-				$output .= "<br>"; # spacing
+				$output .= $attributesMsg if $haveAttributes;
 			}
 			
 			# render Category Group/Cateogrizations
 			if (scalar keys %$image) {
-				$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp  Classifications:<br>';
+				my $classificationMsg .= "&nbsp&nbsp&nbsp&nbsp&nbsp  Classifications:<br>\n";
+				my $haveClassifications = 0;
 				foreach my $key (sort keys %$image) {
 					unless( $key =~ m/^ST:(.*)$/ ) {
+						$haveClassifications = 1;
 						my $CG = $factory->findObject('@CategoryGroup', {Name => $key});
 						if (defined $CG) {
-							$output .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ <a href="'.OME::Web->getObjDetailURL($CG).'">'.$key."</a>".
-								' : <ahref='.OME::Web->getObjDetailURL($image->{$key}).'">'.$image->{$key}->Name().'</a><br>';
+							$classificationMsg .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ <a href="'.OME::Web->getObjDetailURL($CG).'">'.$key."</a>".
+								' : <ahref='.OME::Web->getObjDetailURL($image->{$key}).'">'.$image->{$key}->Name()."</a><br>\n";
+						} else {
+							# the classification can't be found because it was not written to the database (since --noop was selected)
+							$classificationMsg .= '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\\_ '.$key." : ".$image->{$key}->Name()."<br>\n";
 						}
 					}
 				}
-				$output .= "<br>"; # spacing
+				$output .= $classificationMsg if $haveClassifications; 
 			}
+			$output .= "<br>\n"; # spacing
 		}
 	}
 	return $output;
