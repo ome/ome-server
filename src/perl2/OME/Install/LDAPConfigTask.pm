@@ -247,7 +247,7 @@ sub execute {
 			print "During this setup, the URIs will be tested for functionality as you enter them.\n";
 			print "Enter a username and password that will authenticate with your LDAP server(s)\n";
 			$username = confirm_default("LDAP username to test: ", $USERNAME);
-			($passwd,undef) = get_password ('Password: ');
+			($passwd,undef) = get_password ('Password: ',1);
 			my @URIs;
 			my $num=0;
 			while (1) {

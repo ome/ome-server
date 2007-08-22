@@ -120,7 +120,7 @@ sub addUser {
 			if ($ldap_conf->{use}) {
 				print "LDAP authentication is enabled.\n";
 				my $exper_hash = {};
-				my ($ldap_password,undef) = get_password   ("LDAP Password?",0,1);
+				my ($ldap_password,undef) = get_password   ("LDAP Password?",1);
 				if (OME::SessionManager->authenticate_LDAP ($ldap_conf,$username,$ldap_password,$exper_hash)) {
 					print "LDAP authentication successful\n";
 					($firstname,$lastname,$email,$directory) = (
