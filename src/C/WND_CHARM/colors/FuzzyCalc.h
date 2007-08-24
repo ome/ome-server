@@ -33,7 +33,6 @@
 //---------------------------------------------------------------------------
 
 
-#define map
 #ifndef WIN32
 typedef enum {clMin=-0x7fffffff-1, clMax=0x7fffffff} TColor;
 #else
@@ -75,7 +74,7 @@ typedef enum {clMin=-0x7fffffff-1, clMax=0x7fffffff} TColor;
 #define GREY_MAX 0
 #define GREY_END 40
 
-#define ALMOST_GREY_START 0
+#define ALMOST_GREY_START 10
 #define ALMOST_GREY_MAX   30
 #define ALMOST_GREY_END   70
 
@@ -146,7 +145,7 @@ typedef enum {clMin=-0x7fffffff-1, clMax=0x7fffffff} TColor;
 #define COLOR_DARK_FUCIA   18
 #define COLOR_LIGHT_FUCIA  19
 
-#define COLORS_NUM 20
+#define COLORS_NUM 19
 
 
 typedef struct COLOR_TYPE

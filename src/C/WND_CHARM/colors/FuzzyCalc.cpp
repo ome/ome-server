@@ -74,22 +74,22 @@ red         grey         tend_light       light_grey\n\
 red         grey         light            white\n\
 \n\
 red         almost_grey    dark             black\n\
-red         almost_grey    almost_dark      dark_brown\n\
-red         almost_grey    tend_dark        dark_brown\n\
-red         almost_grey    tend_light       pink\n\
+red         almost_grey    almost_dark      dark_grey\n\
+red         almost_grey    tend_dark        dark_grey\n\
+red         almost_grey    tend_light       light_fucia\n\
 red         almost_grey    light            pink\n\
 \n\
 red         tend_grey      dark             black\n\
 red         tend_grey      almost_dark      dark_brown\n\
-red         tend_grey      tend_dark        dark_brown\n\
+red         tend_grey      tend_dark        dark_fucia\n\
 red         tend_grey      tend_light       pink\n\
 red         tend_grey      light            pink\n\
 \n\
 red         medium_grey    dark             black\n\
 red         medium_grey    almost_dark      dark_brown\n\
-red         medium_grey    tend_dark        dark_brown\n\
-red         medium_grey    tend_light       light_brown\n\
-red         medium_grey    light            light_orange\n\
+red         medium_grey    tend_dark        light_brown\n\
+red         medium_grey    tend_light       light_fucia\n\
+red         medium_grey    light            pink\n\
 \n\
 red         tend_clear   dark             black\n\
 red         tend_clear   almost_dark      dark_brown\n\
@@ -98,8 +98,8 @@ red         tend_clear   tend_light       red\n\
 red         tend_clear   light            red\n\
 \n\
 red         clear        dark             black\n\
-red         clear        almost_dark      dark_brown\n\
-red         clear        tend_dark        dark_brown\n\
+red         clear        almost_dark      black\n\
+red         clear        tend_dark        red\n\
 red         clear        tend_light       red\n\
 red         clear        light            red\n\
 \n\
@@ -112,16 +112,16 @@ dark_orange   grey        tend_light      light_grey\n\
 dark_orange   grey        light           white\n\
 \n\
 dark_orange   almost_grey   dark            black\n\
-dark_orange   almost_grey   almost_dark     dark_brown\n\
-dark_orange   almost_grey   tend_dark       dark_brown\n\
-dark_orange   almost_grey   tend_light      light_brown\n\
-dark_orange   almost_grey   light           pink\n\
+dark_orange   almost_grey   almost_dark     dark_grey\n\
+dark_orange   almost_grey   tend_dark       dark_grey\n\
+dark_orange   almost_grey   tend_light      light_grey\n\
+dark_orange   almost_grey   light           white\n\
 \n\
 dark_orange   tend_grey   dark            black\n\
 dark_orange   tend_grey   almost_dark     dark_brown\n\
-dark_orange   tend_grey   tend_dark       dark_brown\n\
+dark_orange   tend_grey   tend_dark       dark_grey\n\
 dark_orange   tend_grey   tend_light      light_brown\n\
-dark_orange   tend_grey   light           light_orange\n\
+dark_orange   tend_grey   light           pink\n\
 \n\
 dark_orange   medium_grey   dark            black\n\
 dark_orange   medium_grey   almost_dark     dark_brown\n\
@@ -138,81 +138,81 @@ dark_orange   tend_clear  light           dark_orange\n\
 dark_orange   clear       dark           black\n\
 dark_orange   clear       almost_dark    dark_brown\n\
 dark_orange   clear       tend_dark      dark_brown\n\
-dark_orange   clear       tend_light     dark_brown\n\
+dark_orange   clear       tend_light     light_brown\n\
 dark_orange   clear       light          dark_orange\n\
 \n\
 // *** light_orange ***\n\
 \n\
 light_orange   grey       dark           black\n\
-light_orange   grey       almost_dark    black\n\
+light_orange   grey       almost_dark    dark_grey\n\
 light_orange   grey       tend_dark      dark_grey\n\
 light_orange   grey       tend_light     light_grey\n\
 light_orange   grey       light          white\n\
 \n\
 light_orange   almost_grey    dark           black\n\
-light_orange   almost_grey    almost_dark    black\n\
+light_orange   almost_grey    almost_dark    dark_grey\n\
 light_orange   almost_grey    tend_dark      dark_grey\n\
 light_orange   almost_grey    tend_light     light_grey\n\
-light_orange   almost_grey    light          yellow\n\
+light_orange   almost_grey    light          white\n\
 \n\
 light_orange   tend_grey    dark           black\n\
-light_orange   tend_grey    almost_dark    black\n\
-light_orange   tend_grey    tend_dark      olive\n\
-light_orange   tend_grey    tend_light     light_brown\n\
+light_orange   tend_grey    almost_dark    dark_grey\n\
+light_orange   tend_grey    tend_dark      dark_grey\n\
+light_orange   tend_grey    tend_light     light_grey\n\
 light_orange   tend_grey    light          light_orange\n\
 \n\
 light_orange   medium_grey   dark         black\n\
 light_orange   medium_grey   almost_dark  dark_brown\n\
-light_orange   medium_grey   tend_dark    dark_brown\n\
+light_orange   medium_grey   tend_dark    light_brown\n\
 light_orange   medium_grey   tend_light   light_brown\n\
 light_orange   medium_grey   light        light_orange\n\
 \n\
 light_orange   tend_clear  dark         black\n\
 light_orange   tend_clear  almost_dark  dark_brown\n\
-light_orange   tend_clear  tend_dark    dark_brown\n\
+light_orange   tend_clear  tend_dark    light_brown\n\
 light_orange   tend_clear  tend_light   light_brown\n\
 light_orange   tend_clear  light        light_orange\n\
 \n\
 light_orange   clear       dark         black\n\
-light_orange   clear       almost_dark  black\n\
-light_orange   clear       tend_dark    dark_brown\n\
+light_orange   clear       almost_dark  dark_brown\n\
+light_orange   clear       tend_dark    light_brown\n\
 light_orange   clear       tend_light   light_brown\n\
 light_orange   clear       light        light_orange\n\
 \n\
 // *** yellow ***\n\
 \n\
 yellow         grey        dark         black\n\
-yellow         grey        almost_dark  black\n\
+yellow         grey        almost_dark  dark_grey\n\
 yellow         grey        tend_dark    dark_grey\n\
 yellow         grey        tend_light   light_grey\n\
 yellow         grey        light        white\n\
 \n\
 yellow         almost_grey    dark         black\n\
-yellow         almost_grey    almost_dark  dark_brown\n\
+yellow         almost_grey    almost_dark  dark_grey\n\
 yellow         almost_grey    tend_dark    dark_grey\n\
 yellow         almost_grey    tend_light   light_grey\n\
-yellow         almost_grey    light        yellow\n\
+yellow         almost_grey    light        white\n\
 \n\
 yellow         tend_grey    dark         black\n\
-yellow         tend_grey    almost_dark  dark_brown\n\
+yellow         tend_grey    almost_dark  dark_grey\n\
 yellow         tend_grey    tend_dark    olive\n\
 yellow         tend_grey    tend_light   olive\n\
 yellow         tend_grey    light        yellow\n\
 \n\
 yellow         medium_grey  dark          black\n\
-yellow         medium_grey  almost_dark   dark_brown\n\
+yellow         medium_grey  almost_dark   olive\n\
 yellow         medium_grey  tend_dark     olive\n\
 yellow         medium_grey  tend_light    olive\n\
 yellow         medium_grey  light         yellow\n\
 \n\
 yellow         tend_clear  dark          black\n\
-yellow         tend_clear  almost_dark   dark_brown\n\
+yellow         tend_clear  almost_dark   olive\n\
 yellow         tend_clear  tend_dark     olive\n\
 yellow         tend_clear  tend_light    olive\n\
 yellow         tend_clear  light         yellow\n\
 \n\
 yellow         clear        dark          black\n\
-yellow         clear        almost_dark   dark_brown\n\
+yellow         clear        almost_dark   olive\n\
 yellow         clear        tend_dark     olive\n\
 yellow         clear        tend_light    olive\n\
 yellow         clear        light         yellow\n\
@@ -220,20 +220,20 @@ yellow         clear        light         yellow\n\
 // *** light_green ***\n\
 \n\
 light_green    grey        dark         black\n\
-light_green    grey        almost_dark  black\n\
+light_green    grey        almost_dark  dark_grey\n\
 light_green    grey        tend_dark    dark_grey\n\
 light_green    grey        tend_light   light_grey\n\
 light_green    grey        light        white\n\
 \n\
 light_green    almost_grey     dark         black\n\
-light_green    almost_grey     almost_dark  black\n\
-light_green    almost_grey     tend_dark    olive\n\
-light_green    almost_grey     tend_light   olive\n\
-light_green    almost_grey     light        light_green\n\
+light_green    almost_grey     almost_dark  dark_grey\n\
+light_green    almost_grey     tend_dark    dark_grey\n\
+light_green    almost_grey     tend_light   light_grey\n\
+light_green    almost_grey     light        white\n\
 \n\
 light_green    tend_grey     dark         black\n\
-light_green    tend_grey     almost_dark  dark_green\n\
-light_green    tend_grey     tend_dark    dark_green\n\
+light_green    tend_grey     almost_dark  olive\n\
+light_green    tend_grey     tend_dark    olive\n\
 light_green    tend_grey     tend_light   light_green\n\
 light_green    tend_grey     light        light_green\n\
 \n\
@@ -258,13 +258,13 @@ light_green    clear        light          light_green\n\
 // *** dark_green ***\n\
 \n\
 dark_green    grey         dark          black\n\
-dark_green    grey         almost_dark   black\n\
+dark_green    grey         almost_dark   dark_grey\n\
 dark_green    grey         tend_dark     dark_grey\n\
 dark_green    grey         tend_light    light_grey\n\
 dark_green    grey         light         white\n\
 \n\
 dark_green    almost_grey         dark          black\n\
-dark_green    almost_grey         almost_dark   dark_green\n\
+dark_green    almost_grey         almost_dark   dark_grey\n\
 dark_green    almost_grey         tend_dark     dark_grey\n\
 dark_green    almost_grey         tend_light    light_green\n\
 dark_green    almost_grey         light         light_green\n\
@@ -296,7 +296,7 @@ dark_green    clear         light         light_green\n\
 // *** aqua ***\n\
 \n\
 aqua           grey          dark          black\n\
-aqua           grey          almost_dark   black\n\
+aqua           grey          almost_dark   dark_grey\n\
 aqua           grey          tend_dark     dark_grey\n\
 aqua           grey          tend_light    light_grey\n\
 aqua           grey          light         white\n\
@@ -304,24 +304,24 @@ aqua           grey          light         white\n\
 aqua           almost_grey     dark          black\n\
 aqua           almost_grey     almost_dark   dark_grey\n\
 aqua           almost_grey     tend_dark     dark_grey\n\
-aqua           almost_grey     tend_light    light_grey\n\
-aqua           almost_grey     light         light_grey\n\
+aqua           almost_grey     tend_light    teal\n\
+aqua           almost_grey     light         aqua\n\
 \n\
 aqua           tend_grey     dark          black\n\
-aqua           tend_grey     almost_dark   dark_grey\n\
+aqua           tend_grey     almost_dark   teal\n\
 aqua           tend_grey     tend_dark     blue\n\
 aqua           tend_grey     tend_light    blue\n\
-aqua           tend_grey     light         blue\n\
+aqua           tend_grey     light         aqua\n\
 \n\
 aqua           medium_grey    dark          black\n\
-aqua           medium_grey    almost_dark   blue\n\
+aqua           medium_grey    almost_dark   teal\n\
 aqua           medium_grey    tend_dark     blue\n\
 aqua           medium_grey    tend_light    aqua\n\
 aqua           medium_grey    light         aqua\n\
 \n\
 aqua           tend_clear    dark         black\n\
 aqua           tend_clear    almost_dark  teal\n\
-aqua           tend_clear    tend_dark    teal\n\
+aqua           tend_clear    tend_dark    blue\n\
 aqua           tend_clear    tend_light   aqua\n\
 aqua           tend_clear    light        aqua\n\
 \n\
@@ -334,22 +334,22 @@ aqua           clear          light         aqua\n\
 // *** blue ***\n\
 \n\
 blue           grey           dark         black\n\
-blue           grey           almost_dark  black\n\
+blue           grey           almost_dark  dark_grey\n\
 blue           grey           tend_dark    dark_grey\n\
 blue           grey           tend_light   light_grey\n\
 blue           grey           light        white\n\
 \n\
 \n\
 blue           almost_grey    dark         black\n\
-blue           almost_grey    almost_dark  blue\n\
-blue           almost_grey    tend_dark    dark_fucia\n\
-blue           almost_grey    tend_light   light_fucia\n\
-blue           almost_grey    light        light_fucia\n\
+blue           almost_grey    almost_dark  dark_grey\n\
+blue           almost_grey    tend_dark    light_gray\n\
+blue           almost_grey    tend_light   aqua\n\
+blue           almost_grey    light        aqua\n\
 \n\
 blue           tend_grey    dark         black\n\
-blue           tend_grey    almost_dark  blue\n\
-blue           tend_grey    tend_dark    blue\n\
-blue           tend_grey    tend_light   blue\n\
+blue           tend_grey    almost_dark  dark_fucia\n\
+blue           tend_grey    tend_dark    ligh_fucia\n\
+blue           tend_grey    tend_light   light_fucia\n\
 blue           tend_grey    light        aqua\n\
 \n\
 blue           medium_grey     dark         black\n\
@@ -373,19 +373,19 @@ blue           clear          light        blue\n\
 // *** dark_fucia ***\n\
 \n\
 dark_fucia    grey          dark        black\n\
-dark_fucia    grey          almost_dark black\n\
+dark_fucia    grey          almost_dark dark_grey\n\
 dark_fucia    grey          tend_dark   dark_grey\n\
 dark_fucia    grey          tend_light  light_grey\n\
 dark_fucia    grey          light       white\n\
 \n\
 dark_fucia    almost_grey   dark        black\n\
-dark_fucia    almost_grey   almost_dark dark_brown\n\
-dark_fucia    almost_grey   tend_dark   dark_grey\n\
-dark_fucia    almost_grey   tend_light  light_grey\n\
+dark_fucia    almost_grey   almost_dark dark_grey\n\
+dark_fucia    almost_grey   tend_dark   dark_fucia\n\
+dark_fucia    almost_grey   tend_light  light_fucia\n\
 dark_fucia    almost_grey   light       light_fucia\n\
 \n\
 dark_fucia    tend_grey   dark        black\n\
-dark_fucia    tend_grey   almost_dark dark_brown\n\
+dark_fucia    tend_grey   almost_dark dark_fucia\n\
 dark_fucia    tend_grey   tend_dark   dark_fucia\n\
 dark_fucia    tend_grey   tend_light  light_fucia\n\
 dark_fucia    tend_grey   light       light_fucia\n\
@@ -403,7 +403,7 @@ dark_fucia    tend_clear    tend_light   light_fucia\n\
 dark_fucia    tend_clear    light        light_fucia\n\
 \n\
 dark_fucia    clear          dark         black\n\
-dark_fucia    clear          almost_dark  black\n\
+dark_fucia    clear          almost_dark  dark_brown\n\
 dark_fucia    clear          tend_dark    dark_fucia\n\
 dark_fucia    clear          tend_light   dark_fucia\n\
 dark_fucia    clear          light        light_fucia\n\
@@ -411,25 +411,25 @@ dark_fucia    clear          light        light_fucia\n\
 // *** light fucia ***\n\
 \n\
 light_fucia    grey          dark          black\n\
-light_fucia    grey          almost_dark   black\n\
+light_fucia    grey          almost_dark   dark_grey\n\
 light_fucia    grey          tend_dark     dark_grey\n\
 light_fucia    grey          tend_light    light_grey\n\
 light_fucia    grey          light         white\n\
 \n\
 light_fucia    almost_grey   dark          black\n\
-light_fucia    almost_grey   almost_dark   dark_brown\n\
-light_fucia    almost_grey   tend_dark     dark_grey\n\
+light_fucia    almost_grey   almost_dark   dark_grey\n\
+light_fucia    almost_grey   tend_dark     light_grey\n\
 light_fucia    almost_grey   tend_light    light_fucia\n\
 light_fucia    almost_grey   light         light_fucia\n\
 \n\
 light_fucia    tend_grey   dark          black\n\
-light_fucia    tend_grey   almost_dark   dark_brown\n\
+light_fucia    tend_grey   almost_dark   dark_fucia\n\
 light_fucia    tend_grey   tend_dark     dark_fucia\n\
 light_fucia    tend_grey   tend_light    light_fucia\n\
 light_fucia    tend_grey   light         light_fucia\n\
 \n\
 light_fucia    medium_grey    dark          black\n\
-light_fucia    medium_grey    almost_dark   dark_brown\n\
+light_fucia    medium_grey    almost_dark   dark_fucia\n\
 light_fucia    medium_grey    tend_dark     dark_fucia\n\
 light_fucia    medium_grey    tend_light    light_fucia\n\
 light_fucia    medium_grey    light         light_fucia\n\
@@ -437,7 +437,7 @@ light_fucia    medium_grey    light         light_fucia\n\
 light_fucia    tend_clear   dark         black\n\
 light_fucia    tend_clear   almost_dark  dark_brown\n\
 light_fucia    tend_clear   tend_dark    dark_fucia\n\
-light_fucia    tend_clear   tend_light   dark_fucia\n\
+light_fucia    tend_clear   tend_light   light_fucia\n\
 light_fucia    tend_clear   light        light_fucia\n\
 \n\
 light_fucia    clear         dark           black\n\
@@ -535,9 +535,9 @@ void SetColors()
   strcpy(colors[COLOR_BLUE].name,"blue");
   colors[COLOR_BLUE].color=(TColor)0x00FF0000;
   strcpy(colors[COLOR_DARK_FUCIA].name,"dark_fucia");
-  colors[COLOR_DARK_FUCIA].color=(TColor)0x00FF00FF;
+  colors[COLOR_DARK_FUCIA].color=(TColor)0x00800080;
   strcpy(colors[COLOR_LIGHT_FUCIA].name,"light_fucia");
-  colors[COLOR_LIGHT_FUCIA].color=(TColor)0x00800080;
+  colors[COLOR_LIGHT_FUCIA].color=(TColor)0x00FF00FF;
 }
 
 char *getline(char *buffer)
