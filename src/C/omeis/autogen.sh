@@ -47,4 +47,4 @@ autoheader || exit;
 automake --add-missing --copy;
 autoconf || exit;
 automake || exit;
-./configure $@
+./configure "$@"
