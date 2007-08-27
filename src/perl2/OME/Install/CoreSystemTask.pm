@@ -77,7 +77,7 @@ our @core_dirs = (
 		name => "base",
 		path => "/OME",
 		description => "Base OME directory",
-		children => ["xml", "bin", "perl2", "cgi", "crontab", "matlab", "Inline", "lib"],
+		children => ["xml", "bin", "perl2", "cgi", "crontab", "matlab", "Inline", "lib", "java"],
 		owner => \$OME_USER,
 		group => \$OME_GROUP,
 		mode => 02755, # Set the "Set-GID" bit on the dir
@@ -508,8 +508,7 @@ CROAK
 				owner => $OME_USER,
 				group => $OME_GROUP,
 			}, "$$OME_BASE_DIR/$directory");
-    }
-    
+    }    
 
     #********
     #******** Save the configuration so far
@@ -539,6 +538,40 @@ CROAK
     my $retval = 0;
 
 	##############
+	# BioFormats
+	##############
+	print "Installing BioFormats\n";
+	my $bioformats_jar = "$$OME_BASE_DIR/java/loci_tools.jar";
+	print "  \\_ Checking for $bioformats_jar ";
+	if (-e $bioformats_jar) {
+        print BOLD, "[FOUND]", RESET, ".\n";
+	} else {
+        print BOLD, "[NOT FOUND]", RESET, ".\n";
+        my $bioformats_URL = 'http://www.loci.wisc.edu/software/loci_tools.jar';
+		print "  \\_ Downloading  $bioformats_URL ";
+		my $resp;
+		$iwd = getcwd;
+	    chdir ($INSTALL_HOME) or croak "Unable to chdir into $INSTALL_HOME. $!";
+	    # Don't die here no matter what
+		eval {
+			$resp = download_package ({repository_file => $bioformats_URL},$LOGFILE);
+        };
+		chdir ($iwd) or croak "Unable to chdir back to \"$iwd\". $!";
+        if ($resp) {
+        	# Copy the jar
+        	copy("$INSTALL_HOME/loci_tools.jar", $bioformats_jar) or croak "Couldn't copy file $INSTALL_HOME/loci_tools.jar: $!";
+        	# Set permissions on the jar
+			fix_ownership( {
+					owner => $OME_USER,
+					group => $OME_GROUP,
+				}, $bioformats_jar);
+        	print BOLD, "[SUCCESS]", RESET, ".\n";
+        } else {
+			print BOLD, "[FAILURE]\n BioFormats will not be used!\n", RESET, ".\n";
+        }
+	}
+
+	##############
 	# OMEIS
 	##############
 	print "Installing OMEIS\n";
@@ -546,7 +579,9 @@ CROAK
     # Configure
     unless ($environment->get_flag("NO_BUILD")) {
         print "  \\_ Configuring ";
-        $retval = configure_module ("src/C/omeis", $LOGFILE, {options => "--prefix=$$OME_BASE_DIR --with-omeis-root=$$OMEIS_BASE_DIR"});
+        $retval = configure_module ("src/C/omeis", $LOGFILE, {options => 
+        	"--prefix=$$OME_BASE_DIR --with-omeis-root=$$OMEIS_BASE_DIR --with-omebf-bin='java\\ -mx256m\\ -cp\\ $bioformats_jar\\ loci.formats.ome.OmeisImporter'"
+        });
          
         print BOLD, "[FAILURE]", RESET, ".\n"
             and croak "Unable to configure module, see $LOGFILE_NAME for details."
