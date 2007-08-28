@@ -63,6 +63,7 @@ my $file;
 	eval {
 		$result = OME::Image::Server->isBioFormats ( \@inlist );
 	};
+	logdbg "debug", ref ($self)."->getGroups: IsBioFormats error: $@" if $@;
 	return [] if $@;
 	
 	logdbg "debug", ref ($self)."->getGroups: IsBioFormats result: $result";
