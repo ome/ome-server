@@ -867,7 +867,7 @@ dispatch (char **param)
 		/*
 		  omebf is responsible for reporting the error, including sending the http header.
 		*/
-			sprintf (file_path,"./omebf -http-response %s",theParam);
+			sprintf (file_path,"%s -http-response %s",OMEBF_BIN,theParam);
 			result = system (file_path);
 		/*
 		  The only error we get to report is failure to launch omebf, which is a return code of 127 in the lower 8 bits
