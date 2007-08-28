@@ -10,6 +10,8 @@ while ( ($key, $value) = each %ENV)
 {
         print "$key = $value\n";
 }
+print "\nPerl \@INC:\n";
+print "$_\n" foreach (@INC);
 
 
 1;
