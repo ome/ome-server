@@ -409,4 +409,16 @@ sub ldap_conf {
     return;
 }
 
+sub java_path {
+    my ($self, $java_path) = @_;
+
+    if ($java_path) {
+	$self->{java_path} = $java_path;
+    } else {
+	return $self->{java_path} unless not exists $self->{java_path};
+    }
+
+    return;
+}
+
 1;

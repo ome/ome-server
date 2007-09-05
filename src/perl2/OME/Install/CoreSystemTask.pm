@@ -540,7 +540,56 @@ CROAK
 	##############
 	# BioFormats
 	##############
+	$blurb = <<BioFormats_BLURB;
+OME can optionally be configured to work with BioFormats which is an external Java library that can read 50+ common microscopy file formats. BioFormats requires Sun Java, but if you don't need BioFormats you can continue the install without Sun Java.
+BioFormats_BLURB
+	print wrap("", "", $blurb);
+	print "\n";
+		
 	print "Installing BioFormats\n";
+	
+	my $java_path;
+	$java_path = $environment->java_path()
+		if ( $environment->java_path() );
+	$java_path = which('java')
+		unless ($java_path);
+	$java_path = 'java'
+		unless ($java_path);
+		
+	$java_path = confirm_path ("Path to Sun java", $java_path )
+			unless ($environment->get_flag("UPDATE"));
+	$environment->java_path($java_path);
+    $environment->store_to();
+    
+	print "  \\_ Checking for Sun Java ";
+	my $outputs = `$java_path -version 2>&1`;
+	print $LOGFILE $outputs;
+	
+	if ($? != 0) {
+		my $error = <<ERROR_nojava;
+**** Warning: It appears that you don't have Java installed. 
+ERROR_nojava
+ 		print wrap("", "", $error);
+		y_or_n("Are you ready to continue ?") or die;
+	
+	} else {
+		my $GNU_java=0;
+		my $SUN_java=0;
+		$GNU_java = 1 if $outputs =~ /\s*GNU\s*/;
+		$SUN_java = 1 if $outputs =~ /\s*HotSpot\s*/;
+	
+		if ($GNU_java) {
+			print BOLD, "[NOT FOUND]", RESET, ".\n";
+			my $error = <<ERROR_GNU_java;
+**** Warning: It appears that you have GNU Java (GNU libgcj) installed rather than Sun Java.
+ERROR_GNU_java
+			print wrap("", "", $error);
+			y_or_n("Are you ready to continue ?") or die;
+		} else {
+			print BOLD, "[FOUND]", RESET, ".\n";
+		}
+	}
+	
 	my $bioformats_jar = "$$OME_BASE_DIR/java/loci_tools.jar";
 	print "  \\_ Checking for $bioformats_jar ";
 	if (-e $bioformats_jar) {
@@ -580,7 +629,7 @@ CROAK
     unless ($environment->get_flag("NO_BUILD")) {
         print "  \\_ Configuring ";
         $retval = configure_module ("src/C/omeis", $LOGFILE, {options => 
-        	"--prefix=$$OME_BASE_DIR --with-omeis-root=$$OMEIS_BASE_DIR --with-omebf-bin='java\\ -mx256m\\ -cp\\ $bioformats_jar\\ loci.formats.ome.OmeisImporter'"
+        	"--prefix=$$OME_BASE_DIR --with-omeis-root=$$OMEIS_BASE_DIR --with-omebf-bin='$java_path\\ -Djava.awt.headless=true\\ -mx256m\\ -cp\\ $bioformats_jar\\ loci.formats.ome.OmeisImporter'"
         });
          
         print BOLD, "[FAILURE]", RESET, ".\n"
