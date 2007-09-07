@@ -149,7 +149,10 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element ref = "Bin:BinData" maxOccurs = "unbounded"/>
+				<xs:choice maxOccurs="unbounded">
+					<xs:element ref="Bin:BinData"/>
+					<xs:element ref="TiffData"/>
+				</xs:choice>
 			</xs:sequence>
 			<xs:attribute name = "ID" use = "required" type = "PixelsID"/>
 			<xs:attribute name = "DimensionOrder" use = "required">
@@ -205,6 +208,56 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 			<xs:attribute name = "SizeT" use = "required" type = "xs:positiveInteger">
 				<xs:annotation>
 					<xs:documentation>Dimensional size of pixel data array</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="TiffData">
+		<xs:annotation>
+			<xs:documentation>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:attribute name="IFD" type="xs:integer" default="0">
+				<xs:annotation>
+					<xs:documentation>
+						Gives the IFD(s) for which this element is applicable.
+						Indexed from 0. Default is 0 (the first IFD).
+					</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="FirstZ" type="xs:integer" default="0">
+				<xs:annotation>
+					<xs:documentation>
+						Gives the Z position of the image plane at the specified IFD.
+						Indexed from 0. Default is 0 (the first Z position).
+					</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="FirstT" type="xs:integer" default="0">
+				<xs:annotation>
+					<xs:documentation>
+						Gives the T position of the image plane at the specified IFD.
+						Indexed from 0. Default is 0 (the first T position).
+					</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="FirstC" type="xs:integer" default="0">
+				<xs:annotation>
+					<xs:documentation>
+						Gives the C position of the image plane at the specified IFD.
+						Indexed from 0. Default is 0 (the first C position).
+					</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="NumPlanes" type="xs:integer">
+				<xs:annotation>
+					<xs:documentation>
+						Gives the number of IFDs affected. Dimension order of IFDs is given
+						by the enclosing Pixels element's DimensionOrder attribute. Default
+						is the number of IFDs in the TIFF file, unless an IFD is specified,
+						in which case the default is 1. 
+					</xs:documentation>
 				</xs:annotation>
 			</xs:attribute>
 		</xs:complexType>
@@ -465,7 +518,7 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 			<xs:documentation>
 				The presence of this element indicates the user wants to view the Image as a maximum intensity projection.
 				The Zstart and Zstop attributes are optional.  If they are not specified, then the entire Z stack will be pro
- 				z values are index from 0 to maxZ - 1
+				z values are index from 0 to maxZ - 1
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
