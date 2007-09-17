@@ -42,7 +42,7 @@
 fuzzy_rule fuzzy_rules[1000];
 trapez_function color_functions[50];
 
-color_type colors[COLORS_NUM];
+color_type colors[COLORS_NUM+1];
 
 int rules_loaded=0;
 
@@ -465,7 +465,7 @@ void num2color(int color,char *color_name)
 int color2num(char *color)
 {
   int color_index;
-  for (color_index=COLOR_WHITE;color_index<COLORS_NUM;color_index++)
+  for (color_index=COLOR_WHITE;color_index<=COLORS_NUM;color_index++)
   if (colors[color_index].color>=0)
   {  if (strcmp(colors[color_index].name,color)==0)
      return(color_index);
@@ -497,7 +497,7 @@ int value2num(char *value)
 void SetColors()
 { int color_index;
   /* initialize */
-  for (color_index=COLOR_WHITE;color_index<COLORS_NUM;color_index++)
+  for (color_index=COLOR_WHITE;color_index<=COLORS_NUM;color_index++)
     colors[color_index].color=(TColor)-1;
   /* set the colors */
   strcpy(colors[COLOR_WHITE].name,"white");
@@ -845,7 +845,7 @@ long FindColor(short hue, short saturation, short value, float *color_certaintie
       ColorFunctionsStart=strstr(rulesfile,"color_functions:");
       RulesStart=strstr(rulesfile,"rules:");
       if (!LoadColorsFunctions(ColorFunctionsStart) || !LoadRules(RulesStart))
-      {  printf("Could not open 'rulesfile.txt' \n");
+      {  printf("Could not load rules \n");
          return(-1);
       }
       rules_loaded=1;

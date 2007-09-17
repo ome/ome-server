@@ -97,7 +97,7 @@ class ImageMatrix
    void convolve(ImageMatrix *filter);
    void BasicStatistics(double *mean, double *median, double *std, double *min, double *max, double *histogram, int bins);
    void GetColorStatistics(double *hue_avg, double *hue_std, double *sat_avg, double *sat_std, double *val_avg, double *val_std, double *max_color, double *colors);
-   void ColorTransform(RGBcolor rgb);
+   void ColorTransform(double *color_hist);
    void histogram(double *bins,unsigned short bins_num, int imhist);
    double Otsu();                                  /* Otsu grey threshold                  */
    void MultiScaleHistogram(double *out);

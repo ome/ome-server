@@ -49,12 +49,13 @@
 signatures::signatures()
 {  int sig_index;
    for (sig_index=0;sig_index<MAX_SIGNATURE_NUM;sig_index++)
-   {  data[sig_index].name[0]='\0';
+   {  //data[sig_index].name[0]='\0';
       data[sig_index].value=0;
    }
    count=0;
    sample_class=0;
    full_path[0]='\0';
+   NamesTrainingSet=NULL;   
    ScoresTrainingSet=NULL;
 }
 //---------------------------------------------------------------------------
@@ -67,11 +68,14 @@ signatures *signatures::duplicate()
    new_samp=new signatures();
    new_samp->sample_class=sample_class;
    new_samp->count=count;
+   new_samp->NamesTrainingSet=NamesTrainingSet;   
+   new_samp->ScoresTrainingSet=ScoresTrainingSet;
    strcpy(new_samp->full_path,full_path);
    for (sig_index=0;sig_index<count;sig_index++)
-   {  new_samp->data[sig_index].value=data[sig_index].value;
-      strcpy(new_samp->data[sig_index].name,data[sig_index].name);
-   }
+     new_samp->data[sig_index]=data[sig_index];
+//   {  new_samp->data[sig_index].value=data[sig_index].value;
+//      strcpy(new_samp->data[sig_index].name,data[sig_index].name);
+//   }
    return(new_samp);
 }
 
@@ -82,9 +86,11 @@ signatures *signatures::duplicate()
 */
 void signatures::Add(char *name,double value)
 {
-//printf("%s %f\n",name,value);
-   if (strchr(name,'\n')) *(strchr(name,'\n'))='\0';  /* prevent end of lines inside the features names */
-   if (name) strcpy(data[count].name,name);   
+   if (name && NamesTrainingSet)
+   {  if (strchr(name,'\n')) *(strchr(name,'\n'))='\0';  /* prevent end of lines inside the features names */      
+//      strcpy(data[count].name,name);
+      strcpy(((TrainingSet *)(NamesTrainingSet))->SignatureNames[count],name);
+   }
    if (value>INF) value=INF;        /* prevent error */
    if (value<-INF) value=-INF;      /* prevent error */
    if (value<1/INF && value>-1/INF) value=0;  /* prevent a numerical error */
@@ -185,7 +191,7 @@ void signatures::compute(ImageMatrix *matrix, int compute_colors)
    for (a=0;a<48;a++)
    {  sprintf(buffer,"Comb4Orient4MomentsHistogram_ChebyshevFFT %s",four_moments_names[a]);
       Add(buffer,vec[a]);
-   }   
+   }
    FourierTransform->CombFirstFourMoments(vec);  
    for (a=0;a<48;a++)
    {  sprintf(buffer,"Comb4Orient4MomentsHistogram_FFT %s",four_moments_names[a]);
@@ -738,10 +744,12 @@ void signatures::CompGroupC(ImageMatrix *matrix, char *transform_label)
          - transform_label - the image transform short description (e.g., wavelet-fourier)
 */
 void signatures::CompGroupD(ImageMatrix *matrix, char *transform_label)
-{  int a;
+{  int color_index;
    char buffer[80];
+   double color_hist[COLORS_NUM+1];
 
    /* general color image statistics */
+/*
    {  double hue_avg=0, hue_std=0, sat_avg=0, sat_std=0, val_avg=0, val_std=0, max_color=0, colors[COLORS_NUM];
       for (a=0;a<COLORS_NUM;a++) colors[a]=0;
       if (IsNeeded(count,7+COLORS_NUM))
@@ -753,12 +761,46 @@ void signatures::CompGroupD(ImageMatrix *matrix, char *transform_label)
       Add("value average",val_avg);
       Add("value stddev",val_std);
       Add("most popular color",max_color);
-      for (a=1;a<COLORS_NUM;a++)
+      for (a=1;a<=COLORS_NUM;a++)
       {  sprintf(buffer,"color %d (%s)",a,transform_label);
          Add(buffer,colors[a]);
       }
    }
+*/
+   ImageMatrix *ColorTransformMatrix,*ColorFFT,*ColorChebyshev,*ColorWavelet;
+   ColorTransformMatrix=matrix->duplicate();
+   ColorTransformMatrix->ColorTransform(color_hist);
+   ColorFFT=ColorTransformMatrix->duplicate();
+   ColorFFT->fft2();
+   ColorChebyshev=ColorTransformMatrix->duplicate();
+   ColorChebyshev->ChebyshevTransform(0);
+   ColorWavelet=ColorTransformMatrix->duplicate();
+   ColorWavelet->Symlet5Transform();
 
+   /* color histogram */
+   for (color_index=1;color_index<=COLORS_NUM;color_index++)
+   {  sprintf(buffer,"color histogram bin %d (%s)",color_index,transform_label);
+      Add(buffer,color_hist[color_index]);
+   }
+
+   /* now compute the groups */
+   CompGroupA(ColorTransformMatrix,"Color Transform");
+   CompGroupB(ColorTransformMatrix,"Color Transform");
+   CompGroupC(ColorTransformMatrix,"Color Transform");
+
+   CompGroupB(ColorFFT,"Color FFT Transform");
+   CompGroupC(ColorFFT,"Color FFT Transform");
+
+   CompGroupB(ColorChebyshev,"Color Chebyshev Transform");
+   CompGroupC(ColorChebyshev,"Color Chebyshev Transform");
+
+   CompGroupB(ColorWavelet,"Color Wavelet Transform");
+   CompGroupC(ColorWavelet,"Color Wavelet Transform");
+
+   delete ColorTransformMatrix;
+   delete ColorFFT;
+   delete ColorChebyshev;
+   delete ColorWavelet;
 }
 
 /* ComputeGroups
@@ -927,8 +969,8 @@ int signatures::SaveToFile(FILE *value_file)
    fprintf(value_file,"%d\n",sample_class);
    fprintf(value_file,"%s\n",full_path);
    for (sig_index=0;sig_index<count;sig_index++)
-     fprintf(value_file,"%f %s\n",data[sig_index].value,data[sig_index].name);
-//     fprintf(value_file,"%e %s\n",data[sig_index].value,data[sig_index].name);	 
+     fprintf(value_file,"%f\n",data[sig_index].value);   
+//     fprintf(value_file,"%f %s\n",data[sig_index].value,data[sig_index].name);
    return(1);
 }
 
@@ -953,8 +995,10 @@ int signatures::LoadFromFile(char *filename)
    while (p_buffer)
    {  char *p_name;
       p_name=strchr(buffer,' ');
-      *p_name='\0';
-      p_name++;
+      if (p_name)    /* if there is a feature name in the file */
+	  {  *p_name='\0';
+         p_name++;
+	  }
       Add(p_name,atof(buffer));
       p_buffer=fgets(buffer,sizeof(buffer),value_file);
    }

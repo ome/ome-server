@@ -37,7 +37,7 @@
 #include "cmatrix.h"
 //#include "TrainingSet.h"
 
-#define MAX_SIGNATURE_NUM 3000
+#define MAX_SIGNATURE_NUM 4000
 #define SIGNATURE_NAME_LENGTH 80
 #define IMAGE_PATH_LENGTH 256
 
@@ -51,7 +51,7 @@
 struct signature
 {
   public:
-   char name[SIGNATURE_NAME_LENGTH];
+//   char name[SIGNATURE_NAME_LENGTH];
    double value;
 };
 
@@ -64,7 +64,8 @@ class signatures
     unsigned short sample_class;                    /* the class of the sample */
     long count;
     char full_path[IMAGE_PATH_LENGTH];              /* optional - full path the the image file   */
-    void *ScoresTrainingSet;            /* a pointer to a training set with computed Fisher scores (to avoid computing 0-scored signatures) */
+	void *NamesTrainingSet;             /* the training set in which this set of signatures belongs - is assigned so that the signature names will be added */
+    void *ScoresTrainingSet;            /* a pointer to a training set with computed Fisher scores (to avoid computing 0-scored signatures)                 */
     signatures();                       /* constructor */
     signatures *duplicate();            /* create an identical signature vector object */
 //    signatures(sample *one_sample, int sigs_count);

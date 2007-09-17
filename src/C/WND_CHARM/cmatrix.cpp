@@ -194,7 +194,7 @@ int ImageMatrix::LoadTIFF(char *filename)
    unsigned char *buf8;
    unsigned short *buf16;
    double max_val;
-   
+
    if (tif = TIFFOpen(filename, "r"))
    {
      TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
@@ -204,6 +204,7 @@ int ImageMatrix::LoadTIFF(char *filename)
      TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bps);
      bits=bps;
      TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &spp);
+     if (!spp) spp=1;  /* assume one sample per pixel if nothing is specified */
 
      /* allocate the data */
      data=new pix_data *[width];
@@ -217,41 +218,42 @@ int ImageMatrix::LoadTIFF(char *filename)
      /* read TIFF header and determine image size */
      buf8 = (unsigned char *)_TIFFmalloc(TIFFScanlineSize(tif)*spp);
      buf16 = (unsigned short *)_TIFFmalloc(TIFFScanlineSize(tif)*sizeof(unsigned short)*spp);
- 	 for (y = 0; y < height; y++)
-	 {   int col;
-	     if (bits==8) TIFFReadScanline(tif, buf8, y);
-		 else TIFFReadScanline(tif, buf16, y);
-	     x=0;col=0;
-	 	 while (x<width)
-		 { unsigned char byte_data;
-		   unsigned short short_data;
-		   double val;
-		   int sample_index;	
-		   for (sample_index=0;sample_index<spp;sample_index++)
-		   {  byte_data=buf8[col+sample_index];
+     for (y = 0; y < height; y++)
+     {   int col;
+         if (bits==8) TIFFReadScanline(tif, buf8, y);
+         else TIFFReadScanline(tif, buf16, y);
+         x=0;col=0;
+         while (x<width)
+         { unsigned char byte_data;
+           unsigned short short_data;
+           double val;
+           int sample_index;
+           for (sample_index=0;sample_index<spp;sample_index++)
+           {  byte_data=buf8[col+sample_index];
               short_data=buf16[col+sample_index];
- 		      if (bits==8) val=(double)byte_data;
-		      else val=(double)(short_data);
-			  if (spp==3)  /* RGB image */
-			  {  if (sample_index==0) data[x][y].clr.RGB.red=(unsigned char)(255*(val/max_val));
-			     if (sample_index==1) data[x][y].clr.RGB.green=(unsigned char)(255*(val/max_val));
-				 if (sample_index==2) data[x][y].clr.RGB.blue=(unsigned char)(255*(val/max_val));
-			  }
-		   }
-		   if (spp==3) data[x][y].intensity=COLOR2GRAY(RGB2COLOR(data[x][y].clr.RGB));
-		   if (spp==1)	  
+              if (bits==8) val=(double)byte_data;
+              else val=(double)(short_data);
+              if (spp==3)  /* RGB image */
+              {  if (sample_index==0) data[x][y].clr.RGB.red=(unsigned char)(255*(val/max_val));
+                 if (sample_index==1) data[x][y].clr.RGB.green=(unsigned char)(255*(val/max_val));
+                 if (sample_index==2) data[x][y].clr.RGB.blue=(unsigned char)(255*(val/max_val));
+                 if (ColorMode=cmHSV) data[x][y].clr.HSV=RGB2HSV(data[x][y].clr.RGB);
+              }
+           }
+           if (spp==3) data[x][y].intensity=COLOR2GRAY(RGB2COLOR(data[x][y].clr.RGB));
+           if (spp==1)
            {  data[x][y].clr.RGB.red=(unsigned char)(255*(val/max_val));
               data[x][y].clr.RGB.green=(unsigned char)(255*(val/max_val));
               data[x][y].clr.RGB.blue=(unsigned char)(255*(val/max_val));
-		      data[x][y].intensity=val;
-		   }	  
-		   x++;
-		   col+=spp;
-		 }
-	 }
-	 _TIFFfree(buf8);
-	 _TIFFfree(buf16);
-	 TIFFClose(tif);
+              data[x][y].intensity=val;
+           }
+           x++;
+           col+=spp;
+         }
+     }
+     _TIFFfree(buf8);
+     _TIFFfree(buf16);
+     TIFFClose(tif); 
    }
    else return(0);
 #endif
@@ -283,6 +285,7 @@ int ImageMatrix::SaveTiff(char *filename)
    TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, 1);
    TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bits);
    TIFFSetField(tif, TIFFTAG_COMPRESSION, 1);
+   TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1);
 
    for (y = 0; y < height; y ++)
    {  if (bits==16) TIFFWriteScanline (tif, &(BufImage16[y*width]), y,0 );
@@ -378,11 +381,13 @@ ImageMatrix::ImageMatrix()
    data=NULL;
    width=0;
    height=0;
+   ColorMode=cmHSV;    /* set a diffult color mode */
 }
 
 ImageMatrix::ImageMatrix(int width, int height)
 {  int a,b;
    bits=8; /* set some default value */
+   ColorMode=cmHSV;
    this->width=width;
    this->height=height;
    data=new pix_data *[width];
@@ -489,7 +494,7 @@ void ImageMatrix::flip()
      for (x=0;x<width/2;x++)
 	 { temp=data[x][y];
 	   data[x][y]=data[width-x-1][y];
-	   data[width-x-1][y]=temp;	   
+	   data[width-x-1][y]=temp;
 	 }
 }
 
@@ -726,7 +731,7 @@ void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *s
 {  int x,y,a,color_index;
    color hsv;
    double max,pixel_num;
-   float certainties[COLORS_NUM];
+   float certainties[COLORS_NUM+1];
 
    pixel_num=height*width;
 
@@ -735,7 +740,7 @@ void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *s
    if (sat_avg) *sat_avg=0;
    if (val_avg) *val_avg=0;
    if (colors)
-     for (a=0;a<COLORS_NUM;a++)
+     for (a=0;a<=COLORS_NUM;a++)
        colors[a]=0;
 
    for (y=0;y<height;y++)
@@ -745,7 +750,6 @@ void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *s
         if (sat_avg) *sat_avg+=hsv.HSV.saturation;
         if (val_avg) *val_avg+=hsv.HSV.value;
          color_index=FindColor(hsv.HSV.hue,hsv.HSV.saturation,hsv.HSV.value,certainties);
-//         data[x][y].classified_color=(byte)color_index;
          colors[color_index]+=1;
      }
    *hue_avg=*hue_avg/pixel_num;
@@ -756,7 +760,7 @@ void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *s
    if (max_color)
    {  *max_color=0;
       max=0.0;
-      for (a=0;a<COLORS_NUM;a++)
+      for (a=0;a<=COLORS_NUM;a++)
         if (colors[a]>max)
         {  max=colors[a];
            *max_color=a;
@@ -764,7 +768,7 @@ void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *s
    }
    /* colors */
    if (colors)
-     for (a=0;a<COLORS_NUM;a++)
+     for (a=0;a<=COLORS_NUM;a++)
        colors[a]=colors[a]/pixel_num;
 
    /* standard deviation of hue, saturation and value */
@@ -784,29 +788,39 @@ void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *s
 }
 
 /* ColorTransform
-   Finds the closest color to the given RGB triple
-   and transforms all the pixels that have a different
-   color to black.
+   Transform a color image to a greyscale image such that each
+   color_hist -double *- a histogram (of COLOR_NUM + 1 bins) of the colors. This parameter is ignored if NULL
+   grey level represents a different color
 */
-void ImageMatrix::ColorTransform(RGBcolor rgb)
+void ImageMatrix::ColorTransform(double *color_hist)
 {  int x,y,base_color;
-   HSVcolor hsv;
+   double cb_intensity;
+   double max_value;
    color hsv_pixel;
-   float certainties[COLORS_NUM];
-   hsv=RGB2HSV(rgb);
-   base_color=FindColor(hsv.hue,hsv.saturation,hsv.value,certainties);
+   int color_index;   
+   RGBcolor rgb;
+   float certainties[COLORS_NUM+1];
+   max_value=pow(2,bits)-1;
+   /* initialize the color histogram */
+   if (color_hist) 
+     for (color_index=0;color_index<=COLORS_NUM;color_index++)
+       color_hist[color_index]=0;
+   /* find the colors */	   
    for (y=0;y<height;y++)
      for (x=0;x<width;x++)
-     {  int color_index;
-        hsv_pixel=data[x][y].clr;
+     {  hsv_pixel=data[x][y].clr;
         color_index=FindColor(hsv_pixel.HSV.hue,hsv_pixel.HSV.saturation,hsv_pixel.HSV.value,certainties);
-        if (color_index!=base_color)
-        {  data[x][y].clr.HSV.hue=0;
-           data[x][y].clr.HSV.saturation=0;
-           data[x][y].clr.HSV.value=0;
-           data[x][y].intensity=0;
-        }
+        if (color_hist)
+          color_hist[color_index]+=1;
+        cb_intensity=int((max_value*color_index)/COLORS_NUM);  /* convert the color index to a greyscale value */
+		rgb.red=rgb.green=rgb.blue=(byte)(255*(cb_intensity/max_value));
+        data[x][y].clr.HSV=RGB2HSV(rgb);
+        data[x][y].intensity=cb_intensity;
      }
+   /* normalize the color histogram */
+   if (color_hist) 
+     for (color_index=0;color_index<=COLORS_NUM;color_index++)
+       color_hist[color_index]/=(width*height);	 
 }
 
 /* get image histogram */
@@ -850,7 +864,6 @@ double ImageMatrix::fft2()
 
    in = (double*) fftw_malloc(sizeof(double) * width*height);
    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * width*height);
-
 
    p=fftw_plan_dft_r2c_2d(width,height,in,out, FFTW_MEASURE /* FFTW_ESTIMATE */);
 
@@ -1420,141 +1433,6 @@ void ImageMatrix::zernike(double *zvalues, long *output_size)
 {  mb_zernike(this, 0, 0, zvalues, output_size);
 }
 
-/*
-double radon(ImageMatrix *image, double p, double tau)
-//function radon,image,p,tau,all_rays=all_rays,raylen = raylen
-{ int a,xl,yl;
-  double *x,*y;
-//if  n_params() lt 1 then return,-1
-//sz = size(image)
-//if sz(0) ne 2 then return,-1
-//xl = sz(1)
-//yl = sz(2)
-  xl=width;
-  yl=height;
-//x = findgen(xl)-xl/2
-//y = findgen(yl)
-  x=new double[xl];
-  y-new double[yl];
-  max_abs_x=-100000000;
-  x_min=10000000;
-  for (a=0;a<xl;a++)
-  {  x[a]=(double)a-xl/2;
-     if (x[a]>max_abs_x) max_abs_x=x[a];
-     if (x[a]<x_min) x_min=x[a];
-  }
-  y_min=100000000;
-  for (a=0;a<y1;a++)
-  {  y[a]=(double)a;
-     if (Y[a]<y_min) y_min=Y[a];
-  }
-
-  kl=xl;
-  hl=yl;
-  ml=xl;
-  nl=yl;
-  delta_x = delta_y=1;
-// p = (findgen(kl)/(kl-1)*kl-(kl)/2)*delta_y/max(abs(x))
-  for (a=0;a<kl;a++)
-    p[a]=(a/(kl-1)*kl-kl/2)*delta_y/max_abs_x;
-
-
-tau = findgen(hl)*delta_y
-alpha = p * delta_x/delta_y
-
-g_radon  =  fltarr(kl,hl)
-raylen   =  fltarr(kl,hl)
-all_rays =  fltarr(kl,hl,xl > yl)
-
-for k = 0,kl-1 do begin
- for h = 0,hl-1 do begin
-  beta = (p(k)*x_min+tau(h) - y_min)/delta_y
-  if alpha(k) gt 0 then begin
-    m_min = 0 > ceil((-beta)/alpha(k))
-    m_max = ml - 1 < floor((nl-1-beta)/alpha(k))
-  endif else begin
-    m_min = 0 > ceil((nl-1-beta)/alpha(k))
-    m_max = ml - 1 < floor((-beta)/alpha(k))
-  endelse
-  sum=0
-  mv = findgen(m_max-m_min+1)+m_min
-  nfloatv = (alpha(k)*mv+beta)
-  wneg = where(nfloatv lt 0.0,wnegcount)
-  wre = where(abs(nfloatv) lt 0.01,wrecount)
-  if wrecount gt 0 then nfloatv(wre) = 0
-  nv = floor(nfloatv)
-  wv = nfloatv-nv
-  sum = 0
-  if max(nfloatv) gt nl-1 then stop ;this is an error in indexing
-  wno = where(wv eq 0,wnocount)
-  inray = fltarr(n_elements(mv))
-  if wnocount gt 0 then begin
-   inray(wno) = image(mv(wno),nv(wno))
-   wint = where(wv ne 0,wintcount)
-   if wintcount gt 0 then begin
-
-inray(wint)=image(mv(wint),nv(wint))*(1-wv)+image(mv(wint),nv(wint)+1)*wv
-   endif
-  endif else inray = image(mv,nv)*(1-wv)+image(mv,nv)*wv
-  g_radon(k,h) = delta_x*(mean(inray))
-  raylen(k,h) =n_elements(inray)
-  all_rays(k,h,0:raylen(k,h)-1) = inray
- endfor
-endfor
-
-
-return,g_radon
-
-  delete x,y;
-}
-
-;__________________________________________________
-;__________________________________________________
-; test code here
-
-
-xl=(yl=100)
-image = fltarr(xl,yl)
-
-;slope=-0.8
-;offset = 0
-slope= (randomu(seed,1))(0)*2-1
-offset = (randomu(seed,1))(0)*xl
-
-line = 10
-for i = 0,yl-1 do begin
-  yind = slope*(i-xl/2)+offset
-  if yind ge 0 and yind lt yl then $
-   image(i,yind) = image(i,yind) + line
-endfor
-
-image=smooth(image,5)
-image = image+randomn(seed,xl,yl)
-
-g_radon = radon(image,p,tau,all_rays=all_rays,raylen=raylen)
-
-wm = wheremax(g_radon)
-print
-print,'Actual Values for slope and y offset:......... P=',slope,  '    Tau =
-: ',offset
-print,'Measured slope and offset from radon transform: P=',p(wm(0)),'    Tau
-= : ',tau(wm(1))
-print,'value at peak of radon transform= ',g_radon(wm(0),wm(1))
-
-
-!P.multi=[0,1,3]
-!P.charsize=2
-fill=1
-contour,image,fill=fill,tit='Image (line + noise)',xtit='X',ytit='Y'
-axis,xl/2,/data,yaxis=1
-contour,g_radon,p,tau,tit='Radon
-Transform',fill=fill,nlevels=21,xtit='Slope',ytit='Y Offset'
-surface,g_radon,p,tau,tit='Radon Transform',xtit='Slope',ytit='Y Offset'
-
-
-end
-
-*/
 
 #pragma package(smart_init)
 
