@@ -601,7 +601,7 @@ sub createWithPassword {
 
 	my $userState = $self->makeOrGetUserState($factory,experimenter => $experimenter);
 
-	my $session = OME::Session->instance($userState, $factory, $ACL);
+	$session = OME::Session->instance($userState, $factory, $ACL);
 	$self->updateACL();
 
 	$userState->storeObject();
