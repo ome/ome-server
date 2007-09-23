@@ -118,7 +118,7 @@ public abstract class OMEXMLNode implements DataInterface {
   public void setLSID(String lsid) { setAttribute("ID", lsid); }
 
   /** Gets the name of the DOM element. */
-  public String getElementName() { return element.getTagName(); }
+  public String getElementName() { return DOMUtil.getName(element); }
 
   /** Gets an OME-XML node representing the first child with the given name. */
   public OMEXMLNode getChild(String name) {
@@ -548,7 +548,7 @@ public abstract class OMEXMLNode implements DataInterface {
     if (el == null) return null;
 
     // search for the correct OMEXMLNode subclass among the known packages
-    String nodeName = el.getTagName() + "Node";
+    String nodeName = DOMUtil.getName(el) + "Node";
     for (int i=0; i<NODE_PACKAGES.length; i++) {
       try {
         Class c = Class.forName(NODE_PACKAGES[i] + "." + nodeName);

@@ -99,10 +99,28 @@ public abstract class DOMUtil {
   public static Templates makeTemplates(String sheet)
     throws IOException, TransformerConfigurationException
   {
-    InputStream in = OMENode.class.getResource(sheet).openStream();
+    InputStream in = DOMUtil.class.getResource(sheet).openStream();
     Templates t = TRANS_FACT.newTemplates(new StreamSource(in));
     in.close();
     return t;
+  }
+
+
+  // -- Node methods --
+
+  /** Gets the local (sans namespace) name of the given node. */
+  public static String getName(Node node) {
+    // NB: The node.getLocalName() method does not work.
+    String name = node.getNodeName();
+    int colon = name.lastIndexOf(":");
+    return colon < 0 ? name : name.substring(colon + 1);
+  }
+
+  /** Gets the namespace of the given node. */
+  public static String getNamespace(Node node) {
+    String name = node.getNodeName();
+    int colon = name.lastIndexOf(":");
+    return colon < 0 ? null : name.substring(0, colon);
   }
 
 
@@ -146,7 +164,7 @@ public abstract class DOMUtil {
     for (int i=0; i<size; i++) {
       Node node = list.item(i);
       if (!(node instanceof Element)) continue;
-      if (name.equals(node.getNodeName())) return (Element) node;
+      if (name.equals(getName(node))) return (Element) node;
     }
     return null;
   }
@@ -177,7 +195,7 @@ public abstract class DOMUtil {
     for (int i=0; i<size; i++) {
       Node node = list.item(i);
       if (!(node instanceof Element)) continue;
-      if (name.equals(node.getNodeName())) v.add(node);
+      if (name.equals(getName(node))) v.add(node);
     }
     return v;
   }
@@ -189,7 +207,7 @@ public abstract class DOMUtil {
   public static Element getAncestorElement(String name, Element el) {
     if (name == null || el == null) return null;
     Node parent = el.getParentNode();
-    while (parent != null && !name.equals(parent.getNodeName())) {
+    while (parent != null && !name.equals(getName(parent))) {
       parent = parent.getParentNode();
     }
     if (parent == null || (!(parent instanceof Element))) return null;

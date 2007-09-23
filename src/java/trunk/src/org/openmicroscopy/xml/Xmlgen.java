@@ -257,7 +257,7 @@ public class Xmlgen {
         Node node = children.item(j);
         if (!(node instanceof Element)) continue;
         Element el = (Element) node;
-        String tagName = el.getTagName();
+        String tagName = DOMUtil.getName(el);
         if (tagName.equals("Description")) {
           // extract ST description
           Text text = DOMUtil.getChildTextNode(el);
@@ -493,7 +493,7 @@ public class Xmlgen {
         Node node = children.item(j);
         if (!(node instanceof Element)) continue;
         Element el = (Element) node;
-        String tagName = el.getTagName();
+        String tagName = DOMUtil.getName(el);
         if (!tagName.equals("Element")) continue;
 
         String attrName = el.getAttribute("Name");

@@ -289,7 +289,7 @@ public class OMENode extends OMEXMLNode {
             Node node = nl.item(j);
             if (!(node instanceof Element)) continue;
             Element n = (Element) node;
-            Element child = DOMUtil.createChild(el, n.getTagName());
+            Element child = DOMUtil.createChild(el, DOMUtil.getName(n));
             String[] names = DOMUtil.getAttributeNames(n);
             String[] values = DOMUtil.getAttributeValues(n);
             for (int k=0; k<names.length; k++) {
