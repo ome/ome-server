@@ -7,7 +7,7 @@
 	 xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	 xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	 xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
-	 version = "FC"
+	 version = "FC-TIFF"
 	 elementFormDefault = "qualified">
 	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"/>
 	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"/>
@@ -16,9 +16,9 @@
 	<xs:annotation>
 		<xs:documentation>
 			Open Microscopy Environment
-			OME XML Schema 1.0 FC
+			OME XML Schema 1.0 FC-TIFF
 			Author:  Ilya G. Goldberg
-			Copyright 2002 - 2004 OME. All rights reserved.
+			Copyright 2002 - 2007 OME. All rights reserved.
 		</xs:documentation>
 	</xs:annotation>
 	<!--
@@ -816,7 +816,9 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 		<xs:annotation>
 			<xs:documentation>
 				Just some free-form text to describe Images, Screens and Projects.
-				The content model is ANY, which means that en entire XML sub-document can be placed here.
+				The content model is currently ANY, but this is going to change to String in 
+				the future releases. This is no longer the correct place for an XML sub-document
+				- use CustomAttributes instead.
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
