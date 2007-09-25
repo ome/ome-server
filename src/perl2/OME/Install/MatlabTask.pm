@@ -417,7 +417,9 @@ sub execute {
 	depends on the version of MATLAB installed
 */
 OME_MATLAB_H_START
-		unless ($MATLAB_INFO{"VERS"} =~ /7\.3\.0.+/ or $MATLAB_INFO{"VERS"} =~ /7\.4\.0.+/) {
+		
+		# Matlab versions before 7.3 need these typedef definitions
+		if ($MATLAB_INFO{"VERS"} =~ /7\.[0,1,2]\.0.+/ or $MATLAB_INFO{"VERS"} =~ /6\.+/) {
 			my $ome_matlab_h_augment = "typedef int mwSize;\n".
 									   "typedef int mwIndex;\n".
 									   "typedef int mwSignedIndex;\n";
