@@ -56,70 +56,362 @@ public final class SampleTest {
     // check OME node
     int projectCount = ome.getProjectCount();
     Vector projectList = ome.getProjectList();
-    if (projectCount != 1 || projectList.size() != 1) {
-      System.out.println("Error: Incorrect number of Projects" +
-        " (projectCount=" + projectCount +
-        ", projectList.size()=" + projectList.size() + ")");
-    }
+    checkCount("Project", projectCount, projectList, 1);
     int datasetCount = ome.getDatasetCount();
     Vector datasetList = ome.getDatasetList();
-    if (datasetCount != 1 || datasetList.size() != 1) {
-      System.out.println("Error: Incorrect number of Datasets" +
-        " (datasetCount=" + datasetCount +
-        ", datasetList.size()=" + datasetList.size() + ")");
-    }
+    checkCount("Dataset", datasetCount, datasetList, 1);
     int experimentCount = ome.getExperimentCount();
     Vector experimentList = ome.getExperimentList();
-    if (experimentCount != 1 || experimentList.size() != 1) {
-      System.out.println("Error: Incorrect number of Experiments" +
-        " (experimentCount=" + experimentCount +
-        ", experimentList.size()=" + experimentList.size() + ")");
-    }
+    checkCount("Experiment", experimentCount, experimentList, 1);
     int plateCount = ome.getPlateCount();
     Vector plateList = ome.getPlateList();
-    if (plateCount != 1 || plateList.size() != 1) {
-      System.out.println("Error: Incorrect number of Plates" +
-        " (plateCount=" + plateCount +
-        ", plateList.size()=" + plateList.size() + ")");
-    }
+    checkCount("Plate", plateCount, plateList, 1);
     int screenCount = ome.getScreenCount();
     Vector screenList = ome.getScreenList();
-    if (screenCount != 1 || screenList.size() != 1) {
-      System.out.println("Error: Incorrect number of Screens" +
-        " (screenCount=" + screenCount +
-        ", screenList.size()=" + screenList.size() + ")");
-    }
+    checkCount("Screen", screenCount, screenList, 1);
     int experimenterCount = ome.getExperimenterCount();
     Vector experimenterList = ome.getExperimenterList();
-    if (experimenterCount != 1 || experimenterList.size() != 1) {
-      System.out.println("Error: Incorrect number of Experimenters" +
-        " (experimenterCount=" + experimenterCount +
-        ", experimenterList.size()=" + experimenterList.size() + ")");
-    }
+    checkCount("Experimenter", experimenterCount, experimenterList, 1);
     int groupCount = ome.getGroupCount();
     Vector groupList = ome.getGroupList();
-    if (groupCount != 1 || groupList.size() != 1) {
-      System.out.println("Error: Incorrect number of Groups" +
-        " (groupCount=" + groupCount +
-        ", groupList.size()=" + groupList.size() + ")");
-    }
+    checkCount("Group", groupCount, groupList, 1);
     int instrumentCount = ome.getInstrumentCount();
     Vector instrumentList = ome.getInstrumentList();
-    if (instrumentCount != 1 || instrumentList.size() != 1) {
-      System.out.println("Error: Incorrect number of Instruments" +
-        " (instrumentCount=" + instrumentCount +
-        ", instrumentList.size()=" + instrumentList.size() + ")");
-    }
+    checkCount("Instrument", instrumentCount, instrumentList, 1);
     int imageCount = ome.getImageCount();
     Vector imageList = ome.getImageList();
-    if (imageCount != 1 || imageList.size() != 1) {
-      System.out.println("Error: Incorrect number of Images" +
-        " (imageCount=" + imageCount +
-        ", imageList.size()=" + imageList.size() + ")");
-    }
-/*
+    checkCount("Image", imageCount, imageList, 1);
+    SemanticTypeDefinitionsNode semanticTypeDefinitions =
+      ome.getSemanticTypeDefinitions();
+    checkNull("SemanticTypeDefinitions", semanticTypeDefinitions);
+    AnalysisModuleLibraryNode analysisModuleLibrary =
+      ome.getAnalysisModuleLibrary();
+    checkNull("AnalysisModuleLibrary", analysisModuleLibrary);
+    CustomAttributesNode customAttributes = ome.getCustomAttributes();
+    checkNull("CustomAttributes", customAttributes);
+
     // -- Depth 2 --
 
+    // check OME/Project node
+
+    // check OME/Dataset node
+
+    // check OME/Experiment node
+    ExperimentNode experiment = (ExperimentNode) experimentList.get(0);
+    String experimentID = experiment.getID();
+    checkValue("Experiment ID", experimentID,
+      "urn:lsid:foo.bar.com:Experiment:123456");
+    String experimentDescription = experiment.getDescription();
+    checkValue("Experiment Description", experimentDescription,
+      "This was an experiment.");
+    ExperimenterNode experimentExperimenterNode = experiment.getExperimenter();
+    checkNotNull("Experiment Experimenter", experimentExperimenterNode);
+    int experimentMicrobeamManipulationCount =
+      experiment.getMicrobeamManipulationCount();
+    Vector experimentMicrobeamManipulationList =
+      experiment.getMicrobeamManipulationList();
+    checkCount("Experiment MicrobeamManipulation",
+      experimentMicrobeamManipulationCount,
+      experimentMicrobeamManipulationList, 0);
+    String experimentType = experiment.getType();
+    checkValue("Experiment Type", experimentType, "TimeLapse");
+
+    // check OME/Plate node
+
+    // check OME/Screen node
+
+    // check OME/Experimenter node
+
+    // check OME/Group node
+
+    // check OME/Instrument node
+    InstrumentNode instrument = (InstrumentNode) instrumentList.get(0);
+    checkNotNull("Instrument", instrument);
+    MicroscopeNode instrumentMicroscope = instrument.getMicroscope();
+    checkNotNull("Instrument Microscope", instrumentMicroscope);
+    int instrumentLightSourceCount = instrument.getLightSourceCount();
+    Vector instrumentLightSourceList = instrument.getLightSourceList();
+    checkCount("Instrument LightSource",
+      instrumentLightSourceCount, instrumentLightSourceList, 2);
+    int instrumentDetectorCount = instrument.getDetectorCount();
+    Vector instrumentDetectorList = instrument.getDetectorList();
+    checkCount("Instrument Detector",
+      instrumentDetectorCount, instrumentDetectorList, 1);
+    int instrumentObjectiveCount = instrument.getObjectiveCount();
+    Vector instrumentObjectiveList = instrument.getObjectiveList();
+    checkCount("Instrument Objective",
+      instrumentObjectiveCount, instrumentObjectiveList, 1);
+    int instrumentFilterSetCount = instrument.getFilterSetCount();
+    Vector instrumentFilterSetList = instrument.getFilterSetList();
+    checkCount("Instrument FilterSet",
+      instrumentFilterSetCount, instrumentFilterSetList, 1);
+    int instrumentFilterCount = instrument.getFilterCount();
+    Vector instrumentFilterList = instrument.getFilterList();
+    checkCount("Instrument Filter",
+      instrumentFilterCount, instrumentFilterList, 2);
+    int instrumentDichroicCount = instrument.getDichroicCount();
+    Vector instrumentDichroicList = instrument.getDichroicList();
+    checkCount("Instrument Dichroic",
+      instrumentDichroicCount, instrumentDichroicList, 0);
+    int instrumentOTFCount = instrument.getOTFCount();
+    Vector instrumentOTFList = instrument.getOTFList();
+    checkCount("Instrument OTF",
+      instrumentOTFCount, instrumentOTFList, 1);
+
+    // check OME/Image node
+    ImageNode image = (ImageNode) imageList.get(0);
+    checkNotNull("Image", image);
+    String imageID = image.getID();
+    checkValue("Image ID", imageID, "urn:lsid:foo.bar.com:Image:123456");
+    String imageCreationDate = image.getCreationDate();
+    checkValue("Image CreationDate", imageCreationDate, "1988-04-07T18:39:09");
+    ExperimenterNode imageExperimenter = image.getExperimenter();
+    checkNotNull("Image Experimenter", imageExperimenter);
+    String imageDescription = image.getDescription();
+    checkValue("Image Description", imageDescription, "This is an Image");
+    ExperimentNode imageExperiment = image.getExperiment();
+    checkNotNull("Image Experiment", imageExperiment);
+    GroupNode imageGroup = image.getGroup();
+    checkNotNull("Image Group", imageGroup);
+    int imageDatasetCount = image.getDatasetCount();
+    Vector imageDatasetList = image.getDatasetList();
+    checkCount("Image Dataset", imageDatasetCount, imageDatasetList, 1);
+    InstrumentNode imageInstrument = image.getInstrument();
+    checkNotNull("Image Instrument", imageInstrument);
+    ObjectiveSettingsNode imageObjectiveSettings = image.getObjectiveSettings();
+    checkNull("Image ObjectiveSettings", imageObjectiveSettings);
+    ImagingEnvironmentNode imageImagingEnvironment =
+      image.getImagingEnvironment();
+    checkNotNull("Image ImagingEnvironment", imageImagingEnvironment);
+    ThumbnailNode imageThumbnail = image.getThumbnail();
+    checkNotNull("Image Thumbnail", imageThumbnail);
+    int imageLogicalChannelCount = image.getLogicalChannelCount();
+    Vector imageLogicalChannelList = image.getLogicalChannelList();
+    checkCount("Image LogicalChannel", imageLogicalChannelCount,
+      imageLogicalChannelList, 1);
+    DisplayOptionsNode imageDisplayOptions = image.getDisplayOptions();
+    checkNotNull("Image DisplayOptions", imageDisplayOptions);
+    StageLabelNode imageStageLabel = image.getStageLabel();
+    checkNotNull("Image StageLabel", imageStageLabel);
+    int imagePixelsCount = image.getPixelsCount();
+    Vector imagePixelsList = image.getPixelsList();
+    checkCount("Image Pixels", imagePixelsCount, imagePixelsList, 1);
+    PixelsNode imageAcquiredPixels = image.getAcquiredPixels();
+    checkNull("Image AcquiredPixels", imageAcquiredPixels);
+    int imageRegionCount = image.getRegionCount();
+    Vector imageRegionList = image.getRegionList();
+    checkCount("Image Region", imageRegionCount, imageRegionList, 0);
+    CustomAttributesNode imageCustomAttributes = image.getCustomAttributes();
+    checkNull("Image CustomAttributes", imageCustomAttributes);
+    int imageROICount = image.getROICount();
+    Vector imageROIList = image.getROIList();
+    checkCount("Image ROI", imageROICount, imageROIList, 0);
+    int imageMicrobeamManipulationCount =
+      image.getMicrobeamManipulationCount();
+    Vector imageMicrobeamManipulationList =
+      image.getMicrobeamManipulationList();
+    checkCount("Image MicrobeamManipulation", imageMicrobeamManipulationCount,
+      imageMicrobeamManipulationList, 0);
+    String imageName = image.getName();
+    checkValue("Image Name", imageName, "P1W1S1");
+
+    // -- Depth 3 --
+
+    // check OME/Dataset/CustomAttributes
+
+    // check OME/Screen/Reagent
+
+    // check OME/Screen/ScreenAcquisition
+
+    // check OME/Instrument/Microscope
+
+    // check OME/Instrument/LightSource-1
+
+    // check OME/Instrument/LightSource-2
+
+    // check OME/Instrument/Detector
+
+    // check OME/Instrument/Objective
+
+    // check OME/Instrument/FilterSet
+
+    // check OME/Instrument/Filter-1
+
+    // check OME/Instrument/Filter-2
+
+    // check OME/Instrument/OTF
+
+    // check OME/Image/ImagingEnvironment
+
+    // check OME/Image/Thumbnail
+
+    // check OME/Image/LogicalChannel
+    LogicalChannelNode imageLogicalChannel =
+      (LogicalChannelNode) imageLogicalChannelList.get(0);
+    checkNotNull("Image LogicalChannel", imageLogicalChannel);
+    String imageLogicalChannelID = imageLogicalChannel.getID();
+    checkValue("Image LogicalChannel ID", imageLogicalChannelID,
+      "urn:lsid:foo.bar.com:LogicalChannel:123456");
+    LightSourceNode imageLogicalChannelLightSource =
+      imageLogicalChannel.getLightSource();
+    checkNotNull("Image LogicalChannel LightSource",
+      imageLogicalChannelLightSource);
+    OTFNode imageLogicalChannelOTF = imageLogicalChannel.getOTF();
+    checkNotNull("Image LogicalChannel OTF", imageLogicalChannelOTF);
+    DetectorNode imageLogicalChannelDetector =
+      imageLogicalChannel.getDetector();
+    checkNotNull("Image LogicalChannel Detector", imageLogicalChannelDetector);
+    FilterSetNode imageLogicalChannelFilterSet =
+      imageLogicalChannel.getFilterSet();
+    checkNotNull("Image LogicalChannel FilterSet",
+      imageLogicalChannelFilterSet);
+    int imageLogicalChannelChannelComponentCount =
+      imageLogicalChannel.getChannelComponentCount();
+    Vector imageLogicalChannelChannelComponentList =
+      imageLogicalChannel.getChannelComponentList();
+    checkCount("Image LogicalChannel ChannelComponent",
+      imageLogicalChannelChannelComponentCount,
+      imageLogicalChannelChannelComponentList, 1);
+    String imageLogicalChannelName = imageLogicalChannel.getName();
+    checkValue("Image LogicalChannel Name", imageLogicalChannelName, "Ch 1");
+    String imageLogicalChannelSamplesPerPixel =
+      imageLogicalChannel.getSamplesPerPixel();
+    checkNull("Image LogicalChannel SamplesPerPixel",
+      imageLogicalChannelSamplesPerPixel);
+    FilterNode imageLogicalChannelSecondaryEmissionFilter =
+      imageLogicalChannel.getSecondaryEmissionFilter();
+    checkNull("Image LogicalChannel SecondaryEmissionFilter",
+      imageLogicalChannelSecondaryEmissionFilter);
+    FilterNode imageLogicalChannelSecondaryExcitationFilter =
+      imageLogicalChannel.getSecondaryExcitationFilter();
+    checkNull("Image LogicalChannel SecondaryExcitationFilter",
+      imageLogicalChannelSecondaryExcitationFilter);
+    String imageLogicalChannelIlluminationType =
+      imageLogicalChannel.getIlluminationType();
+    checkValue("Image LogicalChannel IlluminationType",
+      imageLogicalChannelIlluminationType, "Epifluorescence");
+    Integer imageLogicalChannelPinholeSize =
+      imageLogicalChannel.getPinholeSize();
+    checkNull("Image LogicalChannel PinholeSize",
+      imageLogicalChannelPinholeSize);
+    String imageLogicalChannelPhotometricInterpretation =
+      imageLogicalChannel.getPhotometricInterpretation();
+    checkNull("Image LogicalChannel PhotometricInterpretation",
+      imageLogicalChannelPhotometricInterpretation);
+    String imageLogicalChannelMode = imageLogicalChannel.getMode();
+    checkNull("Image LogicalChannel Mode", imageLogicalChannelMode);
+    String imageLogicalChannelContrastMethod =
+      imageLogicalChannel.getContrastMethod();
+    checkNull("Image LogicalChannel ContrastMethod",
+      imageLogicalChannelContrastMethod);
+    Integer imageLogicalChannelExWave = imageLogicalChannel.getExWave();
+    checkValue("Image LogicalChannel ExWave",
+      imageLogicalChannelExWave, new Integer(490));
+    Integer imageLogicalChannelEmWave = imageLogicalChannel.getEmWave();
+    checkValue("Image LogicalChannel EmWave",
+      imageLogicalChannelEmWave, new Integer(528));
+    String imageLogicalChannelFluor = imageLogicalChannel.getFluor();
+    checkValue("Image LogicalChannel Fluor",
+      imageLogicalChannelFluor, "GFP");
+    Float imageLogicalChannelNdFilter = imageLogicalChannel.getNdFilter();
+    checkValue("Image LogicalChannel NdFilter",
+      imageLogicalChannelNdFilter, new Float(0.0f));
+    Integer imageLogicalChannelPockelCellSetting =
+      imageLogicalChannel.getPockelCellSetting();
+    checkNull("Image LogicalChannel PockelCellSetting",
+      imageLogicalChannelPockelCellSetting);
+
+    // check OME/Image/DisplayOptions
+    // TODO
+
+    // check OME/Image/StageLabel
+    // TODO
+
+    // check OME/Image/Pixels
+    PixelsNode imagePixels = (PixelsNode) imagePixelsList.get(0);
+    checkNotNull("Image Pixels", imagePixels);
+    int imagePixelsTiffDataCount = imagePixels.getTiffDataCount();
+    Vector imagePixelsTiffDataList = imagePixels.getTiffDataList();
+    checkCount("Image Pixels TiffData", imagePixelsTiffDataCount,
+      imagePixelsTiffDataList, 0);
+    int imagePixelsPlaneCount = imagePixels.getPlaneCount();
+    Vector imagePixelsPlaneList = imagePixels.getPlaneList();
+    checkCount("Image Pixels Plane", imagePixelsPlaneCount,
+      imagePixelsPlaneList, 0);
+    String imagePixelsDimensionOrder = imagePixels.getDimensionOrder();
+    checkValue("Image Pixels DimensionOrder",
+      imagePixelsDimensionOrder, "XYZCT");
+    String imagePixelsPixelType = imagePixels.getPixelType();
+    checkValue("Image Pixels PixelType", imagePixelsPixelType, "int16");
+    Boolean imagePixelsBigEndian = imagePixels.isBigEndian();
+    checkValue("Image Pixels BigEndian", imagePixelsBigEndian, Boolean.TRUE);
+    Integer imagePixelsSizeX = imagePixels.getSizeX();
+    checkValue("Image Pixels SizeX", imagePixelsSizeX, new Integer(20));
+    Integer imagePixelsSizeY = imagePixels.getSizeY();
+    checkValue("Image Pixels SizeY", imagePixelsSizeY, new Integer(20));
+    Integer imagePixelsSizeZ = imagePixels.getSizeZ();
+    checkValue("Image Pixels SizeZ", imagePixelsSizeZ, new Integer(5));
+    Integer imagePixelsSizeC = imagePixels.getSizeC();
+    checkValue("Image Pixels SizeC", imagePixelsSizeC, new Integer(1));
+    Integer imagePixelsSizeT = imagePixels.getSizeT();
+    checkValue("Image Pixels SizeT", imagePixelsSizeT, new Integer(6));
+    Float imagePixelsPhysicalSizeX = imagePixels.getPhysicalSizeX();
+    checkValue("Image Pixels PhysicalSizeX",
+      imagePixelsPhysicalSizeX, new Float(0.2f));
+    Float imagePixelsPhysicalSizeY = imagePixels.getPhysicalSizeY();
+    checkValue("Image Pixels PhysicalSizeY",
+      imagePixelsPhysicalSizeY, new Float(0.2f));
+    Float imagePixelsPhysicalSizeZ = imagePixels.getPhysicalSizeZ();
+    checkValue("Image Pixels PhysicalSizeZ",
+      imagePixelsPhysicalSizeZ, new Float(0.2f));
+    Float imagePixelsTimeIncrement = imagePixels.getTimeIncrement();
+    checkNull("Image Pixels TimeIncrement", imagePixelsTimeIncrement);
+    Integer imagePixelsWaveStart = imagePixels.getWaveStart();
+    checkNull("Image Pixels WaveStart", imagePixelsWaveStart);
+    Integer imagePixelsWaveIncrement = imagePixels.getWaveIncrement();
+    checkNull("Image Pixels WaveIncrement", imagePixelsWaveIncrement);
+
+    // -- Depth 4 --
+
+    // check OME/Instrument/LightSource-1/Laser
+
+    // check OME/Instrument/LightSource-2/Arc
+
+    // check OME/Instrument/Filter-1/TransmittanceRange
+
+    // check OME/Instrument/Filter-2/TransmittanceRange
+
+    // check OME/Instrument/OTF/BinaryFile
+
+    // check OME/Image/LogicalChannel/ChannelComponent
+
+    // check OME/Image/DisplayOptions/RedChannel
+    // TODO
+
+    // check OME/Image/DisplayOptions/GreenChannel
+    // TODO
+
+    // check OME/Image/DisplayOptions/BlueChannel
+    // TODO
+
+    // check OME/Image/DisplayOptions/GreyChannel
+    // TODO
+
+    // check OME/Image/DisplayOptions/Projection
+    // TODO
+
+    // check OME/Image/DisplayOptions/Time
+    // TODO
+
+    // check OME/Image/DisplayOptions/ROI
+
+    // -- Depth 5 --
+
+    // check OME/Instrument/LightSource-1/Laser/Pump
+
+    // check OME/Instrument/OTF/BinaryFile/External
+
+/*
     // check OME/Project node
     ProjectNode project = (ProjectNode) projectList.get(0);
     String projectID = project.getID();
@@ -2841,6 +3133,46 @@ public final class SampleTest {
 */
 
     return ome;
+  }
+
+  // -- Helper methods --
+
+  private static void checkCount(String field,
+    int count, Vector list, int expected)
+  {
+    if (count != expected || list.size() != expected) {
+      // decapitalize field name
+      char[] c = field.toCharArray();
+      for (int i=0; i<c.length; i++) {
+        if (c[i] < 'A' || c[i] > 'Z') break;
+        c[i] += 'a' - 'A';
+      }
+      // remove spaces
+      String var = new String(c).replaceAll(" ", "");
+      System.out.println("Error: Incorrect " + field + " count" +
+        " (" + var + "Count=" + count +
+        ", " + var + "List.size()=" + list.size() + ")");
+    }
+  }
+
+  private static void checkNull(String field, Object value) {
+    if (value != null) {
+      System.out.println("Error: " + field +
+        " is not null as expected (" + value + ")");
+    }
+  }
+
+  private static void checkNotNull(String field, Object value) {
+    if (value == null) {
+      System.out.println("Error: " + field + " should not be null");
+    }
+  }
+
+  private static void checkValue(String field, Object value, Object expected) {
+    if (value == null && expected == null) return;
+    if (value == null || !value.equals(expected)) {
+      System.out.println("Error: Incorrect " + field + " (" + value + ")");
+    }
   }
 
   // --  Main method --

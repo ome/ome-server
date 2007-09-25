@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.ObjectiveSettingsNode
+ * org.openmicroscopy.xml2007.ProjectionNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,15 +40,37 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class ObjectiveSettingsNode extends OMEXMLNode {
+/**
+ * The presence of this element indicates the user wants to view the Image as a maximum intensity projection.
+ * The ZStart and ZStop attributes are optional.  If they are not specified, then the entire Z stack will be pro
+ * z values are index from 0 to maxZ - 1
+ */
+public class ProjectionNode extends OMEXMLNode {
 
   // -- Constructor --
 
-  public ObjectiveSettingsNode(Element element) { super(element); }
+  public ProjectionNode(Element element) { super(element); }
 
-  // -- ObjectiveSettingsNode API methods --
+  // -- ProjectionNode API methods --
 
-  // CTR - this class is only a stub!
-  // ome.xsd 765
+  public Integer getZStart() {
+    return getIntegerAttribute("ZStart");
+  }
+
+  public void setZStart(Integer zStart) {
+    setIntegerAttribute("ZStart", zStart);
+  }
+
+  public Integer getZStop() {
+    return getIntegerAttribute("ZStop");
+  }
+
+  public void setZStop(Integer zStop) {
+    setIntegerAttribute("ZStop", zStop);
+  }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
 
 }

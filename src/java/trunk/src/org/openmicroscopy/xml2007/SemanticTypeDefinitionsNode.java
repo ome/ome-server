@@ -50,4 +50,8 @@ public class SemanticTypeDefinitionsNode extends OMEXMLNode {
 
   // CTR - this class is only a stub!
 
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
+
 }

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.ObjectiveSettingsNode
+ * org.openmicroscopy.xml2007.TimeNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,15 +40,39 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class ObjectiveSettingsNode extends OMEXMLNode {
+/**
+ * The time range the user is interested in the initial viewer display.  A range of timepoints indicates a movie
+ * If they are not specified, the movie is to include all timepoints.
+ * If the Time attributes point to a single time-point, that is the timepoint to be initially displayed.
+ * If the entire element is missing, the first time-point  will be displayed
+ * t values are index from 0 to maxT - 1
+ */
+public class TimeNode extends OMEXMLNode {
 
   // -- Constructor --
 
-  public ObjectiveSettingsNode(Element element) { super(element); }
+  public TimeNode(Element element) { super(element); }
 
-  // -- ObjectiveSettingsNode API methods --
+  // -- TimeNode API methods --
 
-  // CTR - this class is only a stub!
-  // ome.xsd 765
+  public Integer getTStart() {
+    return getIntegerAttribute("TStart");
+  }
+
+  public void setTStart(Integer tStart) {
+    setIntegerAttribute("TStart", tStart);
+  }
+
+  public Integer getTStop() {
+    return getIntegerAttribute("TStop");
+  }
+
+  public void setTStop(Integer tStop) {
+    setIntegerAttribute("TStop", tStop);
+  }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
 
 }

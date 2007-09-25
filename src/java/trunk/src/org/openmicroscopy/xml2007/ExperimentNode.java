@@ -38,8 +38,17 @@
 
 package org.openmicroscopy.xml2007;
 
+import java.util.Vector;
 import org.w3c.dom.Element;
 
+/**
+ * This element describes the type of experiment.  The required Type attribute must contain one or more entries from the following list:
+ * FP FRET Time-lapse 4-D+ Screen Immunocytochemistry FISH Electrophysiology  Ion-Imaging Colocalization PGI/Documentation
+ * FRAP Photoablation Optical-Trapping Photoactivation Fluorescence-Lifetime Spectral-Imaging Other
+ * FP refers to fluorescent proteins, PGI/Docuemntation is not a 'data' image.
+ * The optional Description element may contain free text to further describe the experiment.
+ * Added Type Photobleaching - ajp
+ */
 public class ExperimentNode extends OMEXMLNode {
 
   // -- Constructor --
@@ -48,6 +57,33 @@ public class ExperimentNode extends OMEXMLNode {
 
   // -- ExperimentNode API methods --
 
-  // CTR - this class is only a stub!
+  public String getDescription() {
+    return getCData("Description");
+  }
+
+  public void setDescription(String description) {
+    setCData("Description", description);
+  }
+
+  /** This is a link to the Experimenter who conducted the experiment - ajp */
+  public ExperimenterNode getExperimenter() {
+    return (ExperimenterNode) getReferencedNode("Experimenter", "ExperimenterRef");
+  }
+
+  public int getMicrobeamManipulationCount() {
+    return getChildCount("MicrobeamManipulationRef");
+  }
+
+  public Vector getMicrobeamManipulationList() {
+    return getReferencedNodes("MicrobeamManipulation", "MicrobeamManipulationRef");
+  }
+
+  public String getType() {
+    return getAttribute("Type");
+  }
+
+  public void setType(String type) {
+    setAttribute("Type", type);
+  }
 
 }

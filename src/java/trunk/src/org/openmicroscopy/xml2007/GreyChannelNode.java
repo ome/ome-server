@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.ObjectiveSettingsNode
+ * org.openmicroscopy.xml2007.GreyChannelNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,15 +40,26 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class ObjectiveSettingsNode extends OMEXMLNode {
+/**
+ * The wave number, black level, white level and optional gamma for a greyscale image.
+ * The GreyChannel element may contain an optional ColorMap attribute, which can be set to 'Greyscale', 'Spectrum' or 'Blackbody'
+ * Pixel values between BlackLevel and WhiteLevel will be assigned values 0-255, inclusive.
+ * Values below BlackLevel or above WhiteLevel will be assigned 0 and 255 respectively.
+ */
+public class GreyChannelNode extends ChannelSpecNode {
 
   // -- Constructor --
 
-  public ObjectiveSettingsNode(Element element) { super(element); }
+  public GreyChannelNode(Element element) { super(element); }
 
-  // -- ObjectiveSettingsNode API methods --
+  // -- GreyChannelNode API methods --
 
-  // CTR - this class is only a stub!
-  // ome.xsd 765
+  public String getColorMap() {
+    return getAttribute("ColorMap");
+  }
+
+  public void setColorMap(String colorMap) {
+    setAttribute("ColorMap", colorMap);
+  }
 
 }

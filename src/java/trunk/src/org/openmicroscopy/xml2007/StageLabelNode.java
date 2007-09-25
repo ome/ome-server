@@ -40,6 +40,7 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
+/** The StageLabel is used to specify a name and position for a stage position in the microscope's reference frame. */
 public class StageLabelNode extends OMEXMLNode {
 
   // -- Constructor --
@@ -48,6 +49,40 @@ public class StageLabelNode extends OMEXMLNode {
 
   // -- StageLabelNode API methods --
 
-  // CTR - this class is only a stub!
+  public String getName() {
+    return getAttribute("Name");
+  }
+
+  public void setName(String name) {
+    setAttribute("Name", name);
+  }
+
+  public Float getX() {
+    return getFloatAttribute("X");
+  }
+
+  public void setX(Float x) {
+    setFloatAttribute("X", x);
+  }
+
+  public Float getY() {
+    return getFloatAttribute("Y");
+  }
+
+  public void setY(Float y) {
+    setFloatAttribute("Y", y);
+  }
+
+  public Float getZ() {
+    return getFloatAttribute("Z");
+  }
+
+  public void setZ(Float z) {
+    setFloatAttribute("Z", z);
+  }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
 
 }

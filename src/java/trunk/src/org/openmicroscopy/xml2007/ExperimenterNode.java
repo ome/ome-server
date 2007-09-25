@@ -40,6 +40,10 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
+/**
+ * An element type to specify an Experimenter under OME.
+ * It consists of a Person element group and a login name specified under OMEName.
+ */
 public class ExperimenterNode extends OMEXMLNode {
 
   // -- Constructor --
@@ -49,5 +53,6 @@ public class ExperimenterNode extends OMEXMLNode {
   // -- ExperimenterNode API methods --
 
   // CTR - this class is only a stub!
+  // ome.xsd 1302
 
 }

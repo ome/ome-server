@@ -96,21 +96,29 @@ public abstract class OMEXMLNode {
   public String getID() { return getAttribute("ID"); }
 
   /** Sets the ID for this node. */
-  public void setID(String lsid) { setAttribute("ID", lsid); }
+  public void setID(String id) { setAttribute("ID", id); }
 
   /** Gets the name of the DOM element. */
   public String getElementName() { return DOMUtil.getName(element); }
 
   // -- Internal OMEXMLNode API methods --
 
+  /** Gets the number of child elements with the given name. */
+  protected int getChildCount(String name) {
+    return getSize(DOMUtil.getChildElements(name, element));
+  }
+
   /** Gets an OME-XML node representing the first child with the given name. */
   protected OMEXMLNode getChildNode(String name) {
     return createNode(DOMUtil.getChildElement(name, element));
   }
 
-  /** Gets the number of child elements with the given name. */
-  protected int getChildCount(String name) {
-    return getSize(DOMUtil.getChildElements(name, element));
+  /**
+   * Gets an OME-XML node of the specified type
+   * representing the first child with the given name.
+   */
+  protected OMEXMLNode getChildNode(String nodeType, String name) {
+    return createNode(nodeType, DOMUtil.getChildElement(name, element));
   }
 
   /** Gets a list of OME-XML node children with the given name. */
@@ -126,6 +134,18 @@ public abstract class OMEXMLNode {
   /** Gets a list of all OME-XML node children. */
   protected Vector getChildNodes() {
     return createNodes(DOMUtil.getChildElements(element));
+  }
+
+  /** Gets the given child node's character data. */
+  public String getCData(String name) {
+    Element el = getChildElement(name);
+    return DOMUtil.getCharacterData(el);
+  }
+
+  /** Sets the given child node's character data to the specified value. */
+  public void setCData(String name, String value) {
+    Element el = getChildElement(name);
+    DOMUtil.setCharacterData(value, el);
   }
 
   /**
@@ -306,7 +326,16 @@ public abstract class OMEXMLNode {
    */
   private OMEXMLNode createNode(Element el) {
     if (el == null) return null;
-    Class c = getClass(DOMUtil.getName(el));
+    return createNode(DOMUtil.getName(el), el);
+  }
+
+  /**
+   * Creates an OME-XML node of the given type,
+   * using the specified DOM element as a source.
+   */
+  private OMEXMLNode createNode(String nodeType, Element el) {
+    if (nodeType == null || el == null) return null;
+    Class c = getClass(nodeType);
     if (c == null) {
       // CTR TODO wrap in generic node class?
       return null;
@@ -349,8 +378,12 @@ public abstract class OMEXMLNode {
       if (o instanceof Element) {
         Element el = (Element) o;
         OMEXMLNode node = createNode(el);
-        if (node != null && nodes.indexOf(node) < 0) nodes.addElement(node);
+        if (node != null && nodes.indexOf(node) < 0) {
+          nodes.addElement(node);
+          continue;
+        }
       }
+      nodes.add(null);
     }
     return nodes;
   }
@@ -365,13 +398,9 @@ public abstract class OMEXMLNode {
     return DOMUtil.getChildElements(name, element);
   }
 
-  /** Gets the first ancestor DOM element with the specified name. */
-  private Element getAncestorElement(String name) {
-    return DOMUtil.getAncestorElement(name, element);
-  }
-
   /** Finds the DOM element with the specified name and ID attribute value. */
   private Element findElement(String name, String id) {
+    if (name == null || id == null) return null;
     return DOMUtil.findElement(name, "ID", id, element.getOwnerDocument());
   }
 
@@ -396,5 +425,20 @@ public abstract class OMEXMLNode {
 
   /** Gets the size of the vector. Returns 0 if the vector is null. */
   private int getSize(Vector v) { return v == null ? 0 : v.size(); }
+
+  // -- Object API methods --
+
+  /**
+   * Tests whether two OME-XML nodes are equal. Nodes are considered equal if
+   * they are instances of the same class with the same backing DOM element.
+   */
+  public boolean equals(Object obj) {
+    if (obj == null) return false;
+    if (!obj.getClass().equals(getClass())) return false;
+    return element.equals(((OMEXMLNode) obj).element);
+  }
+
+  /** Gets a string representation of this node. */
+  public String toString() { return element.toString(); }
 
 }

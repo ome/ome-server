@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.ObjectiveSettingsNode
+ * org.openmicroscopy.xml2007.FilterSetNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,15 +40,14 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class ObjectiveSettingsNode extends OMEXMLNode {
+public class FilterSetNode extends OMEXMLNode {
 
   // -- Constructor --
 
-  public ObjectiveSettingsNode(Element element) { super(element); }
+  public FilterSetNode(Element element) { super(element); }
 
-  // -- ObjectiveSettingsNode API methods --
+  // -- FilterSetNode API methods --
 
   // CTR - this class is only a stub!
-  // ome.xsd 765
 
 }

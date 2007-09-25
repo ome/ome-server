@@ -69,16 +69,11 @@ public class ImageNode extends OMEXMLNode {
    * The element contains a string in the ISO 8601 dateTime format (i.e. 1988-04-07T18:39:09)
    */
   public String getCreationDate() {
-    // TODO
-    return null;
+    return getCData("CreationDate");
   }
 
-  /**
-   * The creation date of the Image - when the Image was acquired.
-   * The element contains a string in the ISO 8601 dateTime format (i.e. 1988-04-07T18:39:09)
-   */
   public void setCreationDate(String creationDate) {
-    // TODO
+    setCData("CreationDate", creationDate);
   }
 
   public ExperimenterNode getExperimenter() {
@@ -86,12 +81,11 @@ public class ImageNode extends OMEXMLNode {
   }
 
   public String getDescription() {
-    // TODO
-    return null;
+    return getCData("Description");
   }
 
   public void setDescription(String description) {
-    // TODO
+    setCData("Description", description);
   }
 
   public ExperimentNode getExperiment() {
