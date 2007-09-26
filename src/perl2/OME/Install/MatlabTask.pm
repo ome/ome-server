@@ -279,36 +279,37 @@ sub execute {
 		# far on Mac OS X, and not on Linux. However, the library problem
 		# may not exist on Linux.
 		
-		if ($target_dir ne $matlab_lib_src && $MATLAB_INFO{"ARCH"} eq 'mac') {
-			print "  \\_ Copying Libraries ";
-			
-			# Makes the target directory if it doesn't exist
-			# and does the copy.
-			# Dies in OME::Install::Util if there's a problem
-			
-			mkpath($target_dir, 0, 02755) unless ( -d $target_dir);			
-			copy_dir( $matlab_lib_src, $target_dir );
-			print $LOGFILE "Copying matlab libraries...\n";
-			print BOLD, "[SUCCESS]", RESET, ".\n";
-			
-			# Patch!
-			print "  \\_ Patching Libraries ";
-			print $LOGFILE "Patching matlab libraries...\n";
-			my @libs_to_patch = get_file_list( $target_dir );
-			$retval = patch_matlab_dylibs ( $target_dir, \@libs_to_patch );
-			if ( scalar(@$retval) > 0 ) {
-				print $LOGFILE "Errors:\n";
-				print $LOGFILE join("\n\t", @$retval)."\n";
-				print BOLD, "[FAILURE]", RESET, ".\n"
-					and croak "Error patching matlab libraries, see $LOGFILE_NAME for details."
-			}
-			
-			print BOLD, "[SUCCESS]", RESET, ".\n";
-			print $LOGFILE "\tNo Errors\n\n";
-		}
+# 		if ($target_dir ne $matlab_lib_src && $MATLAB_INFO{"ARCH"} eq 'mac') {
+# 			print "  \\_ Copying Libraries ";
+# 			
+# 			# Makes the target directory if it doesn't exist
+# 			# and does the copy.
+# 			# Dies in OME::Install::Util if there's a problem
+# 			
+# 			mkpath($target_dir, 0, 02755) unless ( -d $target_dir);			
+# 			copy_dir( $matlab_lib_src, $target_dir );
+# 			print $LOGFILE "Copying matlab libraries...\n";
+# 			print BOLD, "[SUCCESS]", RESET, ".\n";
+# 			
+# 			# Patch!
+# 			print "  \\_ Patching Libraries ";
+# 			print $LOGFILE "Patching matlab libraries...\n";
+# 			my @libs_to_patch = get_file_list( $target_dir );
+# 			$retval = patch_matlab_dylibs ( $target_dir, \@libs_to_patch );
+# 			if ( scalar(@$retval) > 0 ) {
+# 				print $LOGFILE "Errors:\n";
+# 				print $LOGFILE join("\n\t", @$retval)."\n";
+# 				print BOLD, "[FAILURE]", RESET, ".\n"
+# 					and croak "Error patching matlab libraries, see $LOGFILE_NAME for details."
+# 			}
+# 			
+# 			print BOLD, "[SUCCESS]", RESET, ".\n";
+# 			print $LOGFILE "\tNo Errors\n\n";
+# 		}
 		
 		# Configure 
 		print "  \\_ Configuring ";
+		print "MATLAB lib is ".$MATLAB_INFO{"LIB"}."\n";
 		
 		$retval = configure_module("src/perl2/OME/Matlab/", $LOGFILE, 
 			{options => '-include="'.$MATLAB_INFO{"INCLUDE"}.'" -lib="'.$MATLAB_INFO{"LIB"}.'"'.' -version="'.$MATLAB_INFO{"VERS"}.'"'});
@@ -635,19 +636,20 @@ sub matlab_info {
 		or $matlab_vers =~ /7\.0\.4.+/ or $matlab_vers =~/7\.2\.0.+/ )  {
 		$matlab_include = "-I$matlab_root/extern/include";
 		$matlab_lib = "$matlab_root/bin/$matlab_arch";
-		$matlab_lib = "$OME_BASE_DIR/lib/matlab_".$matlab_vers if $matlab_arch eq 'mac';
 		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";		
 	} elsif ($matlab_vers =~ /7\.3\.0.+/ or $matlab_vers =~ /7\.4\.0.+/) {
 		$matlab_include = "-I$matlab_root/extern/include";
 		$matlab_lib = "$matlab_root/bin/$matlab_arch";
-		$matlab_lib = "$OME_BASE_DIR/lib/matlab_".$matlab_vers if $matlab_arch eq 'mac';
 		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";
+	} elsif ($matlab_vers =~ /7\.5\.0.+/) {
+		$matlab_include = "-I$matlab_root/extern/include";
+		$matlab_lib = "$matlab_root/bin/$matlab_arch";
+		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -lustdio -lz";
 	} else {
 		print STDERR "WARNING Matlab Version $matlab_vers not supported.\n";
 		# make an educated guess
 		$matlab_include = "-I$matlab_root/extern/include";
 		$matlab_lib = "$matlab_root/bin/$matlab_arch";
-		$matlab_lib = "$OME_BASE_DIR/lib/matlab_".$matlab_vers if $matlab_arch eq 'mac';
 		$matlab_lib_cmd = "-L$matlab_lib -lmx -leng -lut -lmat -licudata -licui18n -licuuc -lustdio -lz";
 	}
 	
