@@ -40,6 +40,7 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
+/** A description of the user settings on a microscope's objective lens. */
 public class ObjectiveSettingsNode extends OMEXMLNode {
 
   // -- Constructor --
@@ -50,5 +51,9 @@ public class ObjectiveSettingsNode extends OMEXMLNode {
 
   // CTR - this class is only a stub!
   // ome.xsd 765
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
 
 }

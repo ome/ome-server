@@ -60,7 +60,7 @@ public class TimeNode extends OMEXMLNode {
   }
 
   public void setTStart(Integer tStart) {
-    setIntegerAttribute("TStart", tStart);
+    setAttribute("TStart", tStart);
   }
 
   public Integer getTStop() {
@@ -68,7 +68,7 @@ public class TimeNode extends OMEXMLNode {
   }
 
   public void setTStop(Integer tStop) {
-    setIntegerAttribute("TStop", tStop);
+    setAttribute("TStop", tStop);
   }
 
   // -- OMEXMLNode API methods --

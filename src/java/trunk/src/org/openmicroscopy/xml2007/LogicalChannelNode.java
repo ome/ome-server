@@ -137,7 +137,7 @@ public class LogicalChannelNode extends OMEXMLNode {
   }
 
   public void setPinholeSize(Integer pinholeSize) {
-    setIntegerAttribute("PinholeSize", pinholeSize);
+    setAttribute("PinholeSize", pinholeSize);
   }
 
   /**
@@ -173,7 +173,7 @@ public class LogicalChannelNode extends OMEXMLNode {
   }
 
   public void setExWave(Integer exWave) {
-    setIntegerAttribute("ExWave", exWave);
+    setAttribute("ExWave", exWave);
   }
 
   public Integer getEmWave() {
@@ -181,7 +181,7 @@ public class LogicalChannelNode extends OMEXMLNode {
   }
 
   public void setEmWave(Integer emWave) {
-    setIntegerAttribute("EmWave", emWave);
+    setAttribute("EmWave", emWave);
   }
 
   public String getFluor() {
@@ -197,7 +197,7 @@ public class LogicalChannelNode extends OMEXMLNode {
   }
 
   public void setNdFilter(Float ndFilter) {
-    setFloatAttribute("NdFilter", ndFilter);
+    setAttribute("NdFilter", ndFilter);
   }
 
   public Integer getPockelCellSetting() {
@@ -205,7 +205,11 @@ public class LogicalChannelNode extends OMEXMLNode {
   }
 
   public void setPockelCellSetting(Integer pockelCellSetting) {
-    setIntegerAttribute("PockelCellSetting", pockelCellSetting);
+    setAttribute("PockelCellSetting", pockelCellSetting);
   }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
 
 }

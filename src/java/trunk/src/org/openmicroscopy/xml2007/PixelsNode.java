@@ -102,7 +102,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setBigEndian(Boolean bigEndian) {
-    setBooleanAttribute("BigEndian", bigEndian);
+    setAttribute("BigEndian", bigEndian);
   }
 
   /** Dimensional size of pixel data array */
@@ -111,7 +111,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setSizeX(Integer sizeX) {
-    setIntegerAttribute("SizeX", sizeX);
+    setAttribute("SizeX", sizeX);
   }
 
   /** Dimensional size of pixel data array */
@@ -120,7 +120,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setSizeY(Integer sizeY) {
-    setIntegerAttribute("SizeY", sizeY);
+    setAttribute("SizeY", sizeY);
   }
 
   /** Dimensional size of pixel data array */
@@ -129,7 +129,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setSizeZ(Integer sizeZ) {
-    setIntegerAttribute("SizeZ", sizeZ);
+    setAttribute("SizeZ", sizeZ);
   }
 
   /** Dimensional size of pixel data array */
@@ -138,7 +138,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setSizeC(Integer sizeC) {
-    setIntegerAttribute("SizeC", sizeC);
+    setAttribute("SizeC", sizeC);
   }
 
   /** Dimensional size of pixel data array */
@@ -147,7 +147,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setSizeT(Integer sizeT) {
-    setIntegerAttribute("SizeT", sizeT);
+    setAttribute("SizeT", sizeT);
   }
 
   /** Physical size of a pixel */
@@ -156,7 +156,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setPhysicalSizeX(Float physicalSizeX) {
-    setFloatAttribute("PhysicalSizeX", physicalSizeX);
+    setAttribute("PhysicalSizeX", physicalSizeX);
   }
 
   /** Physical size of a pixel */
@@ -165,7 +165,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setPhysicalSizeY(Float physicalSizeY) {
-    setFloatAttribute("PhysicalSizeY", physicalSizeY);
+    setAttribute("PhysicalSizeY", physicalSizeY);
   }
 
   /** Physical size of a pixel */
@@ -174,7 +174,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setPhysicalSizeZ(Float physicalSizeZ) {
-    setFloatAttribute("PhysicalSizeZ", physicalSizeZ);
+    setAttribute("PhysicalSizeZ", physicalSizeZ);
   }
 
   public Float getTimeIncrement() {
@@ -182,7 +182,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setTimeIncrement(Float timeIncrement) {
-    setFloatAttribute("TimeIncrement", timeIncrement);
+    setAttribute("TimeIncrement", timeIncrement);
   }
 
   public Integer getWaveStart() {
@@ -190,7 +190,7 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setWaveStart(Integer waveStart) {
-    setIntegerAttribute("WaveStart", waveStart);
+    setAttribute("WaveStart", waveStart);
   }
 
   public Integer getWaveIncrement() {
@@ -198,7 +198,11 @@ public class PixelsNode extends OMEXMLNode {
   }
 
   public void setWaveIncrement(Integer waveIncrement) {
-    setIntegerAttribute("WaveIncrement", waveIncrement);
+    setAttribute("WaveIncrement", waveIncrement);
   }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
 
 }

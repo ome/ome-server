@@ -42,7 +42,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Hashtable;
 import java.util.Vector;
 import org.w3c.dom.*;
-import org.openmicroscopy.xml.DOMUtil;
 
 /**
  * OMEXMLNode is the abstract superclass of all OME-XML nodes. These nodes are
@@ -90,7 +89,7 @@ public abstract class OMEXMLNode {
   public Element getDOMElement() { return element; }
 
   /** Gets whether this type of node should have an ID. */
-  public boolean hasID() { return true; }
+  public abstract boolean hasID();
 
   /** Gets the ID for this node, or null if none. */
   public String getID() { return getAttribute("ID"); }
@@ -134,18 +133,6 @@ public abstract class OMEXMLNode {
   /** Gets a list of all OME-XML node children. */
   protected Vector getChildNodes() {
     return createNodes(DOMUtil.getChildElements(element));
-  }
-
-  /** Gets the given child node's character data. */
-  public String getCData(String name) {
-    Element el = getChildElement(name);
-    return DOMUtil.getCharacterData(el);
-  }
-
-  /** Sets the given child node's character data to the specified value. */
-  public void setCData(String name, String value) {
-    Element el = getChildElement(name);
-    DOMUtil.setCharacterData(value, el);
   }
 
   /**
@@ -199,6 +186,64 @@ public abstract class OMEXMLNode {
     return createNode(el);
   }
 
+  /** Gets the given child node's character data. */
+  protected String getCData(String name) {
+    return DOMUtil.getCharacterData(getChildElement(name));
+  }
+
+  /** Sets the given child node's character data to the specified value. */
+  protected void setCData(String name, String value) {
+    DOMUtil.setCharacterData(value, getChildElement(name));
+  }
+
+  /**
+   * Sets the given child node's character data
+   * to the specified Object's string representation.
+   */
+  protected void setCData(String name, Object value) {
+    DOMUtil.setCharacterData(value, getChildElement(name));
+  }
+
+  /**
+   * Gets the given child node's character data as a Boolean,
+   * or null if the value is not a boolean.
+   */
+  protected Boolean getBooleanCData(String name) {
+    return DOMUtil.getBooleanCharacterData(getChildElement(name));
+  }
+
+  /**
+   * Gets the given child node's character data as a Double,
+   * or null if the value is not a double.
+   */
+  protected Double getDoubleCData(String name) {
+    return DOMUtil.getDoubleCharacterData(getChildElement(name));
+  }
+
+  /**
+   * Gets the given child node's character data as a Float,
+   * or null if the value is not a float.
+   */
+  protected Float getFloatCData(String name) {
+    return DOMUtil.getFloatCharacterData(getChildElement(name));
+  }
+
+  /**
+   * Gets the given child node's character data as a Integer,
+   * or null if the value is not an integer.
+   */
+  protected Integer getIntegerCData(String name) {
+    return DOMUtil.getIntegerCharacterData(getChildElement(name));
+  }
+
+  /**
+   * Gets the given child node's character data as a Long,
+   * or null if the value is not a long.
+   */
+  protected Long getLongCData(String name) {
+    return DOMUtil.getLongCharacterData(getChildElement(name));
+  }
+
   /** Gets a list of all DOM element attribute names. */
   protected String[] getAttributeNames() {
     return DOMUtil.getAttributeNames(element);
@@ -223,19 +268,19 @@ public abstract class OMEXMLNode {
   }
 
   /**
+   * Sets the value of the DOM element's attribute with the
+   * given name to the specified Object's string representation.
+   */
+  protected void setAttribute(String name, Object value) {
+    DOMUtil.setAttribute(name, value, element);
+  }
+
+  /**
    * Gets the value of the DOM element's attribute with the given name
    * as a Boolean, or null if the value is not a boolean.
    */
   protected Boolean getBooleanAttribute(String name) {
     return DOMUtil.getBooleanAttribute(name, element);
-  }
-
-  /**
-   * Sets the value of the DOM element's attribute with the given name
-   * to the specified Boolean.
-   */
-  protected void setBooleanAttribute(String name, Boolean value) {
-    DOMUtil.setBooleanAttribute(name, value, element);
   }
 
   /**
@@ -247,27 +292,11 @@ public abstract class OMEXMLNode {
   }
 
   /**
-   * Sets the value of the DOM element's attribute with the given name
-   * to the specified Double.
-   */
-  protected void setDoubleAttribute(String name, Double value) {
-    DOMUtil.setDoubleAttribute(name, value, element);
-  }
-
-  /**
    * Gets the value of the DOM element's attribute with the given name
    * as a Float, or null if the value is not a float.
    */
   protected Float getFloatAttribute(String name) {
     return DOMUtil.getFloatAttribute(name, element);
-  }
-
-  /**
-   * Sets the value of the DOM element's attribute with the given name
-   * to the specified Float.
-   */
-  protected void setFloatAttribute(String name, Float value) {
-    DOMUtil.setFloatAttribute(name, value, element);
   }
 
   /**
@@ -279,43 +308,11 @@ public abstract class OMEXMLNode {
   }
 
   /**
-   * Sets the value of the DOM element's attribute with the given name
-   * to the specified Float.
-   */
-  protected void setIntegerAttribute(String name, Integer value) {
-    DOMUtil.setIntegerAttribute(name, value, element);
-  }
-
-  /**
    * Gets the value of the DOM element's attribute with the given name
    * as a Long, or null if the value is not a long.
    */
   protected Long getLongAttribute(String name) {
     return DOMUtil.getLongAttribute(name, element);
-  }
-
-  /**
-   * Sets the value of the DOM element's attribute with the given name
-   * to the specified Float.
-   */
-  protected void setLongAttribute(String name, Long value) {
-    DOMUtil.setLongAttribute(name, value, element);
-  }
-
-  /**
-   * Gets the value of the DOM element's attribute with the given name
-   * as a Short, or null if the value is not a short.
-   */
-  protected Short getShortAttribute(String name) {
-    return DOMUtil.getShortAttribute(name, element);
-  }
-
-  /**
-   * Sets the value of the DOM element's attribute with the given name
-   * to the specified Float.
-   */
-  protected void setShortAttribute(String name, Short value) {
-    DOMUtil.setShortAttribute(name, value, element);
   }
 
   // -- Helper methods --

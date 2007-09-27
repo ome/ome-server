@@ -139,4 +139,8 @@ public class OMENode extends OMEXMLNode {
     return (CustomAttributesNode) getChildNode("CustomAttributes");
   }
 
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
+
 }

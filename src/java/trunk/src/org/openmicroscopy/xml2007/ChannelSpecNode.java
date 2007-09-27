@@ -54,7 +54,7 @@ public class ChannelSpecNode extends OMEXMLNode {
   }
 
   public void setChannelNumber(Integer channelNumber) {
-    setIntegerAttribute("ChannelNumber", channelNumber);
+    setAttribute("ChannelNumber", channelNumber);
   }
 
   /**
@@ -68,7 +68,7 @@ public class ChannelSpecNode extends OMEXMLNode {
   }
 
   public void setBlackLevel(Float blackLevel) {
-    setFloatAttribute("BlackLevel", blackLevel);
+    setAttribute("BlackLevel", blackLevel);
   }
 
   /**
@@ -82,7 +82,7 @@ public class ChannelSpecNode extends OMEXMLNode {
   }
 
   public void setWhiteLevel(Float whiteLevel) {
-    setFloatAttribute("WhiteLevel", whiteLevel);
+    setAttribute("WhiteLevel", whiteLevel);
   }
 
   public Float getGamma() {
@@ -90,7 +90,7 @@ public class ChannelSpecNode extends OMEXMLNode {
   }
 
   public void setGamma(Float gamma) {
-    setFloatAttribute("Gamma", gamma);
+    setAttribute("Gamma", gamma);
   }
 
   public Boolean isisOn() {
@@ -98,7 +98,7 @@ public class ChannelSpecNode extends OMEXMLNode {
   }
 
   public void setisOn(Boolean isOn) {
-    setBooleanAttribute("isOn", isOn);
+    setAttribute("isOn", isOn);
   }
 
   // -- OMEXMLNode API methods --

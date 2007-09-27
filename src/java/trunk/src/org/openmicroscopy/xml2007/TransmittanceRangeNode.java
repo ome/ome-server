@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.DetectorNode
+ * org.openmicroscopy.xml2007.TransmittanceRangeNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,19 +40,63 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class DetectorNode extends OMEXMLNode {
+/**
+ * CutIn Units: nm,
+ * CutOut Units: nm,
+ * CutInTolerance Units: nm,
+ * CutOutTolerance Units: nm,
+ * Transmittance Units: Percentage Fraction
+ */
+public class TransmittanceRangeNode extends OMEXMLNode {
 
   // -- Constructor --
 
-  public DetectorNode(Element element) { super(element); }
+  public TransmittanceRangeNode(Element element) { super(element); }
 
-  // -- DetectorNode API methods --
+  // -- TransmittanceRangeNode API methods --
 
-  // CTR - this class is only a stub!
-  // TODO
+  public Integer getCutIn() {
+    return getIntegerAttribute("CutIn");
+  }
+
+  public void setCutIn(Integer type) {
+    setAttribute("CutIn", type);
+  }
+
+  public Integer getCutOut() {
+    return getIntegerAttribute("CutOut");
+  }
+
+  public void setCutOut(Integer type) {
+    setAttribute("CutOut", type);
+  }
+
+  public Integer getCutInTolerance() {
+    return getIntegerAttribute("CutInTolerance");
+  }
+
+  public void setCutInTolerance(Integer type) {
+    setAttribute("CutInTolerance", type);
+  }
+
+  public Integer getCutOutTolerance() {
+    return getIntegerAttribute("CutOutTolerance");
+  }
+
+  public void setCutOutTolerance(Integer type) {
+    setAttribute("CutOutTolerance", type);
+  }
+
+  public Integer getTransmittance() {
+    return getIntegerAttribute("Transmittance");
+  }
+
+  public void setTransmittance(Integer type) {
+    setAttribute("Transmittance", type);
+  }
 
   // -- OMEXMLNode API methods --
 
-  public boolean hasID() { return true; }
+  public boolean hasID() { return false; }
 
 }

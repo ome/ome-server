@@ -94,7 +94,7 @@ public class DisplayOptionsNode extends OMEXMLNode {
   }
 
   public void setZoom(Float zoom) {
-    setFloatAttribute("Zoom", zoom);
+    setAttribute("Zoom", zoom);
   }
 
 	/** Specifies to display the image as greyscale or RGB */
@@ -105,5 +105,9 @@ public class DisplayOptionsNode extends OMEXMLNode {
   public void setDisplay(String display) {
     setAttribute("Display", display);
   }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
 
 }

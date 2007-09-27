@@ -192,4 +192,8 @@ public class ImageNode extends OMEXMLNode {
     return (PixelsNode) getAttrReferencedNode("Pixels", "DefaultPixels");
   }
 
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
+
 }

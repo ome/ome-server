@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.DetectorNode
+ * org.openmicroscopy.xml2007.ManufactSpecNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,19 +40,40 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class DetectorNode extends OMEXMLNode {
+public class ManufactSpecNode extends OMEXMLNode {
 
   // -- Constructor --
 
-  public DetectorNode(Element element) { super(element); }
+  public ManufactSpecNode(Element element) { super(element); }
 
-  // -- DetectorNode API methods --
+  // -- ManufactSpecNode API methods --
 
-  // CTR - this class is only a stub!
-  // TODO
+  public String getManufacturer() {
+    return getAttribute("Manufacturer");
+  }
 
-  // -- OMEXMLNode API methods --
+  public void setManufacturer(String manufacturer) {
+    setAttribute("Manufacturer", manufacturer);
+  }
 
-  public boolean hasID() { return true; }
+  public String getModel() {
+    return getAttribute("Model");
+  }
+
+  public void setModel(String model) {
+    setAttribute("Model", model);
+  }
+
+  public String getSerialNumber() {
+    return getAttribute("SerialNumber");
+  }
+
+  public void setSerialNumber(String serialNumber) {
+    setAttribute("SerialNumber", serialNumber);
+  }
+
+  // -- OMEXML API methods --
+
+  public boolean hasID() { return false; }
 
 }

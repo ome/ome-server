@@ -49,5 +49,10 @@ public class LightSourceNode extends OMEXMLNode {
   // -- LightSourceNode API methods --
 
   // CTR - this class is only a stub!
+  // TODO
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
 
 }

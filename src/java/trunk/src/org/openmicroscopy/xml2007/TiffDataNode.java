@@ -57,7 +57,7 @@ public class TiffDataNode extends OMEXMLNode {
   }
 
   public void setIFD(Integer ifd) {
-    setIntegerAttribute("IFD", ifd);
+    setAttribute("IFD", ifd);
   }
 
   /**
@@ -69,7 +69,7 @@ public class TiffDataNode extends OMEXMLNode {
   }
 
   public void setFirstZ(Integer firstZ) {
-    setIntegerAttribute("FirstZ", firstZ);
+    setAttribute("FirstZ", firstZ);
   }
 
   /**
@@ -81,7 +81,7 @@ public class TiffDataNode extends OMEXMLNode {
   }
 
   public void setFirstT(Integer firstT) {
-    setIntegerAttribute("FirstT", firstT);
+    setAttribute("FirstT", firstT);
   }
 
   /**
@@ -93,7 +93,7 @@ public class TiffDataNode extends OMEXMLNode {
   }
 
   public void setFirstC(Integer firstC) {
-    setIntegerAttribute("FirstC", firstC);
+    setAttribute("FirstC", firstC);
   }
 
   /**
@@ -106,7 +106,11 @@ public class TiffDataNode extends OMEXMLNode {
   }
 
   public void setNumPlanes(Integer numPlanes) {
-    setIntegerAttribute("NumPlanes", numPlanes);
+    setAttribute("NumPlanes", numPlanes);
   }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
 
 }

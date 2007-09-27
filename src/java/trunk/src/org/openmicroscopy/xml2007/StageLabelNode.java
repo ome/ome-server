@@ -62,7 +62,7 @@ public class StageLabelNode extends OMEXMLNode {
   }
 
   public void setX(Float x) {
-    setFloatAttribute("X", x);
+    setAttribute("X", x);
   }
 
   public Float getY() {
@@ -70,7 +70,7 @@ public class StageLabelNode extends OMEXMLNode {
   }
 
   public void setY(Float y) {
-    setFloatAttribute("Y", y);
+    setAttribute("Y", y);
   }
 
   public Float getZ() {
@@ -78,7 +78,7 @@ public class StageLabelNode extends OMEXMLNode {
   }
 
   public void setZ(Float z) {
-    setFloatAttribute("Z", z);
+    setAttribute("Z", z);
   }
 
   // -- OMEXMLNode API methods --

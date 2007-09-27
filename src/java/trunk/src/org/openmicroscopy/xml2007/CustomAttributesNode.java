@@ -49,5 +49,10 @@ public class CustomAttributesNode extends OMEXMLNode {
   // -- CustomAttributesNode API methods --
 
   // CTR - this class is only a stub!
+  // TODO
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
 
 }

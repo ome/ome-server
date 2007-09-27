@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.DetectorNode
+ * org.openmicroscopy.xml2007.ArcNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,19 +40,19 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class DetectorNode extends OMEXMLNode {
+public class ArcNode extends OMEXMLNode {
 
   // -- Constructor --
 
-  public DetectorNode(Element element) { super(element); }
+  public ArcNode(Element element) { super(element); }
 
-  // -- DetectorNode API methods --
+  // -- ArcNode API methods --
 
   // CTR - this class is only a stub!
   // TODO
 
   // -- OMEXMLNode API methods --
 
-  public boolean hasID() { return true; }
+  public boolean hasID() { return false; }
 
 }

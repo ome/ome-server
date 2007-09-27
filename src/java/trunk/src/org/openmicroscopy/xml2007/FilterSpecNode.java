@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.DetectorNode
+ * org.openmicroscopy.xml2007.FilterSpecNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,19 +40,44 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class DetectorNode extends OMEXMLNode {
+/**
+ * An element type specifying a filter specification.
+ * Unlike the ManufactSpec, filters are referred to by lot number rather than serial number.
+ */
+public class FilterSpecNode extends OMEXMLNode {
 
   // -- Constructor --
 
-  public DetectorNode(Element element) { super(element); }
+  public FilterSpecNode(Element element) { super(element); }
 
-  // -- DetectorNode API methods --
+  // -- FilterSpecNode API methods --
 
-  // CTR - this class is only a stub!
-  // TODO
+  public String getManufacturer() {
+    return getAttribute("Manufacturer");
+  }
+
+  public void setManufacturer(String manufacturer) {
+    setAttribute("Manufacturer", manufacturer);
+  }
+
+  public String getModel() {
+    return getAttribute("Model");
+  }
+
+  public void setModel(String model) {
+    setAttribute("Model", model);
+  }
+
+  public String getLotNumber() {
+    return getAttribute("LotNumber");
+  }
+
+  public void setLotNumber(String lotNumber) {
+    setAttribute("LotNumber", lotNumber);
+  }
 
   // -- OMEXMLNode API methods --
 
-  public boolean hasID() { return true; }
+  public boolean hasID() { return false; }
 
 }

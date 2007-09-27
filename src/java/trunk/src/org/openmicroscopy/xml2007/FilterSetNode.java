@@ -49,5 +49,11 @@ public class FilterSetNode extends OMEXMLNode {
   // -- FilterSetNode API methods --
 
   // CTR - this class is only a stub!
+  // ome.xsd 903
+  // TODO START HERE
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
 
 }

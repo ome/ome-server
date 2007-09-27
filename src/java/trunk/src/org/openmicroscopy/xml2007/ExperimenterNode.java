@@ -38,6 +38,7 @@
 
 package org.openmicroscopy.xml2007;
 
+import java.util.Vector;
 import org.w3c.dom.Element;
 
 /**
@@ -52,7 +53,56 @@ public class ExperimenterNode extends OMEXMLNode {
 
   // -- ExperimenterNode API methods --
 
-  // CTR - this class is only a stub!
-  // ome.xsd 1302
+  public String getFirstName() {
+    return getCData("FirstName");
+  }
+
+  public void setFirstName(String firstName) {
+    setCData("FirstName", firstName);
+  }
+
+  public String getLastName() {
+    return getCData("LastName");
+  }
+
+  public void setLastName(String lastName) {
+    setCData("LastName", lastName);
+  }
+
+  public String getEmail() {
+    return getCData("Email");
+  }
+
+  public void setEmail(String email) {
+    setCData("Email", email);
+  }
+
+  public String getInstitution() {
+    return getCData("Institution");
+  }
+
+  public void setInstitution(String institution) {
+    setCData("Institution", institution);
+  }
+
+  public String getOMEName() {
+    return getCData("OMEName");
+  }
+
+  public void setOMEName(String omeName) {
+    setCData("OMEName", omeName);
+  }
+
+  public int getGroupCount() {
+    return getChildCount("GroupRef");
+  }
+
+  public Vector getGroupList() {
+    return getReferencedNodes("Group", "GroupRef");
+  }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
 
 }

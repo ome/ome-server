@@ -40,7 +40,16 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class FilterNode extends OMEXMLNode {
+/**
+ * A filter is either an excitation or emission filters.
+ * There should be one filter element specified per wavelength in the image. 
+ * The channel number associated with a filter set is specified in LogicalChannel's required ChannelComponent element and its Index attribute.
+ * It is based on the FilterSpec type, so has the required attributes Manufacturer, Model, and LotNumber.
+ * It may also contain a Type attribute which may be set to
+ * 'LongPass', 'ShortPass', 'BandPass', or 'MultiPass'.
+ * It can be associated with an optional FilterWheel - Note: this is not the same as a FilterSet
+ */
+public class FilterNode extends FilterSpecNode {
 
   // -- Constructor --
 
@@ -48,7 +57,29 @@ public class FilterNode extends OMEXMLNode {
 
   // -- FilterNode API methods --
 
-  // CTR - this class is only a stub!
-  // ome.xsd 794
+  public TransmittanceRangeNode getTransmittanceRange() {
+    return (TransmittanceRangeNode) getChildNode("TransmittanceRange");
+  }
+
+  public String getType() {
+    return getAttribute("Type");
+  }
+
+  public void setType(String type) {
+    setAttribute("Type", type);
+  }
+
+  /** A filter 'wheel' in OME can refer to any arrangement of filters in a filter holder of any shape. It could, for example, be a filter slider. */
+  public String getFilterWheel() {
+    return getAttribute("FilterWheel");
+  }
+
+  public void setFilterWheel(String filterWheel) {
+    setAttribute("FilterWheel", filterWheel);
+  }
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
 
 }

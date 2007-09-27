@@ -40,7 +40,7 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class MicroscopeNode extends OMEXMLNode {
+public class MicroscopeNode extends ManufactSpecNode {
 
   // -- Constructor --
 
@@ -49,5 +49,10 @@ public class MicroscopeNode extends OMEXMLNode {
   // -- MicroscopeNode API methods --
 
   // CTR - this class is only a stub!
+  // TODO
+
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
 
 }

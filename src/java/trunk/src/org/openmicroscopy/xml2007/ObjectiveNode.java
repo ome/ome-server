@@ -40,7 +40,11 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class ObjectiveNode extends OMEXMLNode {
+/**
+ * A description of the microscope's objective lens.
+ * Required elements include the lens numerical aperture, and the magnification, both of which a floating point (real) numbers.
+ */
+public class ObjectiveNode extends ManufactSpecNode {
 
   // -- Constructor --
 
@@ -48,7 +52,62 @@ public class ObjectiveNode extends OMEXMLNode {
 
   // -- ObjectiveNode API methods --
 
-  // CTR - this class is only a stub!
-  // ome.xsd 740
+  /** The coating applied to the lens */
+  public String getCorrection() {
+    return getCData("Correction");
+  }
+
+  public void setCorrection(String correction) {
+    setCData("Correction", correction);
+  }
+
+  /** The immersion medium the lens is designed for */
+  public String getImmersion() {
+    return getCData("Immersion");
+  }
+
+  public void setImmersion(String immersion) {
+    setCData("Immersion", immersion);
+  }
+
+  /** The numerical aperture of the lens expressed as a floating point (real) number. */
+  public Float getLensNA() {
+    return getFloatCData("LensNA");
+  }
+
+  public void setLensNA(Float lensNA) {
+    setCData("LensNA", lensNA);
+  }
+
+  /** The magnification of the lens as specified by the manufacturer - i.e. '60' is a 60X lens. */
+  public Integer getNominalMagnification() {
+    return getIntegerCData("NominalMagnification");
+  }
+
+  public void setNominalMagnification(Integer nominalMagnification) {
+    setCData("NominalMagnification", nominalMagnification);
+  }
+
+  /** The magnification of the lens as measured by a calibration process- i.e. '59.987' for a 60X lens. */
+  public Float getCalibratedMagnification() {
+    return getFloatCData("CalibratedMagnification");
+  }
+
+  public void setCalibratedMagnification(Float calibratedMagnification) {
+    setCData("CalibratedMagnification", calibratedMagnification);
+  }
+
+  /** The working distance of the lens expressed as a floating point (real) number. Units are um. */
+  public Float getWorkingDistance() {
+    return getFloatCData("WorkingDistance");
+  }
+
+  public void setWorkingDistance(Float workingDistance) {
+    setCData("WorkingDistance", workingDistance);
+  }
+
+  // -- OMEXML API methods --
+
+  public boolean hasID() { return true; }
 
 }

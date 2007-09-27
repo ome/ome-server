@@ -124,4 +124,8 @@ public class InstrumentNode extends OMEXMLNode {
     return getChildNodes("OTF");
   }
 
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
+
 }

@@ -86,4 +86,8 @@ public class ExperimentNode extends OMEXMLNode {
     setAttribute("Type", type);
   }
 
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return true; }
+
 }

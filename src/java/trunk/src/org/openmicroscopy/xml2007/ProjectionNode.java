@@ -58,7 +58,7 @@ public class ProjectionNode extends OMEXMLNode {
   }
 
   public void setZStart(Integer zStart) {
-    setIntegerAttribute("ZStart", zStart);
+    setAttribute("ZStart", zStart);
   }
 
   public Integer getZStop() {
@@ -66,7 +66,7 @@ public class ProjectionNode extends OMEXMLNode {
   }
 
   public void setZStop(Integer zStop) {
-    setIntegerAttribute("ZStop", zStop);
+    setAttribute("ZStop", zStop);
   }
 
   // -- OMEXMLNode API methods --

@@ -62,4 +62,8 @@ public class GreyChannelNode extends ChannelSpecNode {
     setAttribute("ColorMap", colorMap);
   }
 
+  // -- OMEXMLNode API methods --
+
+  public boolean hasID() { return false; }
+
 }
