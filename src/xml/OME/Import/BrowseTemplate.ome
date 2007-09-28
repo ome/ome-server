@@ -40,25 +40,20 @@
           </Description>
           <Element
 			 Name="ObjectType"
-			 DBLocation="BROWSE_TEMPLATE.OBJECT_TYPE"
 			 DataType="string"
 			 Description="Type by which to browse (i.e. OME::Dataset, OME::Image, @Instrument, etc.)"/>
           <Element
 			 Name="Name"
-			 DBLocation="BROWSE_TEMPLATE.NAME"
 			 DataType="string"/>
           <Element
 			 Name="Description"
-			 DBLocation="BROWSE_TEMPLATE.DESCRIPTION"
 			 DataType="string"/>
           <Element
 			 Name="Template"
-			 DBLocation="BROWSE_TEMPLATE.TEMPLATE"
 			 DataType="string"
 			 Description="Path to the file (maybe template itself in the future?)"/>
 		  <Element
 			 Name="ImplementedBy"
-			 DBLocation="BROWSE_TEMPLATE.IMPLEMENTED_BY"
 			 DataType="string"
 			 Description="The name of the Perl package that is set up to handle this template."/>
 		</SemanticType>

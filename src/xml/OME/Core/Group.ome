@@ -1,4 +1,4 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -25,61 +25,44 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Douglas Creager <dcreager@alum.mit.edu>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
-<OME
-  xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
-  xmlns:xsi=
-    "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:STD=
-    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-
-	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType
-			Name= "Group"
-			AppliesTo = "G">
-			<Description>Defines groups of experimenters.  This can be a lab or a project group.  It is not meant to represent an institution or a company.</Description>
-			<Element
-				Name= "Name"
-				DBLocation = "GROUPS.NAME"
-				DataType = "string"/>
-			<Element
-				Name= "Leader"
-				DBLocation = "GROUPS.LEADER"
-				DataType = "reference"
-				RefersTo = "Experimenter"/>
-			<Element
-				Name= "Contact"
-				DBLocation = "GROUPS.CONTACT"
-				DataType = "reference"
-				RefersTo = "Experimenter"/>
-		</SemanticType>
-		
-		<SemanticType
-			Name= "ExperimenterGroup"
-			AppliesTo = "G">
-			<Description>Defines the relationship between Experimenters and Groups.</Description>
-			<Element
-				Name= "Experimenter"
-				DBLocation = "EXPERIMENTER_GROUP_MAP.EXPERIMENTER_ID"
-				DataType = "reference"
-				RefersTo = "Experimenter"/>
-			<Element
-				Name= "Group"
-				DBLocation = "EXPERIMENTER_GROUP_MAP.GROUP_ID"
-				DataType = "reference"
-				RefersTo = "Group"/>
-		</SemanticType>
-	</SemanticTypeDefinitions>
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd       http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    <SemanticType Name="Group" AppliesTo="G">
+      <Label xml:lang="en">Group</Label>
+      <Label xml:lang="es">Grupo</Label>
+      <Description xml:lang="en">Defines groups of experimenters.  This can be a lab or a project group.  It is not meant to represent an institution or a company.</Description>
+      <Description xml:lang="es">Define grupos de investigadores. Esto puede ser un laboratorio o proyecto grupal. No esta pensado para representar una institucion o compania.</Description>
+      <Element Name="Name" DBLocation="GROUPS.NAME" DataType="string">
+        <Label xml:lang="en">Name</Label>
+        <Label xml:lang="es">Nombre</Label>
+      </Element>
+      <Element Name="Leader" DBLocation="GROUPS.LEADER" DataType="reference" RefersTo="Experimenter">
+        <Label xml:lang="en">Leader</Label>
+        <Label xml:lang="es">Lider</Label>
+      </Element>
+      <Element Name="Contact" DBLocation="GROUPS.CONTACT" DataType="reference" RefersTo="Experimenter">
+        <Label xml:lang="en">Contact</Label>
+        <Label xml:lang="es">Contacto</Label>
+      </Element>
+    </SemanticType>
+    <SemanticType Name="ExperimenterGroup" AppliesTo="G">
+      <Label xml:lang="en">ExperimenterGroup</Label>
+      <Label xml:lang="es">Investigador/Grupo</Label>
+      <Description xml:lang="en">Defines the relationship between Experimenters and Groups.</Description>
+      <Description xml:lang="es">Define la relacion entre investigadores y grupos.</Description>
+      <Element Name="Experimenter" DataType="reference" RefersTo="Experimenter">
+        <Label xml:lang="en">Experimenter</Label>
+        <Label xml:lang="es">Investigador</Label>
+      </Element>
+      <Element Name="Group" DataType="reference" RefersTo="Group">
+        <Label xml:lang="en">Group</Label>
+        <Label xml:lang="es">Grupo</Label>
+      </Element>
+    </SemanticType>
+  </SemanticTypeDefinitions>
 </OME>

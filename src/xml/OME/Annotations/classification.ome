@@ -68,11 +68,9 @@
     <Description>A set of mutually exclusive categories.</Description>
     <Element
 	Name = "Name"
-	DBLocation = "CATEGORY_GROUPS.NAME"
 	DataType = "string" />
     <Element
 	Name = "Description"
-	DBLocation = "CATEGORY_GROUPS.DESCRIPTION"
 	DataType = "string" />
   </SemanticType>
 
@@ -82,16 +80,13 @@
     <Description>A category within some set.</Description>
     <Element
        Name = "Name"
-       DBLocation = "CATEGORIES.NAME"
        DataType = "string" />
     <Element
        Name = "CategoryGroup"
-       DBLocation = "CATEGORIES.CATEGORY_GROUP"
        DataType = "reference"
        RefersTo = "CategoryGroup" />
     <Element
        Name = "Description"
-       DBLocation = "CATEGORIES.DESCRIPTION"
        DataType = "string" />
   </SemanticType>
 
@@ -101,16 +96,13 @@
     <Description>Reference to the Category an image belongs to.</Description>
     <Element
        Name = "Category"
-       DBLocation = "CLASSIFICATION.CATEGORY"
        DataType = "reference"
        RefersTo = "Category" />
     <Element
        Name = "Confidence"
-       DBLocation = "CLASSIFICATION.CONFIDENCE"
        DataType = "float" />
     <Element
 	  Name = "Valid"
-	  DBLocation = "CLASSIFICATION.VALID"
 	  DataType = "boolean">
 	  <Description>
 		Set to false to invalidate this classification.

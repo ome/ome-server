@@ -61,7 +61,6 @@
 	<Description>Image Location in Worm</Description>
 	<Element 
 	   Name="Name"
-	   DBLocation="WORM_LOCATION.NAME"
 	   DataType="string"/>
        </SemanticType>
 
@@ -74,12 +73,10 @@
 
        <Element
 	  Name= "Strain"
-	  DBLocation = "WORM_LOCATION_STRAIN_MAP.STRAIN_ID"
 	  DataType = "reference"
 	  RefersTo = "Strain"/>
        <Element
 	  Name= "WormLocation"
-	  DBLocation = "WORM_LOCATION_STRAIN_MAP.WORM_LOCATION_ID"
 	  DataType = "reference"
 	  RefersTo = "WormLocation"/>
      </SemanticType>
@@ -90,11 +87,9 @@
        <Description>The worm's Age</Description>
        <Element
 	 Name="Days"
-	 DBLocation="AGE.DAYS"
 	 DataType="integer"/>
 	<Element 
 	  Name="Name"
-	  DBLocation="AGE.NAME"
           DataType="string"/>
      </SemanticType>
   
@@ -104,7 +99,6 @@
 	<Description>A Mapping between an age and an image</Description>
 	<Element
 	 Name="Age"
-	 DBLocation="IMAGE_AGE.AGE"
 	 DataType="reference"
 	 RefersTo="Age"/>
       </SemanticType>
@@ -116,7 +110,6 @@
       </Description>
       <Element 
 	 Name = "WormLocation"
-	 DBLocation = "IMAGE_WORM_LOCATION.WORM_LOCATION_ID"
 	 DataType = "reference"
 	 RefersTo = "WormLocation"/>
     </SemanticType>
@@ -127,7 +120,6 @@
        <Description>The predicted morphological score.</Description>
        <Element
 	 Name="Score"
-	 DBLocation="MORPH_SCORE.SCORE"
 	 DataType="float"/>
      </SemanticType>
        

@@ -74,11 +74,9 @@
 
     <Element
        Name = "Content"
-       DBLocation = "DATASET_ANNOTATIONS.CONTENT"
        DataType = "string" />
     <Element
 	  Name = "Valid"
-	  DBLocation = "DATASET_ANNOTATIONS.VALID"
 	  DataType = "boolean">
       <Description>
 		Set to false to invalidate this annotation.
@@ -98,11 +96,9 @@
 
     <Element
        Name = "Content"
-       DBLocation = "IMAGE_ANNOTATIONS.CONTENT"
        DataType = "string" />
     <Element
        Name = "TheC"
-       DBLocation = "IMAGE_ANNOTATIONS.THE_C"
        DataType = "integer">
        <Description>
 	 Make null to imply generality across channels.
@@ -110,7 +106,6 @@
     </Element>
     <Element
        Name = "TheT"
-       DBLocation = "IMAGE_ANNOTATIONS.THE_T"
        DataType = "integer">
        <Description>
 	 Make null to imply generality across channels.
@@ -118,7 +113,6 @@
     </Element>
     <Element
        Name = "TheZ"
-       DBLocation = "IMAGE_ANNOTATIONS.THE_Z"
        DataType = "integer">
        <Description>
 	 Make null to imply generality across channels.
@@ -126,7 +120,6 @@
     </Element>
     <Element
 	  Name = "Valid"
-	  DBLocation = "IMAGE_ANNOTATIONS.VALID"
 	  DataType = "boolean">
 	  <Description>
 		Set to false if this annotation has been invalidated.

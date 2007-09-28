@@ -1,4 +1,4 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -25,87 +25,93 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Douglas Creager <dcreager@alum.mit.edu>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
-<OME
-  xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
-  xmlns:xsi=
-    "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:STD=
-    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-
-	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType
-			Name="OriginalFile"
-           	AppliesTo="G">
-			<Description>
-				An original proprietary or XML file.
-			</Description>
-			
-			<Element
-				Name="Repository"
-				DBLocation="ORIGINAL_FILES.REPOSITORY"
-				DataType="reference"
-				RefersTo="Repository">
-				<Description>
-					If the original file was in the server's filesystem at
-					the time of import, this element will be NULL.  If the
-					original file was transmitted to the server from a
-					client before import, then the original file will be
-					stored in the Repository specified by this entry.
-				</Description>
-			</Element>
-			<Element
-				Name="Path"
-				DBLocation="ORIGINAL_FILES.PATH"
-				DataType="string">
-				<Description>
-					If the original file was in the server's filesystem at
-					the time of import, then this is the path to
-					that file.  If the original file was transmitted to the
-					server from a client before import, then the original
-					file will be stored in a Repository, and this element
-					will be that file's name (and optionally path) in the Repository.
-				</Description>
-			</Element>
-			<Element
-				Name="FileID"
-				DBLocation="ORIGINAL_FILES.FILE_ID"
-				DataType="bigint">
-				<Description>
-					If the file is on a Repository (OMEIS), then this is the
-					file's repository ID.
-				</Description>
-			</Element>
-			<Element
-				Name="SHA1"
-				DBLocation="ORIGINAL_FILES.SHA1"
-				DataType="string">
-				<Description>
-					Contains the SHA-1 digest of this file.  This digest is
-					used to prevent images from being imported more than
-					once.
-				</Description>
-			</Element>
-			<Element
-				Name="Format"
-				DBLocation="ORIGINAL_FILES.FORMAT"
-				DataType="string">
-				<Description>
-					The file format of the original file
-				</Description>
-			</Element>
-        </SemanticType>
-	</SemanticTypeDefinitions>
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd       http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    <SemanticType Name="OriginalFile" AppliesTo="G">
+      <Label xml:lang="en">Original File</Label>
+      <Label xml:lang="es">Archivo Original</Label>
+      <Description xml:lang="en">An original proprietary or XML file.</Description>
+      <Description xml:lang="es">Un archivo propietario o XML original.</Description>
+      <Element Name="Repository" DataType="reference" RefersTo="Repository">
+        <Label xml:lang="en">Repository</Label>
+        <Label xml:lang="es">Repositorio</Label>
+        <Description xml:lang="en">
+		If the original file was in the server's filesystem at
+		the time of import, this element will be NULL.  If the
+		original file was transmitted to the server from a
+		client before import, then the original file will be
+		stored in the Repository specified by this entry.
+	</Description>
+        <Description xml:lang="es">
+        	Si el archivo original estaba en el sistema de archivos
+        	del servidor al momento de importar, este elemento sera
+        	NULL. Si el archivo original fue transmitido al servidor
+        	desde un cliente antes de importarlo, el archivo original
+        	sera guardado en el repositorio especificado por este
+        	campo.
+	</Description>
+      </Element>
+      <Element Name="Path" DataType="string">
+        <Label xml:lang="en">Path</Label>
+        <Label xml:lang="es">Ruta</Label>
+        <Description xml:lang="en">
+		If the original file was in the server's filesystem at
+		the time of import, then this is the path to
+		that file.  If the original file was transmitted to the
+		server from a client before import, then the original
+		file will be stored in a Repository, and this element
+		will be that file's name (and optionally path) in the Repository.
+	</Description>
+        <Description xml:lang="es">
+        	Si el archivo original estaba en el sistema de archivos
+        	del servidor al momento de importar, este es la ruta a
+        	ese archivo. Si el archivo original fue transmitido al
+        	servidor desde un cliente antes de importarlo, el archivo
+        	original sera guardado en un repositorio, y este elemento
+        	sera el nombre de ese archivo (ruta opcional) en el Repositorio.
+	</Description>
+      </Element>
+      <Element Name="FileID" DataType="bigint">
+        <Label xml:lang="en">File ID</Label>
+        <Label xml:lang="es">ID del Archivo</Label>
+        <Description xml:lang="en">
+		If the file is on a Repository (OMEIS), then this is the
+		file's repository ID.
+	</Description>
+        <Description xml:lang="es">
+        	Si el archivo esta en un Repositorio (OMEIS), entonces
+        	es el identificador del archivo en ese repositorio.
+	</Description>
+      </Element>
+      <Element Name="SHA1" DataType="string">
+        <Label xml:lang="en">SHA1</Label>
+        <Label xml:lang="es">SHA1</Label>
+        <Description xml:lang="en">
+		Contains the SHA-1 digest of this file.  This digest is
+		used to prevent images from being imported more than
+		once.
+	</Description>
+        <Description xml:lang="es">
+		Contiene el SHA-1 digest de este archivo. Este digest es
+		usado para prevenir que las imagenes sean importadas mas
+		de una vez.
+	</Description>
+      </Element>
+      <Element Name="Format" DataType="string">
+        <Label xml:lang="en">Format</Label>
+        <Label xml:lang="es">Formato</Label>
+        <Description xml:lang="en">
+		The file format of the original file.
+	</Description>
+        <Description xml:lang="es">
+		El formato del archivo original.
+	</Description>
+      </Element>
+    </SemanticType>
+  </SemanticTypeDefinitions>
 </OME>

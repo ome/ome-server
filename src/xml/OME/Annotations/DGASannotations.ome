@@ -62,11 +62,9 @@
 		<Description>Type of Probe</Description>
 		<Element 
 			Name="Name"
-			DBLocation="PROBE_TYPE.Name"
 			DataType="string"/>
 		<Element 
 			Name="Description"
-			DBLocation="PROBE_TYPE.Description"
 			DataType="string"/>
 	</SemanticType>
 	
@@ -80,11 +78,9 @@
 		<Description>An Experimental Probe</Description>
 		<Element
 			Name= "Name"
-			DBLocation = "PROBE.NAME"
 			DataType = "string"/>
 		<Element 
 			Name = "Type"
-			DBLocation = "PROBE.PROBE_TYPE"
 			DataType = "reference"
 			RefersTo = "ProbeType"/>
 	</SemanticType>
@@ -96,12 +92,10 @@
 		<Description>An map between an Experiment and a Probe</Description>
 		<Element 
 			Name = "Experiment"
-			DBLocation = "EXPERIMENT_PROBE_MAP.EXPERIMENT_ID"
 			DataType = "reference"
 			RefersTo = "Experiment"/>
 		<Element 
 			Name = "Probe"
-			DBLocation = "EXPERIMENT_PROBE_MAP.PROBE_ID"
 			DataType = "reference"
 			RefersTo = "Probe"/>
 	</SemanticType>
@@ -122,7 +116,6 @@
 		<Description>An Experimental Strain</Description>
 		<Element
 			Name= "Name"
-			DBLocation = "STRAIN.NAME"
 			DataType = "string"/>
 	</SemanticType>
 	
@@ -132,7 +125,6 @@
 		<Description>A Clone for a Gene</Description>
 		<Element
 			Name= "Name"
-			DBLocation = "CLONE.NAME"
 			DataType = "string"/>
 	</SemanticType>
 	
@@ -145,7 +137,6 @@
 		<Description>A Gene</Description>
 		<Element
 			Name= "Name"
-			DBLocation = "GENE.NAME"
 			DataType = "string"/>
 	</SemanticType>
 	
@@ -157,11 +148,9 @@
 		</Description>
 		<Element
 			Name= "Name"
-			DBLocation = "GENE_ALIAS.NAME"
 			DataType = "string"/>
 		<Element
 			Name= "Gene"
-			DBLocation = "GENE_ALIAS.GENE_ID"
 			DataType = "reference"
 			RefersTo = "Gene"/>
 	</SemanticType>
@@ -176,12 +165,10 @@
 		<Description>Defines the relationship between Probes and Genes.</Description>
 		<Element
 			Name= "Probe"
-			DBLocation = "PROBE_GENE_MAP.PROBE_ID"
 			DataType = "reference"
 			RefersTo = "Probe"/>
 		<Element
 			Name= "Gene"
-			DBLocation = "PROBE_GENE_MAP.GENE_ID"
 			DataType = "reference"
 			RefersTo = "Gene"/>
 	</SemanticType>
@@ -194,12 +181,10 @@
 		</Description>
 		<Element
 			Name= "Strain"
-			DBLocation = "STRAIN_GENE_MAP.STRAIN_ID"
 			DataType = "reference"
 			RefersTo = "Strain"/>
 		<Element
 			Name= "Gene"
-			DBLocation = "STRAIN_GENE_MAP.GENE_ID"
 			DataType = "reference"
 			RefersTo = "Gene"/>
 	</SemanticType>
@@ -210,12 +195,10 @@
 		<Description>Defines the relationship between Clones and Genes.</Description>
 		<Element
 			Name= "Clone"
-			DBLocation = "CLONE_GENE_MAP.CLONE_ID"
 			DataType = "reference"
 			RefersTo = "Clone"/>
 		<Element
 			Name= "Gene"
-			DBLocation = "CLONE_GENE_MAP.GENE_ID"
 			DataType = "reference"
 			RefersTo = "Gene"/>
 	</SemanticType>
@@ -231,11 +214,9 @@
 		</Description> 
 		<Element 
 			Name="Name"
-			DBLocation="EXTERNAL_LINK_TEMPLATE.NAME"
 			DataType="string"/>
 		<Element 
 			Name="Template"
-			DBLocation="EXTERNAL_LINK_TEMPLATE.TEMPLATE"
 			DataType="string"/>
 	</SemanticType>
 	
@@ -251,19 +232,15 @@
 		<Description>A link to an external data source.</Description>
 		<Element
 			Name = "Description"
-			DBLocation = "EXTERNAL_LINK.DESCRIPTION"
 			DataType="string"/>
 		<Element 
 			Name = "ExternalId"
-			DBLocation ="EXTERNAL_LINK.EXTERNAL_ID"
 			DataType = "string"/>
 		<Element 
 			Name = "URL"
-			DBLocation ="EXTERNAL_LINK.URL"
 			DataType = "string"/>
 		<Element 
 			Name="Template"
-			DBLocation="EXTERNAL_LINK.TEMPLATE"
 			DataType="reference"
 			RefersTo="ExternalLinkTemplate"/>
 	</SemanticType>
@@ -276,27 +253,21 @@
 		<Description>A link to a publication </Description>
 		<Element
 			Name="Author"
-			DBLocation="PUBLICATION.AUTHOR"
 			DataType="string"/>
 		<Element
 			Name="Title"
-			DBLocation="PUBLICATION.TITLE"
 			DataType="string"/>
 		<Element 
 			Name="Venue"
-			DBLocation="PUBLICATION.VENUE"
 			DataType="string"/>
 		<Element 
 			Name="Date"
-			DBLocation="PUBLICATION.DATE"
 			DataType="string"/>
 		<Element 
 			Name="PubmedID"
-			DBLocation="PUBLICATION.PMID"
 			DataType="string"/>
 		<Element 
 			Name="ExternalLink"
-			DBLocation="PUBLICATION.EXTERNAL_LINK"
 			DataType="reference"
 			RefersTo="ExternalLink"/>
 	</SemanticType>
@@ -311,12 +282,10 @@
 		links.</Description>
 		<Element
 			Name= "Gene"
-			DBLocation = "GENE_EXTERNAL_LINK_MAP.GENE_ID"
 			DataType = "reference"
 			RefersTo = "Gene"/>
 		<Element
 			Name= "ExternalLink"
-			DBLocation = "GENE_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
 			DataType = "reference"
 			RefersTo = "ExternalLink"/>
 	</SemanticType>
@@ -329,12 +298,10 @@
 		links.</Description>
 		<Element
 			Name= "Probe"
-			DBLocation = "PROBE_EXTERNAL_LINK_MAP.PROBE_ID"
 			DataType = "reference"
 			RefersTo = "Probe"/>
 		<Element
 			Name= "ExternalLink"
-			DBLocation = "PROBE_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
 			DataType = "reference"
 			RefersTo = "ExternalLink"/>
 	</SemanticType>
@@ -348,12 +315,10 @@
 		links.</Description>
 		<Element
 			Name= "Strain"
-			DBLocation = "STRAIN_EXTERNAL_LINK_MAP.STRAIN_ID"
 			DataType = "reference"
 			RefersTo = "Strain"/>
 		<Element
 			Name= "ExternalLink"
-			DBLocation = "STRAIN_EXTERNAL_LINK_MAP.EXTERNAL_LINK_ID"
 			DataType = "reference"
 			RefersTo = "ExternalLink"/>
 	</SemanticType>
@@ -367,7 +332,6 @@
 		publication</Description>
 		<Element 
 			Name="Publication"
-			DBLocation="IMAGE_PUBLICATION.PUBLICATION_ID"
 			DataType="reference"
 			RefersTo="Publication"/>
 	</SemanticType>
@@ -378,7 +342,6 @@
 		<Description>Is the image publishable?</Description>
 		<Element 
 			Name="Publishable"
-			DBLocation="PUBLICATION_STATUS.PUBLISHABLE"
 			DataType="boolean"/>
 	</SemanticType>
 	
@@ -388,7 +351,6 @@
 		<Description>A mapping between probes and images</Description>
 		<Element
 			Name = "Probe"
-			DBLocation = "PROBE_IMAGE_MAP.PROBE_ID"
 			DataType = "reference"
 			RefersTo = "Probe"/>
 	</SemanticType>
@@ -399,7 +361,6 @@
 		<Description>A mapping between strains and images</Description>
 		<Element
 			Name = "Strain"
-			DBLocation = "STRAIN_IMAGE_MAP.STRAIN_ID"
 			DataType = "reference"
 			RefersTo = "Strain"/>
 	</SemanticType>
@@ -410,7 +371,6 @@
 		<Description>A mapping between clones and images</Description>
 		<Element
 			Name = "Clone"
-			DBLocation = "CLONE_IMAGE_MAP.CLONE_ID"
 			DataType = "reference"
 			RefersTo = "Clone"/>
 	</SemanticType>
@@ -422,11 +382,9 @@
 		<Description>Embryo's Stage of growth.</Description>
 		<Element 
 			Name="Name"
-			DBLocation="EMBRYO_STAGE.NAME"
 			DataType="string"/>
 		<Element 
 			Name="Description"
-			DBLocation="EMBRYO_STAGE.Description"
 			DataType="string"/>
 	</SemanticType>
 	<SemanticType
@@ -439,7 +397,6 @@
 		</Description>
 		<Element 
 			Name = "EmbryoStage"
-			DBLocation = "IMAGE_EMBRYO_STAGE.EMBRYO_STAGE_ID"
 			DataType = "reference"
 			RefersTo = "EmbryoStage"/>
 	</SemanticType>
@@ -459,11 +416,9 @@
 		<Description>Overexpression/Repression manipulation for a Gene.</Description>
 		<Element 
 			Name="Type"
-			DBLocation="GENETIC_MANIPULATION.TYPE"
 			DataType="string"/>
 		<Element 
 			Name="Gene"
-			DBLocation="GENETIC_MANIPULATION.GENE_ID"
 			DataType="reference"
 			RefersTo="Gene"/>
 	</SemanticType>
@@ -474,12 +429,10 @@
 		<Description>The Gene undergoing GeneticManipulation.</Description>
 		<Element 
 			Name="GeneticManipulation"
-			DBLocation="GENETIC_MANIPULATION_GENE_MAP.GENETIC_MANIPULATION_ID"
 			DataType="reference"
 			RefersTo="GeneticManipulation"/>
 		<Element 
 			Name="Gene"
-			DBLocation="GENETIC_MANIPULATION_GENE_MAP.GENE_ID"
 			DataType="reference"
 			RefersTo="Gene"/>
 	</SemanticType>
@@ -490,7 +443,6 @@
 		<Description>Relationship between an Image and a GeneticManipulation.</Description>
 		<Element 
 			Name="GeneticManipulation"
-			DBLocation="IMAGE_GENETIC_MANIPULATION.GENETIC_MANIPULATION_ID"
 			DataType="reference"
 			RefersTo="GeneticManipulation"/>
 	</SemanticType>
@@ -501,7 +453,6 @@
 		<Description>A parental cell line.</Description>
 		<Element 
 			Name="Name"
-			DBLocation="CELL_LINE.NAME"
 			DataType="string"/>
 	</SemanticType>
 
@@ -511,7 +462,6 @@
 		<Description>Relationship between an Image and a CellLine.</Description>
 		<Element 
 			Name="CellLine"
-			DBLocation="IMAGE_CELL_LINE.CELL_LINE_ID"
 			DataType="reference"
 			RefersTo="CellLine"/>
 	</SemanticType>
@@ -522,7 +472,6 @@
 		<Description>Drugs/factors added to culture media.</Description>
 		<Element 
 			Name="Name"
-			DBLocation="CULTURE_CONDITION.NAME"
 			DataType="string"/>
 	</SemanticType>
 
@@ -532,7 +481,6 @@
 		<Description>Relationship between an Image and a CultureCondition.</Description>
 		<Element 
 			Name="CultureCondition"
-			DBLocation="IMAGE_CULTURE_CONDITION.CULTURE_CONDITION_ID"
 			DataType="reference"
 			RefersTo="CultureCondition"/>
 	</SemanticType>
@@ -543,7 +491,6 @@
 		<Description>Baseline or Altered expression state.</Description>
 		<Element 
 			Name="Name"
-			DBLocation="EXPRESSION_STATE.NAME"
 			DataType="string"/>
 	</SemanticType>
 
@@ -553,7 +500,6 @@
 		<Description>Relationship between an Image and a ExpressionState.</Description>
 		<Element 
 			Name="ExpressionState"
-			DBLocation="IMAGE_EXPRESSION_STATE.EXPRESSION_STATE_ID"
 			DataType="reference"
 			RefersTo="ExpressionState"/>
 	</SemanticType>

@@ -40,27 +40,21 @@
           </Description>
           <Element
 			 Name="ObjectType"
-			 DBLocation="DISPLAY_TEMPLATE.OBJECT_TYPE"
 			 DataType="string"/>
           <Element
 			 Name="Arity"
-			 DBLocation="DISPLAY_TEMPLATE.ARITY"
 			 DataType="string"/>
           <Element
 			 Name="Mode"
-			 DBLocation="DISPLAY_TEMPLATE.MODE"
 			 DataType="string"/>
           <Element
 			 Name="Name"
-			 DBLocation="DISPLAY_TEMPLATE.NAME"
 			 DataType="string"/>
           <Element
 			 Name="Description"
-			 DBLocation="DISPLAY_TEMPLATE.DESCRIPTION"
 			 DataType="string"/>
           <Element
 			 Name="Template"
-			 DBLocation="DISPLAY_TEMPLATE.TEMPLATE"
 			 DataType="string"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>

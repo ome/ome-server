@@ -59,121 +59,121 @@
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
     <SemanticType Name="PlaneMean" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Mean" DBLocation="PLANE_STATISTICS.MEAN" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Mean" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneGeometricMean" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="GeometricMean" DBLocation="PLANE_STATISTICS.GEOMEAN" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="GeometricMean" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneSigma" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Sigma" DBLocation="PLANE_STATISTICS.SIGMA" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Sigma" DataType="float"/>
     </SemanticType>
    <SemanticType Name="PlaneGeometricSigma" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="GeometricSigma" DBLocation="PLANE_STATISTICS.GEOSIGMA" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="GeometricSigma" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneMinimum" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Minimum" DBLocation="PLANE_STATISTICS.MINIMUM" DataType="integer"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Minimum" DataType="integer"/>
     </SemanticType>
     <SemanticType Name="PlaneMaximum" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Maximum" DBLocation="PLANE_STATISTICS.MAXIMUM" DataType="integer"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Maximum" DataType="integer"/>
     </SemanticType>
     <SemanticType Name="PlaneCentroid" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="X" DBLocation="PLANE_STATISTICS.CENTROID_X" DataType="float"/>
-      <Element Name="Y" DBLocation="PLANE_STATISTICS.CENTROID_Y" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="X" DataType="float"/>
+      <Element Name="Y" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneSum_i" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Sum_i" DBLocation="PLANE_STATISTICS.SUM_I" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Sum_i" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneSum_i2" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Sum_i2" DBLocation="PLANE_STATISTICS.SUM_I2" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Sum_i2" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneSum_log_i" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Sum_log_i" DBLocation="PLANE_STATISTICS.SUM_LOG_I" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Sum_log_i" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneSum_Xi" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Sum_Xi" DBLocation="PLANE_STATISTICS.SUM_XI" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Sum_Xi" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneSum_Yi" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Sum_Yi" DBLocation="PLANE_STATISTICS.SUM_YI" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Sum_Yi" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneSum_Zi" AppliesTo="I">
-      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
-      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Sum_Zi" DBLocation="PLANE_STATISTICS.SUM_ZI" DataType="float"/>
+      <Element Name="TheZ" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Sum_Zi" DataType="float"/>
     </SemanticType>
 
     <SemanticType Name="StackMean" AppliesTo="I">
-      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Mean" DBLocation="STACK_STATISTICS.MEAN" DataType="float"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Mean" DataType="float"/>
     </SemanticType>
     <SemanticType Name="StackGeometricMean" AppliesTo="I">
-      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="GeometricMean" DBLocation="STACK_STATISTICS.GEOMEAN" DataType="float"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="GeometricMean" DataType="float"/>
     </SemanticType>
     <SemanticType Name="StackSigma" AppliesTo="I">
-      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Sigma" DBLocation="STACK_STATISTICS.SIGMA" DataType="float"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Sigma" DataType="float"/>
     </SemanticType>
     <SemanticType Name="StackGeometricSigma" AppliesTo="I">
-      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="GeometricSigma" DBLocation="STACK_STATISTICS.GEOSIGMA" DataType="float"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="GeometricSigma" DataType="float"/>
     </SemanticType>
      <SemanticType Name="StackMinimum" AppliesTo="I">
-      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Minimum" DBLocation="STACK_STATISTICS.MINIMUM" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Minimum" DataType="integer"/>
     </SemanticType>
     <SemanticType Name="StackMaximum" AppliesTo="I">
-      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="Maximum" DBLocation="STACK_STATISTICS.MAXIMUM" DataType="integer"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="Maximum" DataType="integer"/>
     </SemanticType>
     <SemanticType Name="StackCentroid" AppliesTo="I">
-      <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-      <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-      <Element Name="X" DBLocation="STACK_STATISTICS.CENTROID_X" DataType="float"/>
-      <Element Name="Y" DBLocation="STACK_STATISTICS.CENTROID_Y" DataType="float"/>
-      <Element Name="Z" DBLocation="STACK_STATISTICS.CENTROID_Z" DataType="float"/>
+      <Element Name="TheC" DataType="integer"/>
+      <Element Name="TheT" DataType="integer"/>
+      <Element Name="X" DataType="float"/>
+      <Element Name="Y" DataType="float"/>
+      <Element Name="Z" DataType="float"/>
     </SemanticType>
 
 </STD:SemanticTypeDefinitions>

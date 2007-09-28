@@ -1,4 +1,4 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -25,78 +25,62 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Douglas Creager <dcreager@alum.mit.edu>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
-<OME
-  xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
-  xmlns:xsi=
-    "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:STD=
-    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-
-	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType
-			Name= "Plate"
-			AppliesTo = "G">
-			<Description>Stores information about the plates that make up a high-throughput screen.  Plates may belong to more than one screen, and have a many-to-many relationship to screens.</Description>
-			<Element
-				Name= "Name"
-				DBLocation = "PLATES.NAME"
-				DataType = "string"/>
-			<Element
-				Name= "ExternalReference"
-				DBLocation = "PLATES.EXTERNAL_REFERENCE"
-				DataType = "string"/>
-			<Element
-				Name= "Screen"
-				DBLocation = "PLATES.SCREEN"
-				DataType = "reference"
-				RefersTo = "Screen"/>
-		</SemanticType>
-
-		<SemanticType
-			Name= "Screen"
-			AppliesTo = "G">
-			<Description>Stores information about a high-throughput screen.</Description>
-			<Element
-				Name= "Name"
-				DBLocation = "SCREENS.NAME"
-				DataType = "string"/>
-			<Element
-				Name= "Description"
-				DBLocation = "SCREENS.DESCRIPTION"
-				DataType = "string"/>
-			<Element
-				Name= "ExternalReference"
-				DBLocation = "SCREENS.EXTERNAL_REFERENCE"
-				DataType = "string"/>
-		</SemanticType>
-
-		<SemanticType
-			Name= "PlateScreen"
-			AppliesTo = "G">
-			<Description>Defines the relationship between Plates and Screens.</Description>
-			<Element
-				Name= "Plate"
-				DBLocation = "PLATE_SCREEN_MAP.PLATE"
-				DataType = "reference"
-				RefersTo = "Plate"/>
-			<Element
-				Name= "Screen"
-				DBLocation = "PLATE_SCREEN_MAP.SCREEN"
-				DataType = "reference"
-				RefersTo = "Screen"/>
-		</SemanticType>
-	</SemanticTypeDefinitions>
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd       http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    <SemanticType Name="Plate" AppliesTo="G">
+      <Label xml:lang="en">Plate</Label>
+      <Label xml:lang="es">Plato</Label>
+      <Description xml:lang="en">Stores information about the plates that make up a high-throughput screen.  Plates may belong to more than one screen, and have a many-to-many relationship to screens.</Description>
+      <Description xml:lang="es">Almacena informacion acerca de los platos que hacen una pantalla de "high-throughput". Los platos pueden pertenecer a mas de una pantalla, tienen una relacion de muchos a muchos con las pantallas.</Description>
+      <Element Name="Name" DataType="string">
+        <Label xml:lang="en">Name</Label>
+        <Label xml:lang="es">Nombre</Label>
+      </Element>
+      <Element Name="ExternalReference" DataType="string">
+        <Label xml:lang="en">ExternalReference</Label>
+        <Label xml:lang="es">Referencia Externa</Label>
+      </Element>
+      <Element Name="Screen" DataType="reference" RefersTo="Screen">
+        <Label xml:lang="en">Screen</Label>
+        <Label xml:lang="es">Pantalla</Label>
+      </Element>
+    </SemanticType>
+    <SemanticType Name="Screen" AppliesTo="G">
+      <Label xml:lang="en">Screen</Label>
+      <Label xml:lang="es">Pantalla</Label>
+      <Description xml:lang="en">Stores information about a high-throughput screen.</Description>
+      <Description xml:lang="es">Almacena informacion acerca de una pantalla de "high-throughput"</Description>
+      <Element Name="Name" DataType="string">
+        <Label xml:lang="en">Name</Label>
+        <Label xml:lang="es">Nombre</Label>
+      </Element>
+      <Element Name="Description" DataType="string">
+        <Label xml:lang="en">Description</Label>
+        <Label xml:lang="es">Descripcion</Label>
+      </Element>
+      <Element Name="ExternalReference" DataType="string">
+        <Label xml:lang="en">ExternalReference</Label>
+        <Label xml:lang="es">Referencia Externa</Label>
+      </Element>
+    </SemanticType>
+    <SemanticType Name="PlateScreen" AppliesTo="G">
+      <Label xml:lang="en">PlateScreen</Label>
+      <Label xml:lang="es">Plato/Pantalla</Label>
+      <Description xml:lang="en">Defines the relationship between Plates and Screens.</Description>
+      <Description xml:lang="es">Define la relacion entre platos y pantallas.</Description>
+      <Element Name="Plate" DataType="reference" RefersTo="Plate">
+        <Label xml:lang="en">Plate</Label>
+        <Label xml:lang="es">Plato</Label>
+      </Element>
+      <Element Name="Screen" DataType="reference" RefersTo="Screen">
+        <Label xml:lang="en">Screen</Label>
+        <Label xml:lang="es">Pantalla</Label>
+      </Element>
+    </SemanticType>
+  </SemanticTypeDefinitions>
 </OME>

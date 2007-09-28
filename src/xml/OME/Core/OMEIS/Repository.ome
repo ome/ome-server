@@ -1,4 +1,4 @@
-<?xml version = "1.0" encoding = "UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -25,49 +25,38 @@
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Written by:  Douglas Creager <dcreager@alum.mit.edu>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
-<OME
-  xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
-  xmlns:xsi=
-    "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:STD=
-    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-
-	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
-		<SemanticType
-			Name = "Repository"
-			AppliesTo = "G">
-		
-			<Description>
-			  A repository is a portion of the server-side file system
-			  devoted to OME.  It is used primarily to store the
-			  pixels of OME images.
-			</Description>
-		
-			<Element
-			   Name="IsLocal"
-			   DBLocation="REPOSITORIES.IS_LOCAL"
-			   DataType="boolean"/>
-			<Element
-			   Name="Path"
-			   DBLocation="REPOSITORIES.PATH"
-			   DataType="string"/>
-			<Element
-			   Name="ImageServerURL"
-			   DBLocation="REPOSITORIES.IMAGE_SERVER_URL"
-			   DataType="string"/>
-		</SemanticType>
-	</SemanticTypeDefinitions>
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd       http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    <SemanticType Name="Repository" AppliesTo="G">
+      <Label xml:lang="en">Repository</Label>
+      <Label xml:lang="es">Repositorio</Label>
+      <Description xml:lang="en">
+      	A repository is a portion of the server-side file system
+      	devoted to OME.  It is used primarily to store the
+      	pixels of OME images.
+      </Description>
+      <Description xml:lang="es">
+      	Un repositorio es una porcion del sistema de archivos del
+      	servidor dedicado a OME. Esta usado primariamente para
+      	almacenar los pixeles de las imagenes de OME.
+      </Description>
+      <Element Name="IsLocal" DBLocation="REPOSITORIES.IS_LOCAL" DataType="boolean">
+        <Label xml:lang="en">IsLocal</Label>
+        <Label xml:lang="es">Es Local</Label>
+      </Element>
+      <Element Name="Path" DBLocation="REPOSITORIES.PATH" DataType="string">
+        <Label xml:lang="en">Path</Label>
+        <Label xml:lang="es">Ruta</Label>
+      </Element>
+      <Element Name="ImageServerURL" DBLocation="REPOSITORIES.IMAGE_SERVER_URL" DataType="string">
+        <Label xml:lang="en">ImageServerURL</Label>
+        <Label xml:lang="es">URL del Servidor de Imagenes</Label>
+      </Element>
+    </SemanticType>
+  </SemanticTypeDefinitions>
 </OME>

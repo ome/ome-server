@@ -40,30 +40,24 @@
           </Description>
           <Element
 			 Name="ObjectType"
-			 DBLocation="ANNOTATION_TEMPLATE.OBJECT_TYPE"
 			 DataType="string"
 			 Description="Type to annotate (i.e. OME::Dataset, OME::Image, @Instrument, etc.)"/>
           <Element
 			 Name="Arity"
-			 DBLocation="ANNOTATION_TEMPLATE.ARITY"
 			 DataType="string"
 			 Description="Number of objects to annotate at once"/>
           <Element
 			 Name="Name"
-			 DBLocation="ANNOTATION_TEMPLATE.NAME"
 			 DataType="string"/>
           <Element
 			 Name="Description"
-			 DBLocation="ANNOTATION_TEMPLATE.DESCRIPTION"
 			 DataType="string"/>
           <Element
 			 Name="Template"
-			 DBLocation="ANNOTATION_TEMPLATE.TEMPLATE"
 			 DataType="string"
 			 Description="Path to the file (maybe template itself in the future?)"/>
 		  <Element
 			 Name="ImplementedBy"
-			 DBLocation="ANNOTATION_TEMPLATE.IMPLEMENTED_BY"
 			 DataType="string"
 			 Description="The name of the Perl package that is set up to handle this template."/>
 		</SemanticType>
