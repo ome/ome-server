@@ -21,15 +21,18 @@ RC3 added internationalization with labels (Josiah) was not available to HEAD
 RC4 introduced polymorphism with the Parent attribute (Josiah and Tomasz) and
 	optional DBLocation (STs moved to one-ST per table) (Tomasz)
 	RC4 joined into HEAD after the 2.6.1 release
-Note that the RC3 and RC4 versions continue to be in the RC2 namespace, as these
-are not breaking changes.
+N.B.:  This document remains in the RC2 namespace because the changes RC2->RC4 are
+non-breaking.  The namespace is preserved, though the schema version attribute is changed
+to RC4 to reflect these changes.
 -->
+
 <schema xmlns = "http://www.w3.org/2001/XMLSchema"
 	 targetNamespace = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+	 xmlns:xml="http://www.w3.org/XML/1998/namespace"
 	 xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	 version = "RC4"
 	 elementFormDefault = "qualified">
-	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
+	<import namespace = "http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>
 	<element name = "Element">
 		<annotation>
 			<documentation>Describes a field of a SemanticType</documentation>
