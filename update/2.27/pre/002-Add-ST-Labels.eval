@@ -1,0 +1,25 @@
+my @labels_classes =
+(
+   'OME::SemanticType::Label',
+   'OME::SemanticType::Element::Label',
+);
+
+print "Expanding Database Schema to support SemanticType Labels";
+foreach my $class (@labels_classes) {
+	print "  \\__ $class ";
+	
+	$class->require();
+
+	# Add our class to the DB
+	eval {
+		$delegate->addClassToDatabase($dbh,$class);
+	};
+	
+	if ($@) {
+		print "[FAILURE] ($@) \n"
+	} else {
+		print "[SUCCESS] \n";
+	}
+}
+
+1;
