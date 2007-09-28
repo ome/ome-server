@@ -125,16 +125,6 @@ public abstract class OMEXMLNode {
     return createNodes(DOMUtil.getChildElements(name, element));
   }
 
-  /** Gets the total number of child elements. */
-  protected int getChildCount() {
-    return getSize(DOMUtil.getChildElements(element));
-  }
-
-  /** Gets a list of all OME-XML node children. */
-  protected Vector getChildNodes() {
-    return createNodes(DOMUtil.getChildElements(element));
-  }
-
   /**
    * Gets an OME-XML node of the given type representing the first
    * element referenced by a child element with the given name.

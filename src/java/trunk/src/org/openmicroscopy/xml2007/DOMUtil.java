@@ -42,11 +42,8 @@ import java.util.Vector;
 import javax.xml.parsers.*;
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.*;
-import org.xml.sax.SAXException;
 
 /** DOMUtil contains useful functions for traversing and manipulating a DOM. */
 public abstract class DOMUtil {
@@ -61,10 +58,6 @@ public abstract class DOMUtil {
   public static final DocumentBuilderFactory DOC_FACT =
     DocumentBuilderFactory.newInstance();
 
-  /** Factory for generating SAX parsers. */
-  public static final SAXParserFactory SAX_FACT =
-    SAXParserFactory.newInstance();
-
   // -- I/O and XSLT methods --
 
   /** Writes the specified DOM to the given output stream. */
@@ -75,32 +68,6 @@ public abstract class DOMUtil {
     Source input = new DOMSource(doc);
     Result output = new StreamResult(os);
     idTransform.transform(input, output);
-  }
-
-  /**
-   * Transforms the given XML input stream using
-   * the specified cached XSLT stylesheet.
-   */
-  public static Document transform(Source source, Templates cachedXSLT)
-    throws IOException, ParserConfigurationException, SAXException,
-    TransformerConfigurationException, TransformerException
-  {
-    DocumentBuilder builder = DOC_FACT.newDocumentBuilder();
-    Document document = builder.newDocument();
-    Result result = new DOMResult(document);
-    Transformer trans = cachedXSLT.newTransformer();
-    trans.transform(source, result);
-    return document;
-  }
-
-  /** Creates a cached XSLT stylesheet object. */
-  public static Templates makeTemplates(String sheet)
-    throws IOException, TransformerConfigurationException
-  {
-    InputStream in = DOMUtil.class.getResource(sheet).openStream();
-    Templates t = TRANS_FACT.newTemplates(new StreamSource(in));
-    in.close();
-    return t;
   }
 
   // -- Node methods --
@@ -213,20 +180,6 @@ public abstract class DOMUtil {
     return null;
   }
 
-  /** Gets a list of the given element's child DOM elements. */
-  public static Vector getChildElements(Element el) {
-    if (el == null) return null;
-    Vector v = new Vector();
-    NodeList list = el.getChildNodes();
-    int size = list.getLength();
-    for (int i=0; i<size; i++) {
-      Node node = list.item(i);
-      if (!(node instanceof Element)) continue;
-      v.add(node);
-    }
-    return v;
-  }
-
   /**
    * Gets a list of the given element's child DOM elements
    * with the specified name.
@@ -242,25 +195,6 @@ public abstract class DOMUtil {
       if (name.equals(getName(node))) v.add(node);
     }
     return v;
-  }
-
-  /**
-   * Gets the given element's first ancestor DOM element
-   * with the specified name.
-   */
-  public static Element getAncestorElement(String name, Element el) {
-    if (name == null || el == null) return null;
-    Node parent = el.getParentNode();
-    while (parent != null && !name.equals(getName(parent))) {
-      parent = parent.getParentNode();
-    }
-    if (parent == null || (!(parent instanceof Element))) return null;
-    return (Element) parent;
-  }
-
-  /** Finds the first DOM element with the specified name. */
-  public static Element findElement(String name, Document doc) {
-    return findElement(name, null, null, doc);
   }
 
   /**
@@ -284,47 +218,6 @@ public abstract class DOMUtil {
       }
     }
     return null;
-  }
-
-  /**
-   * Gets a list of DOM elements with the specified name throughout
-   * the document (not just children of a specific element).
-   */
-  public static Vector findElementList(String name, Document doc) {
-    return findElementList(name, null, null, doc);
-  }
-
-  /**
-   * Gets a list of DOM elements with the specified name
-   * that have an attribute with the given name and value.
-   */
-  public static Vector findElementList(String name, String attrName,
-    String attrValue, Document doc)
-  {
-    if (name == null) return null;
-    Vector v = new Vector();
-    NodeList list = doc.getElementsByTagName(name);
-    int size = list.getLength();
-    for (int i=0; i<size; i++) {
-      Node node = list.item(i);
-      if (!(node instanceof Element)) continue;
-      Element el = (Element) node;
-      if (attrName == null || attrValue == null ||
-        attrValue.equals(getAttribute(attrName, el)))
-      {
-        v.add(el);
-      }
-    }
-    return v;
-  }
-
-  /**
-   * Creates a child element with the given name beneath the specified element.
-   */
-  public static Element createChild(Element el, String name) {
-    Element child = el.getOwnerDocument().createElement(name);
-    el.appendChild(child);
-    return child;
   }
 
   // -- Attribute methods --

@@ -886,8 +886,7 @@ public final class SampleTest {
   /**
    * Tests the org.openmicroscopy.xml2007 package.
    * <ul>
-   * <li>Specify no arguments to parse sample-2007.ome,
-   *   then check it for errors.</li>
+   * <li>Specify path to sample-2007.ome to check it for errors.</li>
    * <li>Specify -build flag to duplicate the structure in Sample.ome from
    *   scratch, then check it for errors.</li>
    * </ul>
