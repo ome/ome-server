@@ -103,6 +103,11 @@ __PACKAGE__->addColumn(granularity => 'granularity',
                         NotNull => 1,
                         Check   => "(granularity in ('G','D','I','F'))",
                        });
+__PACKAGE__->addColumn(parent => 'parent','OME::SemanticType',
+		   {
+			SQLType => 'integer',
+			ForeignKey => 'semantic_types',
+		   });            
 __PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
 __PACKAGE__->hasMany('semantic_elements',
                      'OME::SemanticType::Element' => 'semantic_type');
