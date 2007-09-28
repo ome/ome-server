@@ -563,7 +563,7 @@ public abstract class OMEXMLNode implements DataInterface {
     }
 
     // no subclass found; wrap element in generic CA type
-    return new AttributeNode(el);
+    return new CustomNode(el);
   }
 
   /**
