@@ -15,7 +15,4 @@
 /OME/Annotations/annotations.ome
 /OME/Annotations/classification.ome
 /OME/Analysis/FindSpots/spotModules.ome
-/OME/Tests/EchoModule.ome
-/OME/Tests/datasetExample.ome
-/OME/Tests/featureExample.ome
 /OME/RenderingSettings.ome

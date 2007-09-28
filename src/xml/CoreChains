@@ -1,6 +1,3 @@
 OME/Import/ImageImportChain.xml
 OME/Import/ServerStatsChain.xml
 OME/Analysis/FindSpots/spotChain.xml
-OME/Tests/echoChain.xml
-OME/Tests/datasetExampleChain.xml
-OME/Tests/featureExampleChain.xml
