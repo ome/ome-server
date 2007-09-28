@@ -921,8 +921,7 @@ public final class SampleTest {
 
     System.out.println("Writing OME-XML to String...");
     // CTR TODO improve this...
-    org.openmicroscopy.xml.DOMUtil.writeXML(System.out,
-      ome.getDOMElement().getOwnerDocument());
+    DOMUtil.writeXML(System.out, ome.getDOMElement().getOwnerDocument());
   }
 
 }

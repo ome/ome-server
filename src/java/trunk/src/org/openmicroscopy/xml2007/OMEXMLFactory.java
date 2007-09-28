@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml.OMEXMLFactory
+ * org.openmicroscopy.xml2007.OMEXMLFactory
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,7 +40,6 @@ package org.openmicroscopy.xml2007;
 import java.io.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
-import org.openmicroscopy.xml.DOMUtil;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
