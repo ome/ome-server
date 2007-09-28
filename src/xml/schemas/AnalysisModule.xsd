@@ -12,7 +12,7 @@
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"/>
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"/>
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd"/>
-	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
+	<import namespace = "http://www.w3.org/XML/1998/namespace"  schemaLocation="http://www.w3.org/2001/xml.xsd"/>
 	<!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
