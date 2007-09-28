@@ -103,7 +103,7 @@ our $IMPORT_FORMATS = [qw/
 /];
 
 # Database version
-our $DB_VERSION = "2.27";
+our $DB_VERSION = "2.28";
 
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
@@ -182,10 +182,6 @@ our @INSTALLATION_ATTRIBUTES;
 
 sub update_database {
     my $version = shift;
-    my $session = OME::Session->bootstrapInstance();
-    my $factory = $session->Factory();
-    my $dbh = $factory->obtainDBH();
-    my $delegate = OME::Database::Delegate->getDefaultDelegate();
     
     print "WARNING:  You are about to update an existing ome database.\n";
     print "  If anything goes wrong before the update is finished,\n";
@@ -194,8 +190,12 @@ sub update_database {
     print "> sudo -u postgres pg_dumpall > OME-DB-DumpFile\n";
     y_or_n ("Are you sure you want to proceed ?",'n') or croak "Database update aborted by user";
 
-
-	# Since we may be installing from a directory that does not have permissions
+	my $session = bootstrap_session();
+    my $factory = $session->Factory();
+    my $dbh = $factory->obtainDBH();
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+    
+    # Since we may be installing from a directory that does not have permissions
 	# for a user that can acess the DB (i.e. the OME user), we have to copy the
 	# update files to the temporary directory and go from there.
 	# This of course, we have to do as root and then switch back.
@@ -273,8 +273,8 @@ sub update_database {
             $factory->commitTransaction();
         }
     } # each version prior to $DB_VERSION
-
-    $session->finishBootstrap();
+    
+    $session->deleteInstance();
     return (1);
 }
 
