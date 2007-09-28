@@ -5,7 +5,7 @@
 	 xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	 version = "RC1"
 	 elementFormDefault = "qualified">
-	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
+	<import namespace = "http://www.w3.org/XML/1998/namespace"  schemaLocation="http://www.w3.org/2001/xml.xsd"/>
 	<!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
