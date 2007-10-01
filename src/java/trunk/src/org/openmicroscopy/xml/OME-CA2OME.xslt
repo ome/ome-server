@@ -260,12 +260,21 @@
 			<xsl:attribute name = "DefaultPixels">
 				<xsl:value-of select = "@DefaultPixels"/>
 			</xsl:attribute>
-			<xsl:attribute name = "WaveIncrement">
-				<xsl:value-of select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeC"/>
-			</xsl:attribute>
+			<xsl:if test = "string-length(CA:CustomAttributes/CA:Dimensions/@PixelSizeC) > 0">
+				<xsl:attribute name = "WaveIncrement">
+					<xsl:value-of select = "round(CA:CustomAttributes/CA:Dimensions/@PixelSizeC)"/>
+				</xsl:attribute>
+			</xsl:if>
+			<xsl:if test = "string-length(CA:CustomAttributes/CA:Dimensions/@PixelSizeT) > 0">
+				<xsl:attribute name = "TimeIncrement">
+					<xsl:value-of select = "round(CA:CustomAttributes/CA:Dimensions/@PixelSizeT)"/>
+				</xsl:attribute>
+			</xsl:if>
+<!--
 			<xsl:attribute name = "TimeIncrement">
 				<xsl:value-of select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeT"/>
 			</xsl:attribute>
+-->
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeX" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeY" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeZ" mode = "Attribute2OptionalAttribute"/>
