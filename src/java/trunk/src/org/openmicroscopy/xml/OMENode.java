@@ -70,6 +70,7 @@ public class OMENode extends OMEXMLNode {
   protected static final String SKELETON =
     "<?xml version=\"1.0\"?>\n" +
     "<OME xmlns=\"http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd\" " +
+    "xmlns:CA=\"http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd\" " +
     "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
     "xsi:schemaLocation=\"" +
     "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd " +

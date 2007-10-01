@@ -126,7 +126,7 @@ public class CustomAttributesNode extends OMEXMLNode {
    */
   protected CustomAttributesNode(OMEXMLNode parent, boolean attach) {
     super(parent.getDOMElement().getOwnerDocument().
-      createElement("CustomAttributes"));
+      createElement("CA:CustomAttributes"));
     if (attach) parent.getDOMElement().appendChild(element);
   }
 
