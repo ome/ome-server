@@ -40,7 +40,14 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-public class DetectorNode extends OMEXMLNode {
+/**
+ * The type of detector used to capture the image.
+ * The Detector ID can be used as a reference within the LogicalChannel element in the Image element.
+ * The Type attribute can be set to 'CCD','Intensified-CCD','Analog-Video','PMT','Photodiode','Spectroscopy','Life-time-Imaging','Correlation-Spectroscopy','FTIR'.
+ * Added new types EM-CCD, APD, and CMOS - ajp
+ * Added new optional attributes AmplificationGain and Zoom - ajp
+ */
+public class DetectorNode extends ManufactSpecNode {
 
   // -- Constructor --
 
@@ -48,8 +55,53 @@ public class DetectorNode extends OMEXMLNode {
 
   // -- DetectorNode API methods --
 
-  // CTR - this class is only a stub!
-  // TODO
+  public Float getGain() {
+    return getFloatAttribute("Gain");
+  }
+
+  public void setGain(Float gain) {
+    setAttribute("Gain", gain);
+  }
+
+  public Float getVoltage() {
+    return getFloatAttribute("Voltage");
+  }
+
+  public void setVoltage(Float voltage) {
+    setAttribute("Voltage", voltage);
+  }
+
+  public Float getOffset() {
+    return getFloatAttribute("Offset");
+  }
+
+  public void setOffset(Float offset) {
+    setAttribute("Offset", offset);
+  }
+
+  public Float getZoom() {
+    return getFloatAttribute("Zoom");
+  }
+
+  public void setZoom(Float zoom) {
+    setAttribute("Zoom", zoom);
+  }
+
+  public Float getAmplificationGain() {
+    return getFloatAttribute("AmplificationGain");
+  }
+
+  public void setAmplificationGain(Float amplificationGain) {
+    setAttribute("AmplificationGain", amplificationGain);
+  }
+
+  public String getType() {
+    return getAttribute("Type");
+  }
+
+  public void setType(String type) {
+    setAttribute("Type", type);
+  }
 
   // -- OMEXMLNode API methods --
 

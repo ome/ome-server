@@ -249,13 +249,70 @@ public final class SampleTest {
     // check OME/Instrument/LightSource-2
 
     // check OME/Instrument/Detector
+    DetectorNode instrumentDetector = (DetectorNode)
+      instrumentDetectorList.get(0);
+    checkNotNull("Instrument Detector", instrumentDetector);
+    String instrumentDetectorID = instrumentDetector.getID();
+    checkValue("Instrument Detector ID",
+      instrumentDetectorID, "urn:lsid:foo.bar.com:Detector:123456");
+    String instrumentDetectorManufacturer =
+      instrumentDetector.getManufacturer();
+    checkValue("Instrument Detector Manufacturer",
+        instrumentDetectorManufacturer, "Kodak");
+    String instrumentDetectorModel = instrumentDetector.getModel();
+    checkValue("Instrument Detector Model",
+      instrumentDetectorModel, "Instamatic");
+    String instrumentDetectorSerialNumber =
+      instrumentDetector.getSerialNumber();
+    checkValue("Instrument Detector SerialNumber",
+      instrumentDetectorSerialNumber, "fnuiprf89uh123498");
+    Float instrumentDetectorGain = instrumentDetector.getGain();
+    checkNull("Instrument Detector Gain", instrumentDetectorGain);
+    Float instrumentDetectorVoltage = instrumentDetector.getVoltage();
+    checkNull("Instrument Detector Voltage", instrumentDetectorVoltage);
+    Float instrumentDetectorOffset = instrumentDetector.getOffset();
+    checkNull("Instrument Detector Offset", instrumentDetectorOffset);
+    Float instrumentDetectorZoom = instrumentDetector.getZoom();
+    checkNull("Instrument Detector Zoom", instrumentDetectorZoom);
+    Float instrumentDetectorAmplificationGain =
+      instrumentDetector.getAmplificationGain();
+    checkNull("Instrument Detector AmplificationGain",
+      instrumentDetectorAmplificationGain);
+    String instrumentDetectorType = instrumentDetector.getType();
+    checkValue("Instrument Detector Type", instrumentDetectorType, "CCD");
 
     // check OME/Instrument/Objective
 
     // check OME/Instrument/FilterSet
+    FilterSetNode instrumentFilterSet =
+      (FilterSetNode) instrumentFilterSetList.get(0);
+    checkNotNull("Instrument FilterSet", instrumentFilterSet);
+    String instrumentFilterSetID = instrumentFilterSet.getID();
+    checkValue("Instrument FilterSet ID", instrumentFilterSetID,
+      "urn:lsid:foo.bar.com:FilterSet:123456");
+    String instrumentFilterSetManufacturer =
+      instrumentFilterSet.getManufacturer();
+    checkValue("Instrument FilterSet Manufacturer",
+      instrumentFilterSetManufacturer, "Omega");
+    String instrumentFilterSetModel = instrumentFilterSet.getModel();
+    checkValue("Instrument FilterSet Model",
+      instrumentFilterSetModel, "SuperGFP");
+    String instrumentFilterSetLotNumber = instrumentFilterSet.getLotNumber();
+    checkValue("Instrument FilterSet LotNumber",
+      instrumentFilterSetLotNumber, "123LJKHG123");
+    FilterNode instrumentFilterSetExFilter = instrumentFilterSet.getExFilter();
+    checkNotNull("Instrument FilterSet ExFilter", instrumentFilterSetExFilter);
+    DichroicNode instrumentFilterSetDichroic =
+      instrumentFilterSet.getDichroic();
+    checkNull("Instrument FilterSet Dichroic", instrumentFilterSetDichroic);
+    FilterNode instrumentFilterSetEmFilter = instrumentFilterSet.getEmFilter();
+    checkNotNull("Instrument FilterSet EmFilter", instrumentFilterSetEmFilter);
 
     // check OME/Instrument/Filter-1
     FilterNode instrumentFilter1 = (FilterNode) instrumentFilterList.get(0);
+    checkNotNull("Instrument Filter-1", instrumentFilter1);
+    checkValue("Instrument Filter-1",
+      instrumentFilter1, instrumentFilterSetEmFilter);
     String instrumentFilter1ID = instrumentFilter1.getID();
     checkValue("Instrument Filter-1 ID", instrumentFilter1ID,
       "urn:lsid:foo.bar.com:Filter:123456");
@@ -278,6 +335,9 @@ public final class SampleTest {
 
     // check OME/Instrument/Filter-2
     FilterNode instrumentFilter2 = (FilterNode) instrumentFilterList.get(1);
+    checkNotNull("Instrument Filter-2", instrumentFilter2);
+    checkValue("Instrument Filter-2",
+      instrumentFilter2, instrumentFilterSetExFilter);
     String instrumentFilter2ID = instrumentFilter2.getID();
     checkValue("Instrument Filter-2 ID", instrumentFilter2ID,
       "urn:lsid:foo.bar.com:Filter:1234567");
@@ -480,10 +540,41 @@ public final class SampleTest {
     // check OME/Instrument/LightSource-2/Arc
 
     // check OME/Instrument/Filter-1/TransmittanceRange
-    // TODO START HERE
+    Integer instrumentFilter1TransmittanceRangeCutIn =
+      instrumentFilter1TransmittanceRange.getCutIn();
+    checkValue("Instrument Filter-1 TransmittanceRange CutIn",
+      instrumentFilter1TransmittanceRangeCutIn, new Integer(432));
+    Integer instrumentFilter1TransmittanceRangeCutOut =
+      instrumentFilter1TransmittanceRange.getCutOut();
+    checkValue("Instrument Filter-1 TransmittanceRange CutOut",
+      instrumentFilter1TransmittanceRangeCutOut, new Integer(543));
+    Integer instrumentFilter1TransmittanceRangeCutInTolerance =
+      instrumentFilter1TransmittanceRange.getCutInTolerance();
+    checkNull("Instrument Filter-1 TransmittanceRange CutInTolerance",
+      instrumentFilter1TransmittanceRangeCutInTolerance);
+    Integer instrumentFilter1TransmittanceRangeTransmittance =
+      instrumentFilter1TransmittanceRange.getTransmittance();
+    checkValue("Instrument Filter-1 TransmittanceRange Transmittance",
+      instrumentFilter1TransmittanceRangeTransmittance, new Integer(20));
 
     // check OME/Instrument/Filter-2/TransmittanceRange
-    // TODO START HERE
+    Integer instrumentFilter2TransmittanceRangeCutIn =
+      instrumentFilter2TransmittanceRange.getCutIn();
+    checkValue("Instrument Filter-2 TransmittanceRange CutIn",
+      instrumentFilter2TransmittanceRangeCutIn, new Integer(432));
+    Integer instrumentFilter2TransmittanceRangeCutOut =
+      instrumentFilter2TransmittanceRange.getCutOut();
+    checkValue("Instrument Filter-2 TransmittanceRange CutOut",
+      instrumentFilter2TransmittanceRangeCutOut, new Integer(543));
+    Integer instrumentFilter2TransmittanceRangeCutInTolerance =
+      instrumentFilter2TransmittanceRange.getCutInTolerance();
+    checkNull("Instrument Filter-2 TransmittanceRange CutInTolerance",
+      instrumentFilter2TransmittanceRangeCutInTolerance);
+    Integer instrumentFilter2TransmittanceRangeTransmittance =
+      instrumentFilter2TransmittanceRange.getTransmittance();
+    checkValue("Instrument Filter-2 TransmittanceRange Transmittance",
+      instrumentFilter2TransmittanceRangeTransmittance, new Integer(20));
+
 
     // check OME/Instrument/OTF/BinaryFile
 

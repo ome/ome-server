@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml2007.FilterSetNode
+ * org.openmicroscopy.xml2007.DichroicNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -40,29 +40,18 @@ package org.openmicroscopy.xml2007;
 
 import org.w3c.dom.Element;
 
-/** Filter set manufacturer specification */
-public class FilterSetNode extends FilterSpecNode {
+public class DichroicNode extends OMEXMLNode {
 
   // -- Constructor --
 
-  public FilterSetNode(Element element) { super(element); }
+  public DichroicNode(Element element) { super(element); }
 
-  // -- FilterSetNode API methods --
+  // -- DichroicNode API methods --
 
-  public FilterNode getExFilter() {
-    return (FilterNode) getAttrReferencedNode("Filter", "ExFilterRef");
-  }
-
-  public DichroicNode getDichroic() {
-    return (DichroicNode) getAttrReferencedNode("Dichroic", "DichroicRef");
-  }
-
-  public FilterNode getEmFilter() {
-    return (FilterNode) getAttrReferencedNode("Filter", "EmFilterRef");
-  }
+  // CTR - this class is only a stub!
 
   // -- OMEXMLNode API methods --
 
-  public boolean hasID() { return true; }
+  public boolean hasID() { return false; }
 
 }
