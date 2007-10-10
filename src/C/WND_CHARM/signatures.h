@@ -81,7 +81,7 @@ class signatures
     void ComputeFromDouble(double *data, int height, int width, int compute_color);  /* compute the feature values from an array of doubles */
     FILE *FileOpen(char *path, int tile_x, int tile_y);
     void FileClose(FILE *value_file);
-    int SaveToFile(FILE *value_file);
+    int SaveToFile(FILE *value_file,int save_feature_names);
     int LoadFromFile(char *filename);
 };
 

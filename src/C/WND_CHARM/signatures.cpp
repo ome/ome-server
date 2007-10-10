@@ -698,7 +698,7 @@ void signatures::CompGroupC(ImageMatrix *matrix, char *transform_label)
       Add(buffer,vec[a]);
    }
 
-   /* multiple histogram of the original image */
+   /* multiscale histogram of the original image */
    if (IsNeeded(count,24))
      matrix->MultiScaleHistogram(vec);
    for (a=0;a<24;a++)
@@ -963,14 +963,13 @@ void signatures::FileClose(FILE *value_file)
    fclose(value_file);
 }
 
-int signatures::SaveToFile(FILE *value_file)
+int signatures::SaveToFile(FILE *value_file, int save_feature_names)
 {  int sig_index;
-
    fprintf(value_file,"%d\n",sample_class);
    fprintf(value_file,"%s\n",full_path);
    for (sig_index=0;sig_index<count;sig_index++)
-     fprintf(value_file,"%f\n",data[sig_index].value);   
-//     fprintf(value_file,"%f %s\n",data[sig_index].value,data[sig_index].name);
+     if (save_feature_names && NamesTrainingSet) fprintf(value_file,"%f %s\n",data[sig_index].value,((TrainingSet *)NamesTrainingSet)->SignatureNames[sig_index]);
+	 else fprintf(value_file,"%f\n",data[sig_index].value);   
    return(1);
 }
 

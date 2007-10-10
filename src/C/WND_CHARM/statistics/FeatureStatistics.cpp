@@ -153,8 +153,11 @@ void GlobalCentroid(ImageMatrix *Im, double *x_centroid, double *y_centroid)
           y_mass=y_mass+y+1;    /* the "+1" is only for compatability with matlab code (where index starts from 1) */
           mass++;
        }
-   *x_centroid=x_mass/mass;
-   *y_centroid=y_mass/mass;
+   if (mass)	   
+   {  *x_centroid=x_mass/mass;
+      *y_centroid=y_mass/mass;
+   }
+   else *x_centroid=*y_centroid=0;
 }
 
 /* find the centroid of a certain feature

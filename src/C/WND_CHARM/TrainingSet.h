@@ -34,7 +34,7 @@
 
 #include "signatures.h"
 
-#define MAX_CLASS_NUM 200
+#define MAX_CLASS_NUM 1024
 #define MAX_CLASS_NAME_LENGTH 50
 
 #define WNN 0
@@ -75,11 +75,11 @@ public:
    int AddSample(signatures *new_sample);                          /* add signatures computed from one image    */
    void normalize();                                               /* normalize the values of the signatures to [0,100] */
    void SetFisherScores(double used_signatures, char *sorted_feature_names);   /* compute the fisher scores for the signatures */
-   long WNNclassify(signatures *test_sample, double *probabilities, signatures **closest_sample);/* classify a sample using weighted nearest neighbor */
-   long classify2(signatures *test_sample, double *probabilities); /* classify using -5                         */
-   long classify3(signatures *test_sample, double *probabilities);
+   long WNNclassify(signatures *test_sample, double *probabilities, double *normalization_factor, signatures **closest_sample);/* classify a sample using weighted nearest neighbor */
+   long classify2(signatures *test_sample, double *probabilities,double *normalization_factor); /* classify using -5                         */
+   long classify3(signatures *test_sample, double *probabilities,double *normalization_factor);
    long PrintConfusion(FILE *output_file, unsigned short *confusion_matrix, double *similarity_matrix, unsigned short dend_file, unsigned short method);  /* print a confusion or similarity matrix */
-   long report(FILE *output_file, char *data_set_name, data_split *splits, unsigned short split_num, int tiles, int max_train_images,char *phylib_path,int export_tsv);  /* report on few splits */
+   long report(FILE *output_file, char *data_set_name, data_split *splits, unsigned short split_num, int tiles, int max_train_images,char *phylib_path, int phylip_algorithm, int export_tsv);  /* report on few splits */
 };
 
 

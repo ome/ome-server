@@ -1338,18 +1338,19 @@ void ImageMatrix::FeatureStatistics(int *count, int *Euler, double *centroid_x, 
    qsort(object_areas,*count,sizeof(int),compare_ints);
    *AreaMin=object_areas[0];
    *AreaMax=object_areas[*count-1];
-   if (count>0) *AreaMean=sum_areas/(*count);
+   if (*count>0) *AreaMean=sum_areas/(*count);
    else *AreaMean=0;
    *AreaMedian=object_areas[(*count)/2];
    for (object_index=0;object_index<num_bins;object_index++)
      area_histogram[object_index]=0;
    /* compute the variance and the histogram */
    sum_areas=0;
-   for (object_index=1;object_index<=*count;object_index++)
-   {  sum_areas+=pow(object_areas[object_index-1]-*AreaMean,2);
-      if (object_areas[object_index-1]==*AreaMax) area_histogram[num_bins-1]+=1;
-      else area_histogram[((object_areas[object_index-1]-*AreaMin)/(*AreaMax-*AreaMin))*num_bins]+=1;
-   }
+   if (*AreaMax-*AreaMin>0)
+     for (object_index=1;object_index<=*count;object_index++)
+     {  sum_areas+=pow(object_areas[object_index-1]-*AreaMean,2);
+        if (object_areas[object_index-1]==*AreaMax) area_histogram[num_bins-1]+=1;
+        else area_histogram[((object_areas[object_index-1]-*AreaMin)/(*AreaMax-*AreaMin))*num_bins]+=1;
+     }
    if (*count>1) *AreaVar=sum_areas/((*count)-1);
    else *AreaVar=sum_areas;
 
@@ -1357,7 +1358,7 @@ void ImageMatrix::FeatureStatistics(int *count, int *Euler, double *centroid_x, 
    qsort(centroid_dists,*count,sizeof(double),compare_doubles);
    *DistMin=centroid_dists[0];
    *DistMax=centroid_dists[*count-1];
-   if (count>0) *DistMean=sum_dists/(*count);
+   if (*count>0) *DistMean=sum_dists/(*count);
    else *DistMean=0;
    *DistMedian=centroid_dists[(*count)/2];
    for (object_index=0;object_index<num_bins;object_index++)
