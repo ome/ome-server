@@ -492,10 +492,10 @@ void ImageMatrix::flip()
    pix_data temp;
    for (y=0;y<height;y++)
      for (x=0;x<width/2;x++)
-	 { temp=data[x][y];
-	   data[x][y]=data[width-x-1][y];
-	   data[width-x-1][y]=temp;
-	 }
+     { temp=data[x][y];
+       data[x][y]=data[width-x-1][y];
+       data[width-x-1][y]=temp;
+     }
 }
 
 /* Downsample

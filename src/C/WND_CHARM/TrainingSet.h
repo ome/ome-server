@@ -68,10 +68,11 @@ public:
    int LoadImages(char *filename, int log);                        /* load a set of images (paths are in the text file) */
    int AddAllSignatures(char *filename);                           /* load the image feature values from all files */
    int LoadFromDir(char *filename, int log, int print_to_screen, int tiles, int multi_processor, int large_set, int compute_colors, int downsample);  /* load images from a root directory   */
-   double Test(TrainingSet *TestSet, int method, unsigned short *confusion_matrix, double *similarity_matrix,int tiles, char *report_string);     /* test      */
+   double Test(TrainingSet *TestSet, int method, unsigned short *confusion_matrix, double *similarity_matrix,int tiles, long first_n, char *report_string);     /* test      */
    int SaveToFile(char *filename);                                 /* save the training set values to a file    */
    int ReadFromFile(char *filename);                               /* read the training set values from a file  */
-   void split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet, unsigned short tiles, int max_train_samples, int max_test_samples); /* random split to train and test */
+   void split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet, unsigned short tiles, int max_train_samples, int max_test_samples,int exact_max_train); /* random split to train and test */
+   void RemoveClass(long class_index);                             /* remove a class                            */
    int AddSample(signatures *new_sample);                          /* add signatures computed from one image    */
    void normalize();                                               /* normalize the values of the signatures to [0,100] */
    void SetFisherScores(double used_signatures, char *sorted_feature_names);   /* compute the fisher scores for the signatures */

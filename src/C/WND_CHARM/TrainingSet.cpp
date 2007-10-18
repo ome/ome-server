@@ -45,6 +45,20 @@
 #include <stdlib.h>
 #endif
 
+/* compare_two_doubles
+   function used for qsort
+*/
+int compare_two_doubles (const void *a, const void *b)
+{
+  if (*((double *)a) > *((double*)b)) return(1);
+  if (*((double*)a) == *((double*)b)) return(0);
+  return(-1);
+}
+
+int comp_strings(const void *s1, const void *s2)
+{  return(strcmp((char *)s1,(char *)s2));
+}
+
 //---------------------------------------------------------------------------
 
 /* constructor of a TrainingSet object
@@ -191,6 +205,31 @@ int TrainingSet::ReadFromFile(char *filename)
    return(1);
 }
 
+/* RemoveClass
+   remove a class from the training set
+   class_index -long- the index of the class to be removed
+*/
+void TrainingSet::RemoveClass(long class_index)
+{  long index,deleted_count=0;
+   /* remove the class label */
+   for (index=class_index;index<class_num;index++)
+     strcpy(class_labels[index],class_labels[index+1]);
+   /* remove the samples of that class */
+   for (index=0;index<count;index++)
+   { if (samples[index]->sample_class==class_index)
+     {  delete samples[index];
+        deleted_count++;
+     }
+     else samples[index-deleted_count]=samples[index];
+   }
+   /* change the indices of the samples */
+   for (index=0;index<count;index++)
+     if (samples[index]->sample_class>class_index)
+       samples[index]->sample_class=samples[index]->sample_class-1;
+   /* change the number of classes and training samples */	   
+   class_num--;
+   count=count-deleted_count;
+}
 
 /*  split
     split randomly into a training set and a test set
@@ -199,13 +238,16 @@ int TrainingSet::ReadFromFile(char *filename)
 	                       when splitting to train and test, all tiles of that one image will be either in the
 		     	       test set or training set.
     max_train_samples -int- the maximum number of samples to use for training (0 to ignore and use the proportional part of the set)
+	max_test_samples -int- the maximum namber of samples for the test set (0 to ignore and use the proportional part of the set)
+	exact_max_train -int- if 1 then the class is removed if its number of samples does not reach the "max_train_samples". (ignored if 0)
 */
-void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet, unsigned short tiles, int max_train_samples, int max_test_samples)
+void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet, unsigned short tiles, int max_train_samples, int max_test_samples, int exact_max_train)
 {  long *class_samples;
    int class_index,sig_index,tile_index;
    int number_of_test_samples;
+   long class_counts[MAX_CLASS_NUM];
    class_samples = new long[count];
-   
+
    /* copy the class labels to the train and test */
    for (class_index=0;class_index<=class_num;class_index++)
    {  strcpy(TrainSet->class_labels[class_index],class_labels[class_index]);
@@ -227,6 +269,7 @@ void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet,
         if (samples[sample_index]->sample_class==class_index)
           class_samples[class_samples_count++]=sample_index;	  
       class_samples_count/=tiles;
+	  class_counts[class_index]=class_samples_count;
       /* add the samples to the test set */
       number_of_test_samples=(int)(class_samples_count*ratio);
 	  if (max_train_samples>0) number_of_test_samples=max(0,class_samples_count-max_train_samples);	  
@@ -245,6 +288,16 @@ void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet,
       for (sample_index=0;sample_index<class_samples_count*tiles;sample_index++)
         TrainSet->AddSample(samples[class_samples[sample_index]]->duplicate());
    }
+
+   /* remove the class if it doesn't have enough samples */
+   class_index=class_num;
+   if (exact_max_train)
+   while (class_index>0)
+   {  if (class_counts[class_index]<=max_train_samples)
+        RemoveClass(class_index);
+	  class_index--;
+   }
+   
    delete class_samples;
 }
 
@@ -300,11 +353,6 @@ int TrainingSet::LoadImages(char *filename, int log)
    load the image feature values from all files
    filename -char *- the root directory of the data set
 */
-
-/* this function is used for sorting the files */
-int comp_strings(const void *s1, const void *s2)
-{  return(strcmp((char *)s1,(char *)s2));
-}
 
 int TrainingSet::AddAllSignatures(char *filename)
 {  DIR *root_dir,*class_dir;
@@ -380,8 +428,8 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
    if (!(root_dir=opendir(filename))) return(0);
    if (tiles<1) tiles=1;    /* at least one tile */
    while (ent = readdir(root_dir))
-   {  if (strchr(ent->d_name,'.')) continue;                             /* ignore the '.' and '..' entries or files     */
-      strcpy(class_labels[samp_class],ent->d_name);                      /* the label of the class is the directory name */
+   {  if (strchr(ent->d_name,'.') || strcmp(ent->d_name,"tsv")==0) continue;   /* ignore the '.' and '..' entries or files, and the automatically generated tsv directory */
+      strcpy(class_labels[samp_class],ent->d_name);                            /* the label of the class is the directory name */
       samp_class++;
    }
    closedir(root_dir);
@@ -389,15 +437,11 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
    qsort(&(class_labels[1]),class_num,sizeof(class_labels[1]),comp_strings);
 
    samp_class=1;
-//   while (ent = readdir(root_dir))
    while (samp_class<=class_num)
    {  int file_index,files_in_class_count=0;
-//      if (strchr(ent->d_name,'.')) continue;         /* ignore the '.' and '..' entries or files     */
-//      strcpy(class_labels[samp_class],ent->d_name);  /* the label of the class is the directory name */
-      /* constract the path of the class files */	   		 		 	  
+      /* constract the path of the class files */
       strcpy(buffer,filename);
       strcat(buffer,"/");
-//      strcat(buffer,ent->d_name);
       strcat(buffer,class_labels[samp_class]);
       /* get the file names */
       class_dir=opendir(buffer);
@@ -480,8 +524,6 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
       }
       samp_class++;
     }
-//   class_num=samp_class-1;
-//   closedir(root_dir);
 
     if (multi_processor)
       AddAllSignatures(filename);
@@ -497,14 +539,16 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
    confusion_matrix -unsigned short *- an (N+1)x(N+1) pre-allocated structure for the confusion matrix. will be ignored if NULL
    confusion_matrix -unsigned short *- an (N+1)x(N+1) pre-allocated structure for the normalized similarity matrix. will be ignored if NULL
    tiles -int- number of tiles of each image.
+   first_n -long- the number of first closest classes among which a presence of the right class is considered a match
    report_string -char *- the outpust string for showing the classification of each image (ignored if NULL)
 */
-double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confusion_matrix, double *similarity_matrix,int tiles, char *report_string)
+double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confusion_matrix, double *similarity_matrix,int tiles, long first_n, char *report_string)
 {  int test_sample_index,predicted_class,tile_index,class_index,b;
    signatures *test_signature;
    long accurate_prediction=0;
    double probabilities[MAX_CLASS_NUM],probabilities_sum[MAX_CLASS_NUM],normalization_factor;
-   if (tiles<1) tiles=1;   /* make sure the number of tiles is at least 1*/
+   if (tiles<1) tiles=1;       /* make sure the number of tiles is at least 1 */
+   if (first_n<=0) first_n=1;  /* set a valid value to first_n                */
    if (report_string) strcpy(report_string,"");    /* make sure the string is initially empty */
    /*initialize the confusion and similarity matrix */
    if (confusion_matrix)
@@ -531,11 +575,20 @@ double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confu
       tile_index++;
       for (class_index=1;class_index<=class_num;class_index++) probabilities_sum[class_index]+=probabilities[class_index];
       if (tile_index==tiles)
-      {  double max=0;
-         for (class_index=1;class_index<=class_num;class_index++) if (probabilities_sum[class_index]>max)
-      	 {  max=probabilities_sum[class_index];
-      	    predicted_class=class_index;
-      	 }
+      {  int cand;
+         for (class_index=1;class_index<=class_num;class_index++) probabilities[class_index]=0.0;  /* initialize the array */
+         for (cand=0;cand<first_n;cand++)
+         {
+            double max=0;
+            for (class_index=1;class_index<=class_num;class_index++)
+              if (probabilities_sum[class_index]>max && probabilities[class_index]==0.0)
+              {  max=probabilities_sum[class_index];
+                 predicted_class=class_index;
+              }
+
+            probabilities[predicted_class]=1.0;
+            if (predicted_class==test_signature->sample_class) break;  /* class was found among the n closest */
+         }
 
          /* update confusion and similarity matrices */
          if (predicted_class==test_signature->sample_class) accurate_prediction++;
@@ -551,7 +604,7 @@ double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confu
             for (class_index=1;class_index<=class_num;class_index++)
             {  if (class_index==test_signature->sample_class) sprintf(buffer,"<td><b>%.3f</b></td>",probabilities_sum[class_index]);  /* put the actual class in bold */
                else sprintf(buffer,"<td>%.3f</td>",probabilities_sum[class_index]);
-               strcat(one_image_string,buffer);		   
+               strcat(one_image_string,buffer);
             }
             if (predicted_class==test_signature->sample_class) sprintf(color,"<font color=\"#00FF00\">Correct</font>");
             else sprintf(color,"<font color=\"#FF0000\">Incorrect</font>");
@@ -584,14 +637,6 @@ double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confu
 /* normalize
    normalize the signature in the training set to the interval [0,100]
 */
-
-
-int compare_two_doubles (const void *a, const void *b)
-{
-  if (*((double *)a) > *((double*)b)) return(1);
-  if (*((double*)a) == *((double*)b)) return(0);
-  return(-1);
-}
 
 void TrainingSet::normalize()
 {  int sig_index,samp_index,max_value_index;
@@ -760,11 +805,12 @@ long TrainingSet::WNNclassify(signatures *test_sample, double *probabilities, do
           sum_dists+=1/probabilities[class_index];
       for (class_index=1;class_index<=class_num;class_index++)
         if (sum_dists==0) probabilities[class_index]=0;    /* protect from division by zero */
-		else if (probabilities[class_index]==0) probabilities[class_index]=1.0; /* exact match */
-        else probabilities[class_index]=(1/probabilities[class_index])/sum_dists;
-     if (normalization_factor) *normalization_factor=sum_dists;		
+        else
+          if (probabilities[class_index]==0) probabilities[class_index]=1.0; /* exact match */
+          else probabilities[class_index]=(1/probabilities[class_index])/sum_dists;
+     if (normalization_factor) *normalization_factor=sum_dists;
    }
-   
+
    return(most_probable_class);
 }
 
@@ -998,7 +1044,7 @@ long TrainingSet::PrintConfusion(FILE *output_file,unsigned short *confusion_mat
          {  double dist=0;
             if (method==0) dist=max(1-similarity_matrix[class_index1*class_num+class_index2],1-similarity_matrix[class_index2*class_num+class_index1]);
             if (method==1) dist=((1-similarity_matrix[class_index1*class_num+class_index2])+(1-similarity_matrix[class_index2*class_num+class_index1]))/2;
-            if (dend_file) fprintf(output_file,"%1.4f       ",max(dist,0));
+            if (dend_file) fprintf(output_file,"%1.4f       ",dist*(dist>0));
             else fprintf(output_file,"   %1.5f",similarity_matrix[class_index1*class_num+class_index2]);
          }
       }
@@ -1019,9 +1065,9 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
    
    /* create a directory for the files */
 #ifndef WIN32
-   if (export_tsv) mkdir(data_set_name,0700);
+   if (export_tsv) mkdir("tsv",0755);
 #else
-   if (export_tsv) mkdir(data_set_name);
+   if (export_tsv) mkdir("tsv");
 #endif
 
    /* print the header */
@@ -1102,7 +1148,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
    fprintf(output_file,"<br><br><br><br><br><br> \n\n\n\n\n\n\n\n");
 
    /* average confusion and similarity matrix */
-   sprintf(tsv_filename,"%s/avg_confusion.tsv",data_set_name);   /* determine the tsv file name           */
+   sprintf(tsv_filename,"tsv/avg_confusion.tsv");   /* determine the tsv file name           */
    tsvfile=NULL;                                                 /* keep it null if the file doesn't open */
    if (export_tsv) tsvfile=fopen(tsv_filename,"w");                    /* open the file for tsv                 */
    fprintf(output_file,"<table border=\"1\" align=\"center\"><caption>Average Confusion Matrix</caption> \n");
@@ -1135,7 +1181,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
    if (tsvfile) fclose(tsvfile);
 
    /* average similarity matrix */
-   sprintf(tsv_filename,"%s/avg_similarity.tsv",data_set_name);   /* determine the tsv file name           */
+   sprintf(tsv_filename,"tsv/avg_similarity.tsv");                /* determine the tsv file name           */
    tsvfile=NULL;                                                  /* keep it null if the file doesn't open */
    if (export_tsv) tsvfile=fopen(tsv_filename,"w");                     /* open the file for tsv                 */   
    avg_similarity_matrix=new double[(class_num+1)*(class_num+1)];  /* this is used for creating the dendrograms */
@@ -1177,9 +1223,9 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
 	  {  PrintConfusion(dend_file, splits[0].confusion_matrix,avg_similarity_matrix,1,1);  /* print the dendrogram to a the "dend_file.txt" file */
          fclose(dend_file);
 		 if (export_tsv)   /* write the phylip file to the tsv directory */
-		 {  sprintf(file_path,"%s/dend_file.txt",data_set_name);
+		 {  sprintf(file_path,"tsv/dend_file.txt");
 		    dend_file=fopen(file_path,"w");
-			PrintConfusion(dend_file, splits[0].confusion_matrix,avg_similarity_matrix,1,1);  /* print the dendrogram to a the "dend_file.txt" file */
+			PrintConfusion(dend_file, splits[0].confusion_matrix,avg_similarity_matrix,1,1);  /* print the dendrogram to a "dend_file.txt" file */
 			fclose(dend_file);
 		 }
          sprintf(file_path,"%s/fitch.infile",phylib_path);
@@ -1194,7 +1240,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
 			alg[0]='\0';
 			for (algorithm_index=0;algorithm_index<phylip_algorithm;algorithm_index++)
 			  strcat(alg,"I\n");
-            fprintf(dend_file,"outtree\n%s/src/font1\n%sV\nN\nY\n",phylib_path,alg);
+            fprintf(dend_file,"outtree\n%s/src/font1\n%sV\nD\nN\nY\n",phylib_path,alg);
             fclose(dend_file);
 			/* create the dendrogram */
 			system("rm plotfile");

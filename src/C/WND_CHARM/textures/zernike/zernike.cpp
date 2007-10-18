@@ -115,8 +115,8 @@ void mb_Znl(long n, long l, double *X, double *Y, double *P, int size, double *o
 	sum = Cadd(sum, RCmul(p, Conjg(Vnl)));
   }
 
-  /* sum *= (n+1)/3.14156 ; */
-  sum = RCmul((n+1)/3.14156, sum);
+  /* sum *= (n+1)/3.14159265 ; */
+  sum = RCmul((n+1)/3.14159265, sum);
 
 
   /* Assign the returned value */

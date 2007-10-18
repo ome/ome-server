@@ -133,8 +133,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	sum = Cadd(sum, RCmul(p, Conjg(Vnl)));
   }
 
-  /* sum *= (n+1)/3.14156 ; */
-  sum = RCmul((n+1)/3.14156, sum);
+  /* sum *= (n+1)/3.14159 ; */
+  sum = RCmul((n+1)/3.14159, sum);
   
 
   /* Assign the returned value */
