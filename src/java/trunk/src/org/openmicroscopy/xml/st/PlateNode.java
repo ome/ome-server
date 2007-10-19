@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,9 +51,9 @@ import org.w3c.dom.Element;
  * Name: Plate
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/Plate.ome
- * Description: Stores information about the plates that make up a
- *   high-throughput screen. Plates may belong to more than one screen, and
- *   have a many-to-many relationship to screens.
+ * Description: Alamacena informacion acerca de los platos que hacen una
+ *   pantalla de "high-throughput". Los platos pueden pertenecer a mas de una
+ *   pantalla. Tienen una relacion de muchos a muchos con las pantallas.
  */
 public class PlateNode extends AttributeNode
   implements Plate
@@ -117,8 +117,7 @@ public class PlateNode extends AttributeNode
    * for the Plate element.
    */
   public void setName(String value) {
-    setAttribute("Name", value);
-  }
+    setAttribute("Name", value);  }
 
   /**
    * Gets ExternalReference attribute
@@ -133,8 +132,7 @@ public class PlateNode extends AttributeNode
    * for the Plate element.
    */
   public void setExternalReference(String value) {
-    setAttribute("ExternalReference", value);
-  }
+    setAttribute("ExternalReference", value);  }
 
   /**
    * Gets Screen referenced by Screen
@@ -142,8 +140,7 @@ public class PlateNode extends AttributeNode
    */
   public Screen getScreen() {
     return (Screen)
-      createReferencedNode(ScreenNode.class,
-      "Screen", "Screen");
+      getAttrReferencedNode("Screen", "Screen");
   }
 
   /**
@@ -154,7 +151,7 @@ public class PlateNode extends AttributeNode
    *   if parameter is not an instance of ScreenNode
    */
   public void setScreen(Screen value) {
-    setReferencedNode((OMEXMLNode) value, "Screen", "Screen");
+    setAttrReferencedNode((OMEXMLNode) value, "Screen");
   }
 
   /**
@@ -162,8 +159,7 @@ public class PlateNode extends AttributeNode
    * referencing this Plate node.
    */
   public List getImagePlateList() {
-    return createAttrReferralNodes(ImagePlateNode.class,
-      "ImagePlate", "Plate");
+    return getAttrReferringNodes("ImagePlate", "Plate");
   }
 
   /**
@@ -171,8 +167,7 @@ public class PlateNode extends AttributeNode
    * referencing this Plate node.
    */
   public int countImagePlateList() {
-    return getSize(getAttrReferrals("ImagePlate",
-      "Plate"));
+    return getAttrReferringCount("ImagePlate", "Plate");
   }
 
   /**
@@ -180,8 +175,7 @@ public class PlateNode extends AttributeNode
    * referencing this Plate node.
    */
   public List getPlateScreenList() {
-    return createAttrReferralNodes(PlateScreenNode.class,
-      "PlateScreen", "Plate");
+    return getAttrReferringNodes("PlateScreen", "Plate");
   }
 
   /**
@@ -189,8 +183,7 @@ public class PlateNode extends AttributeNode
    * referencing this Plate node.
    */
   public int countPlateScreenList() {
-    return getSize(getAttrReferrals("PlateScreen",
-      "Plate"));
+    return getAttrReferringCount("PlateScreen", "Plate");
   }
 
 }

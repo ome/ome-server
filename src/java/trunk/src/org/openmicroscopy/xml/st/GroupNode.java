@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,8 +51,9 @@ import org.w3c.dom.Element;
  * Name: Group
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/Experimenter.ome
- * Description: Defines groups of experimenters. This can be a lab or a project
- *   group. It is not meant to represent an institution or a company.
+ * Description: Define grupos de investigadores. Esto puede ser un laboratorio
+ *   o un proyecto grupal. No esta pensado para representar una institucion o
+ *   compania
  */
 public class GroupNode extends AttributeNode
   implements Group
@@ -116,8 +117,7 @@ public class GroupNode extends AttributeNode
    * for the Group element.
    */
   public void setName(String value) {
-    setAttribute("Name", value);
-  }
+    setAttribute("Name", value);  }
 
   /**
    * Gets Leader referenced by Experimenter
@@ -125,8 +125,7 @@ public class GroupNode extends AttributeNode
    */
   public Experimenter getLeader() {
     return (Experimenter)
-      createReferencedNode(ExperimenterNode.class,
-      "Experimenter", "Leader");
+      getAttrReferencedNode("Experimenter", "Leader");
   }
 
   /**
@@ -137,7 +136,7 @@ public class GroupNode extends AttributeNode
    *   if parameter is not an instance of ExperimenterNode
    */
   public void setLeader(Experimenter value) {
-    setReferencedNode((OMEXMLNode) value, "Experimenter", "Leader");
+    setAttrReferencedNode((OMEXMLNode) value, "Leader");
   }
 
   /**
@@ -146,8 +145,7 @@ public class GroupNode extends AttributeNode
    */
   public Experimenter getContact() {
     return (Experimenter)
-      createReferencedNode(ExperimenterNode.class,
-      "Experimenter", "Contact");
+      getAttrReferencedNode("Experimenter", "Contact");
   }
 
   /**
@@ -158,7 +156,7 @@ public class GroupNode extends AttributeNode
    *   if parameter is not an instance of ExperimenterNode
    */
   public void setContact(Experimenter value) {
-    setReferencedNode((OMEXMLNode) value, "Experimenter", "Contact");
+    setAttrReferencedNode((OMEXMLNode) value, "Contact");
   }
 
   /**
@@ -166,8 +164,7 @@ public class GroupNode extends AttributeNode
    * referencing this Group node.
    */
   public List getExperimenterList() {
-    return createAttrReferralNodes(ExperimenterNode.class,
-      "Experimenter", "Group");
+    return getAttrReferringNodes("Experimenter", "Group");
   }
 
   /**
@@ -175,8 +172,7 @@ public class GroupNode extends AttributeNode
    * referencing this Group node.
    */
   public int countExperimenterList() {
-    return getSize(getAttrReferrals("Experimenter",
-      "Group"));
+    return getAttrReferringCount("Experimenter", "Group");
   }
 
   /**
@@ -184,8 +180,7 @@ public class GroupNode extends AttributeNode
    * referencing this Group node.
    */
   public List getExperimenterGroupList() {
-    return createAttrReferralNodes(ExperimenterGroupNode.class,
-      "ExperimenterGroup", "Group");
+    return getAttrReferringNodes("ExperimenterGroup", "Group");
   }
 
   /**
@@ -193,8 +188,7 @@ public class GroupNode extends AttributeNode
    * referencing this Group node.
    */
   public int countExperimenterGroupList() {
-    return getSize(getAttrReferrals("ExperimenterGroup",
-      "Group"));
+    return getAttrReferringCount("ExperimenterGroup", "Group");
   }
 
   /**
@@ -202,8 +196,7 @@ public class GroupNode extends AttributeNode
    * referencing this Group node.
    */
   public List getImageGroupList() {
-    return createAttrReferralNodes(ImageGroupNode.class,
-      "ImageGroup", "Group");
+    return getAttrReferringNodes("ImageGroup", "Group");
   }
 
   /**
@@ -211,8 +204,7 @@ public class GroupNode extends AttributeNode
    * referencing this Group node.
    */
   public int countImageGroupList() {
-    return getSize(getAttrReferrals("ImageGroup",
-      "Group"));
+    return getAttrReferringCount("ImageGroup", "Group");
   }
 
 }

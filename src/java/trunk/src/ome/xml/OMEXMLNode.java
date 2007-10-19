@@ -44,7 +44,7 @@ import java.util.Vector;
 import org.w3c.dom.*;
 
 /**
- * OMEXMLNode is the abstract superclass of all OME-XML nodes. These nodes are
+ * OMEXMLNode is the superclass of all OME-XML nodes. These nodes are
  * similar to, but more sophisticated than, the nodes obtained from a direct
  * DOM parse of an OME-XML file. Every OME-XML node is backed by a
  * corresponding DOM element from the directly parsed XML, but not all DOM
@@ -58,6 +58,10 @@ import org.w3c.dom.*;
  * intuitive traversal of OME structures.
  */
 public abstract class OMEXMLNode {
+
+  // -- Constants --
+
+  protected static final String[] NODE_PACKAGES = {".ome", ".st", ""};
 
   // -- Static fields --
 
@@ -77,11 +81,11 @@ public abstract class OMEXMLNode {
   /** Constructs an OME-XML node with the given associated DOM element. */
   public OMEXMLNode(Element element) {
     this.element = element;
-    if (hasID() && getID() == null) {
+    if (hasID() && getNodeID() == null) {
       String name = getElementName();
       Integer id = (Integer) nextIds.get(name);
       int q = id == null ? 0 : id.intValue();
-      setID(idPrefix + ":" + name + ":" + q);
+      setNodeID(idPrefix + ":" + name + ":" + q);
       nextIds.put(name, new Integer(q + 1));
     }
   }
@@ -95,10 +99,10 @@ public abstract class OMEXMLNode {
   public abstract boolean hasID();
 
   /** Gets the ID for this node, or null if none. */
-  public String getID() { return getAttribute("ID"); }
+  public String getNodeID() { return getAttribute("ID"); }
 
   /** Sets the ID for this node. */
-  public void setID(String id) { setAttribute("ID", id); }
+  public void setNodeID(String id) { setAttribute("ID", id); }
 
   /** Gets the name of the DOM element. */
   public String getElementName() { return DOMUtil.getName(element); }
@@ -123,6 +127,11 @@ public abstract class OMEXMLNode {
     return getSize(DOMUtil.getChildElements(name, element));
   }
 
+  /** Gets an OME-XML node representing the first child with the given name. */
+  protected OMEXMLNode getChildNode(String name) {
+    return createNode(DOMUtil.getChildElement(name, element));
+  }
+
   /**
    * Gets an OME-XML node of the specified type
    * representing the first child with the given name.
@@ -134,6 +143,14 @@ public abstract class OMEXMLNode {
   /** Gets a list of OME-XML node children with the given name. */
   protected Vector getChildNodes(String name) {
     return createNodes(DOMUtil.getChildElements(name, element));
+  }
+
+  /**
+   * Gets an OME-XML node representing the
+   * first ancestor element with the given name.
+   */
+  protected OMEXMLNode getAncestorNode(String name) {
+    return createNode(name, getAncestorElement(name));
   }
 
   /**
@@ -185,6 +202,97 @@ public abstract class OMEXMLNode {
   protected OMEXMLNode getAttrReferencedNode(String nodeType, String attrName) {
     Element el = findElement(nodeType, getAttribute(attrName));
     return createNode(el);
+  }
+
+  /**
+   * Sets the OME-XML referenced by the attribute with the given name.
+   *
+   * For example, if this node is an ImageNode,
+   * setAttrReferencedNode(pixelsNode, "DefaultPixels") will set the
+   * DefaultPixels attribute value to match the given PixelsNode's ID.
+   */
+  protected void setAttrReferencedNode(OMEXMLNode node, String attrName) {
+    if (node == null || attrName == null) return;
+    String id = DOMUtil.getAttribute("ID", node.getDOMElement());
+    if (id != null) setAttribute(attrName, id);
+  }
+
+  /**
+   * Gets the number of elements of a certain type (with the given name)
+   * that reference this OME-XML node using a *Ref child element.
+   */
+  protected int getReferringCount(String name) {
+    return getReferringCount(name, getElementName() + "Ref");
+  }
+
+  /**
+   * Gets the number of elements of a certain type (with the given name)
+   * that reference this OME-XML node using a child element with name refName.
+   */
+  protected int getReferringCount(String name, String refName) {
+    return getSize(findReferringElements(name, refName, getNodeID()));
+  }
+
+  /**
+   * Gets a list of nodes of a certain type (with the given name)
+   * that reference this OME-XML node using a *Ref child element. 
+   *
+   * For example, if this node is a Project node and
+   * getReferringNodes("Dataset") is called, it will search the DOM structure
+   * for Datasets with child ProjectRefs element whose IDs match this Project
+   * node's ID value.
+   */
+  protected Vector getReferringNodes(String name) {
+    return getReferringNodes(name, getElementName() + "Ref");
+  }
+
+  /**
+   * Gets a list of nodes of a certain type (with the given name)
+   * that refer to this OME-XML node using a child element with name refName.
+   *
+   * For example, if this node is an Experimenter node and
+   * getReferringNodes("ExperimenterGroup", "Contact") is called, it will
+   * search the DOM structure for ExperimenterGroups with child Contact
+   * elements whose IDs match this Experimenter node's ID value.
+   */
+  protected Vector getReferringNodes(String name, String refName) {
+    return createNodes(findReferringElements(name, refName, getNodeID()));
+  }
+
+  /**
+   * Gets the number of elements of a certain type (with the given name)
+   * that reference this OME-XML node using an attribute.
+   */
+  protected int getAttrReferringCount(String name, String attrName) {
+    return getSize(DOMUtil.findElementList(name,
+      attrName, getNodeID(), element.getOwnerDocument()));
+  }
+
+  /**
+   * Gets a list of nodes of a certain type (with the given name)
+   * that refer to this OME-XML node using an attribute.
+   *
+   * For example, if this node is a PixelsNode and
+   * getAttrReferringNodes("ChannelComponent", "Pixels") is called, it will
+   * search the DOM structure for ChannelComponents with Pixels
+   * attributes whose values match this Pixels node's ID value.
+   */
+  protected Vector getAttrReferringNodes(String name, String attrName) {
+    return createNodes(DOMUtil.findElementList(name,
+      attrName, getNodeID(), element.getOwnerDocument()));
+  }
+
+  /**
+   * Creates a reference element beneath this node.
+   *
+   * For example, if this node is a DatasetNode and "project" is a ProjectNode,
+   * createReference(project) references the Project from this Dataset by
+   * adding a child XML element called ProjectRef with an ID attribute matching
+   * the ID of the referenced Project.
+   */
+  protected void createReference(OMEXMLNode node) {
+    Element ref = DOMUtil.createChild(element, node.getElementName() + "Ref");
+    DOMUtil.setAttribute("ID", node.getNodeID(), ref);
   }
 
   /** Gets the given child node's character data. */
@@ -332,16 +440,16 @@ public abstract class OMEXMLNode {
     return DOMUtil.getLongAttribute(name, element);
   }
 
-  // -- Helper methods --
-
   /**
    * Creates an OME-XML node of the proper type
    * using the specified DOM element as a source.
    */
-  private OMEXMLNode createNode(Element el) {
+  protected OMEXMLNode createNode(Element el) {
     if (el == null) return null;
     return createNode(DOMUtil.getName(el), el);
   }
+
+  // -- Helper methods --
 
   /**
    * Creates an OME-XML node of the given type,
@@ -350,10 +458,7 @@ public abstract class OMEXMLNode {
   private OMEXMLNode createNode(String nodeType, Element el) {
     if (nodeType == null || el == null) return null;
     Class c = getClass(nodeType);
-    if (c == null) {
-      // CTR TODO wrap in generic node class?
-      return null;
-    }
+    if (c == null) return new CustomNode(el);
     return createNode(c, el);
   }
 
@@ -412,6 +517,11 @@ public abstract class OMEXMLNode {
     return DOMUtil.getChildElements(name, element);
   }
 
+  /** Gets the first ancestor DOM element with the specified name. */
+  protected Element getAncestorElement(String name) {
+    return DOMUtil.getAncestorElement(name, element);
+  } 
+
   /** Finds the DOM element with the specified name and ID attribute value. */
   private Element findElement(String name, String id) {
     if (name == null || id == null) return null;
@@ -419,21 +529,62 @@ public abstract class OMEXMLNode {
   }
 
   /**
+   * Gets a list of elements of a certain type (with the given name)
+   * that refer to the element with the specified ID using a child element
+   * (with name refName).
+   */
+  private Vector findReferringElements(String name, String refName, String id) {
+    if (name == null || refName == null || id == null) return null;
+    Vector possible = DOMUtil.findElementList(name, element.getOwnerDocument());
+    if (possible == null) return null;
+
+    Vector v = new Vector();
+    int psize = possible.size();
+    for (int i=0; i<psize; i++) {
+      Element el = (Element) possible.elementAt(i);
+      Vector refs = DOMUtil.getChildElements(refName, el);
+      int rsize = refs.size();
+      boolean match = false;
+      for (int j=0; j<rsize; j++) {
+        Element ref = (Element) refs.elementAt(j);
+        if (id.equals(DOMUtil.getAttribute("ID", ref))) {
+          match = true;
+          break;
+        }
+      }
+      if (match) v.add(el);
+    }
+    return v;
+  }
+
+  /**
    * Gets the node class based on the given name from the class loader.
    * @return null if the class could not be loaded.
    */
   private Class getClass(String nodeName) {
-    // NB: Will need to expand this logic to check multiple subpackages.
-    String pack = getClass().getPackage().getName() + ".ome";
-    try {
-      return Class.forName(pack + "." + nodeName + "Node");
+    // determine base package; strip off sub-package suffixes
+    String pack = getClass().getPackage().getName();
+    for (int i=0; i<NODE_PACKAGES.length; i++) {
+      if (pack.endsWith(NODE_PACKAGES[i])) {
+        pack = pack.substring(0, pack.length() - NODE_PACKAGES[i].length());
+        break;
+      }
     }
-    catch (ClassNotFoundException exc) { }
-    catch (NoClassDefFoundError err) { }
-    catch (RuntimeException exc) {
-      // HACK: workaround for bug in Apache Axis2
-      String msg = exc.getMessage();
-      if (msg != null && msg.indexOf("ClassNotFound") < 0) throw exc;
+
+    // find class among sub-packages
+    for (int i=0; i<NODE_PACKAGES.length; i++) {
+      String subPack = pack + NODE_PACKAGES[i];
+      String name = subPack + "." + nodeName + "Node";
+      try {
+        return Class.forName(name);
+      }
+      catch (ClassNotFoundException exc) { }
+      catch (NoClassDefFoundError err) { }
+      catch (RuntimeException exc) {
+        // HACK: workaround for bug in Apache Axis2
+        String msg = exc.getMessage();
+        if (msg != null && msg.indexOf("ClassNotFound") < 0) throw exc;
+      }
     }
     return null;
   }

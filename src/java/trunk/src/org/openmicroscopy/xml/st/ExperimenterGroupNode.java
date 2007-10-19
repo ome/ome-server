@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,7 +50,7 @@ import org.w3c.dom.Element;
  * Name: ExperimenterGroup
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/Experimenter.ome
- * Description: Defines the relationship between Experimenters and Groups.
+ * Description: Define la relacion entre investigadores y grupos.
  */
 public class ExperimenterGroupNode extends AttributeNode
   implements ExperimenterGroup
@@ -106,8 +106,7 @@ public class ExperimenterGroupNode extends AttributeNode
    */
   public Experimenter getExperimenter() {
     return (Experimenter)
-      createReferencedNode(ExperimenterNode.class,
-      "Experimenter", "Experimenter");
+      getAttrReferencedNode("Experimenter", "Experimenter");
   }
 
   /**
@@ -118,7 +117,7 @@ public class ExperimenterGroupNode extends AttributeNode
    *   if parameter is not an instance of ExperimenterNode
    */
   public void setExperimenter(Experimenter value) {
-    setReferencedNode((OMEXMLNode) value, "Experimenter", "Experimenter");
+    setAttrReferencedNode((OMEXMLNode) value, "Experimenter");
   }
 
   /**
@@ -127,8 +126,7 @@ public class ExperimenterGroupNode extends AttributeNode
    */
   public Group getGroup() {
     return (Group)
-      createReferencedNode(GroupNode.class,
-      "Group", "Group");
+      getAttrReferencedNode("Group", "Group");
   }
 
   /**
@@ -139,7 +137,7 @@ public class ExperimenterGroupNode extends AttributeNode
    *   if parameter is not an instance of GroupNode
    */
   public void setGroup(Group value) {
-    setReferencedNode((OMEXMLNode) value, "Group", "Group");
+    setAttrReferencedNode((OMEXMLNode) value, "Group");
   }
 
 }

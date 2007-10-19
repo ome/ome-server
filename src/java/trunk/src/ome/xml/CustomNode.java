@@ -1,9 +1,9 @@
 /*
- * org.openmicroscopy.xml.CustomNode
+ * ome.xml.CustomNode
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -28,7 +28,6 @@
  *-----------------------------------------------------------------------------
  */
 
-
 /*-----------------------------------------------------------------------------
  *
  * Written by:    Curtis Rueden <ctrueden@wisc.edu>
@@ -36,7 +35,7 @@
  *-----------------------------------------------------------------------------
  */
 
-package org.openmicroscopy.xml;
+package ome.xml;
 
 import org.w3c.dom.Element;
 
@@ -44,7 +43,7 @@ import org.w3c.dom.Element;
  * CustomNode is the default node type for elements with no specific node type,
  * typically used to wrap custom semantic types within a CustomAttributes block.
  */
-public class CustomNode extends AttributeNode {
+public class CustomNode extends OMEXMLNode {
 
   // -- Constructors --
 
@@ -53,6 +52,6 @@ public class CustomNode extends AttributeNode {
   // -- OMEXMLNode API methods --
 
   /** Custom nodes do not have IDs. */
-  public boolean hasLSID() { return false; }
+  public boolean hasID() { return false; }
 
 }

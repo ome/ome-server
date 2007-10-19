@@ -84,7 +84,7 @@ public class DatasetNode extends OMEXMLNode implements Dataset {
 
   /** Gets Group referenced by Group attribute of the Dataset element. */
   public Group getGroup() {
-    return (Group) createReferencedNode(GroupNode.class, "Group", "Group");
+    return (Group) getAttrReferencedNode("Group", "Group");
   }
 
   /**
@@ -94,21 +94,18 @@ public class DatasetNode extends OMEXMLNode implements Dataset {
    *   if parameter is not an instance of GroupNode
    */
   public void setGroup(Group value) {
-    setReferencedNode((OMEXMLNode) value, "Group", "Group");
+    setAttrReferencedNode((OMEXMLNode) value, "Group");
   }
 
   /** Gets Locked attribute of the Dataset element. */
   public Boolean isLocked() { return getBooleanAttribute("Locked"); }
 
   /** Sets Locked attribute for the Dataset element. */
-  public void setLocked(Boolean locked) {
-    setBooleanAttribute("Locked", locked);
-  }
+  public void setLocked(Boolean locked) { setAttribute("Locked", locked); }
 
   /** Gets node corresponding to CustomAttributes child element. */
   public CustomAttributesNode getCustomAttributes() {
-    return (CustomAttributesNode)
-      createChildNode(CustomAttributesNode.class, "CustomAttributes");
+    return (CustomAttributesNode) getChildNode("CustomAttributes");
   }
 
   /** Adds this Dataset to a Project. */
@@ -145,8 +142,7 @@ public class DatasetNode extends OMEXMLNode implements Dataset {
    * attribute of the Dataset element.
    */
   public Experimenter getOwner() {
-    return (Experimenter) createReferencedNode(ExperimenterNode.class,
-      "Experimenter", "Experimenter");
+    return (Experimenter) getAttrReferencedNode("Experimenter", "Experimenter");
   }
 
   /**
@@ -157,25 +153,21 @@ public class DatasetNode extends OMEXMLNode implements Dataset {
    *   if parameter is not an instance of ExperimenterNode
    */
   public void setOwner(Experimenter value) {
-    setReferencedNode((OMEXMLNode) value, "Experimenter", "Experimenter");
+    setAttrReferencedNode((OMEXMLNode) value, "Experimenter");
   }
 
   /** Gets a list of Projects referenced by the Dataset. */
   public List getProjects() {
-    return createReferencedNodes(ProjectNode.class, "Project");
+    return getReferencedNodes("Project", "ProjectRef");
   }
 
   /** Gets the number of Projects referenced by the Dataset. */
-  public int countProjects() {
-    return getSize(getChildElements("ProjectRef"));
-  }
+  public int countProjects() { return getChildCount("ProjectRef"); }
 
   /** Gets a list of Images referencing this Dataset. */
-  public List getImages() {
-    return createReferralNodes(ImageNode.class, "Image");
-  }
+  public List getImages() { return getReferringNodes("Image"); }
 
   /** Gets the number of Images referencing this Dataset. */
-  public int countImages() { return getSize(getReferrals("Image")); }
+  public int countImages() { return getReferringCount("Image"); }
 
 }

@@ -137,7 +137,7 @@ public class CustomAttributesNode extends OMEXMLNode {
    * Gets a list of DOM elements (custom attributes) beneath the
    * CustomAttributes element. This list can include both recognized STs
    * (nodes from the org.openmicroscopy.xml.st package) and unknown ones
-   * (generic AttributeNodes).
+   * (CustomNodes).
    */
   public List getCAList() {
     NodeList list = element.getChildNodes();

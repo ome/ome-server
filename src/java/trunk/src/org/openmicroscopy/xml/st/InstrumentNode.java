@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,8 +51,9 @@ import org.w3c.dom.Element;
  * Name: Instrument
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/Instrument.ome
- * Description: Describes a microscope. Mainly acts as a container for the
- *   components that constitute it - e.g., Objectives, Filters, etc.
+ * Description: Describe a un microscopio. Principalmente actua como un
+ *   contenedor para los componenetes que lo constituyen (Objetivos, Filtros,
+ *   ect)
  */
 public class InstrumentNode extends AttributeNode
   implements Instrument
@@ -117,8 +118,7 @@ public class InstrumentNode extends AttributeNode
    * for the Instrument element.
    */
   public void setManufacturer(String value) {
-    setAttribute("Manufacturer", value);
-  }
+    setAttribute("Manufacturer", value);  }
 
   /**
    * Gets Model attribute
@@ -133,8 +133,7 @@ public class InstrumentNode extends AttributeNode
    * for the Instrument element.
    */
   public void setModel(String value) {
-    setAttribute("Model", value);
-  }
+    setAttribute("Model", value);  }
 
   /**
    * Gets SerialNumber attribute
@@ -149,8 +148,7 @@ public class InstrumentNode extends AttributeNode
    * for the Instrument element.
    */
   public void setSerialNumber(String value) {
-    setAttribute("SerialNumber", value);
-  }
+    setAttribute("SerialNumber", value);  }
 
   /**
    * Gets Type attribute
@@ -165,16 +163,14 @@ public class InstrumentNode extends AttributeNode
    * for the Instrument element.
    */
   public void setType(String value) {
-    setAttribute("Type", value);
-  }
+    setAttribute("Type", value);  }
 
   /**
    * Gets a list of ImageInstrument elements
    * referencing this Instrument node.
    */
   public List getImageInstrumentList() {
-    return createAttrReferralNodes(ImageInstrumentNode.class,
-      "ImageInstrument", "Instrument");
+    return getAttrReferringNodes("ImageInstrument", "Instrument");
   }
 
   /**
@@ -182,8 +178,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public int countImageInstrumentList() {
-    return getSize(getAttrReferrals("ImageInstrument",
-      "Instrument"));
+    return getAttrReferringCount("ImageInstrument", "Instrument");
   }
 
   /**
@@ -191,8 +186,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public List getLightSourceList() {
-    return createAttrReferralNodes(LightSourceNode.class,
-      "LightSource", "Instrument");
+    return getAttrReferringNodes("LightSource", "Instrument");
   }
 
   /**
@@ -200,8 +194,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public int countLightSourceList() {
-    return getSize(getAttrReferrals("LightSource",
-      "Instrument"));
+    return getAttrReferringCount("LightSource", "Instrument");
   }
 
   /**
@@ -209,8 +202,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public List getDetectorList() {
-    return createAttrReferralNodes(DetectorNode.class,
-      "Detector", "Instrument");
+    return getAttrReferringNodes("Detector", "Instrument");
   }
 
   /**
@@ -218,8 +210,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public int countDetectorList() {
-    return getSize(getAttrReferrals("Detector",
-      "Instrument"));
+    return getAttrReferringCount("Detector", "Instrument");
   }
 
   /**
@@ -227,8 +218,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public List getObjectiveList() {
-    return createAttrReferralNodes(ObjectiveNode.class,
-      "Objective", "Instrument");
+    return getAttrReferringNodes("Objective", "Instrument");
   }
 
   /**
@@ -236,8 +226,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public int countObjectiveList() {
-    return getSize(getAttrReferrals("Objective",
-      "Instrument"));
+    return getAttrReferringCount("Objective", "Instrument");
   }
 
   /**
@@ -245,8 +234,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public List getFilterList() {
-    return createAttrReferralNodes(FilterNode.class,
-      "Filter", "Instrument");
+    return getAttrReferringNodes("Filter", "Instrument");
   }
 
   /**
@@ -254,8 +242,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public int countFilterList() {
-    return getSize(getAttrReferrals("Filter",
-      "Instrument"));
+    return getAttrReferringCount("Filter", "Instrument");
   }
 
   /**
@@ -263,8 +250,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public List getOTFList() {
-    return createAttrReferralNodes(OTFNode.class,
-      "OTF", "Instrument");
+    return getAttrReferringNodes("OTF", "Instrument");
   }
 
   /**
@@ -272,8 +258,7 @@ public class InstrumentNode extends AttributeNode
    * referencing this Instrument node.
    */
   public int countOTFList() {
-    return getSize(getAttrReferrals("OTF",
-      "Instrument"));
+    return getAttrReferringCount("OTF", "Instrument");
   }
 
 }

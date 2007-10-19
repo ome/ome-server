@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,8 +50,8 @@ import org.w3c.dom.Element;
  * Name: ImageGroup
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: This specifies the Group that the Image belongs to (these are
- *   Groups of Experimenters)
+ * Description: Especifica el grupo al que la imagen pertenece (grupos de
+ *   investigadores)
  */
 public class ImageGroupNode extends AttributeNode
   implements ImageGroup
@@ -105,8 +105,7 @@ public class ImageGroupNode extends AttributeNode
    */
   public Group getGroup() {
     return (Group)
-      createReferencedNode(GroupNode.class,
-      "Group", "Group");
+      getAttrReferencedNode("Group", "Group");
   }
 
   /**
@@ -117,7 +116,7 @@ public class ImageGroupNode extends AttributeNode
    *   if parameter is not an instance of GroupNode
    */
   public void setGroup(Group value) {
-    setReferencedNode((OMEXMLNode) value, "Group", "Group");
+    setAttrReferencedNode((OMEXMLNode) value, "Group");
   }
 
 }

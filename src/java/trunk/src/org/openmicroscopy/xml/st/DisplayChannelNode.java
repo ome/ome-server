@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,7 +51,7 @@ import org.w3c.dom.Element;
  * Name: DisplayChannel
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: A specification for displaying a logical channel
+ * Description: Especificacion para mostrar un canal logico.
  */
 public class DisplayChannelNode extends AttributeNode
   implements DisplayChannel
@@ -116,8 +116,7 @@ public class DisplayChannelNode extends AttributeNode
    * for the DisplayChannel element.
    */
   public void setChannelNumber(Integer value) {
-    setIntegerAttribute("ChannelNumber", value);
-  }
+    setAttribute("ChannelNumber", value);  }
 
   /**
    * Gets BlackLevel attribute
@@ -132,8 +131,7 @@ public class DisplayChannelNode extends AttributeNode
    * for the DisplayChannel element.
    */
   public void setBlackLevel(Double value) {
-    setDoubleAttribute("BlackLevel", value);
-  }
+    setAttribute("BlackLevel", value);  }
 
   /**
    * Gets WhiteLevel attribute
@@ -148,8 +146,7 @@ public class DisplayChannelNode extends AttributeNode
    * for the DisplayChannel element.
    */
   public void setWhiteLevel(Double value) {
-    setDoubleAttribute("WhiteLevel", value);
-  }
+    setAttribute("WhiteLevel", value);  }
 
   /**
    * Gets Gamma attribute
@@ -164,8 +161,7 @@ public class DisplayChannelNode extends AttributeNode
    * for the DisplayChannel element.
    */
   public void setGamma(Float value) {
-    setFloatAttribute("Gamma", value);
-  }
+    setAttribute("Gamma", value);  }
 
   /**
    * Gets a list of DisplayOptions elements
@@ -173,8 +169,7 @@ public class DisplayChannelNode extends AttributeNode
    * via a RedChannel attribute.
    */
   public List getDisplayOptionsListByRedChannel() {
-    return createAttrReferralNodes(DisplayOptionsNode.class,
-      "DisplayOptions", "RedChannel");
+    return getAttrReferringNodes("DisplayOptions", "RedChannel");
   }
 
   /**
@@ -183,8 +178,7 @@ public class DisplayChannelNode extends AttributeNode
    * via a RedChannel attribute.
    */
   public int countDisplayOptionsListByRedChannel() {
-    return getSize(getAttrReferrals("DisplayOptions",
-      "RedChannel"));
+    return getAttrReferringCount("DisplayOptions", "RedChannel");
   }
 
   /**
@@ -193,8 +187,7 @@ public class DisplayChannelNode extends AttributeNode
    * via a GreenChannel attribute.
    */
   public List getDisplayOptionsListByGreenChannel() {
-    return createAttrReferralNodes(DisplayOptionsNode.class,
-      "DisplayOptions", "GreenChannel");
+    return getAttrReferringNodes("DisplayOptions", "GreenChannel");
   }
 
   /**
@@ -203,8 +196,7 @@ public class DisplayChannelNode extends AttributeNode
    * via a GreenChannel attribute.
    */
   public int countDisplayOptionsListByGreenChannel() {
-    return getSize(getAttrReferrals("DisplayOptions",
-      "GreenChannel"));
+    return getAttrReferringCount("DisplayOptions", "GreenChannel");
   }
 
   /**
@@ -213,8 +205,7 @@ public class DisplayChannelNode extends AttributeNode
    * via a BlueChannel attribute.
    */
   public List getDisplayOptionsListByBlueChannel() {
-    return createAttrReferralNodes(DisplayOptionsNode.class,
-      "DisplayOptions", "BlueChannel");
+    return getAttrReferringNodes("DisplayOptions", "BlueChannel");
   }
 
   /**
@@ -223,8 +214,7 @@ public class DisplayChannelNode extends AttributeNode
    * via a BlueChannel attribute.
    */
   public int countDisplayOptionsListByBlueChannel() {
-    return getSize(getAttrReferrals("DisplayOptions",
-      "BlueChannel"));
+    return getAttrReferringCount("DisplayOptions", "BlueChannel");
   }
 
   /**
@@ -233,8 +223,7 @@ public class DisplayChannelNode extends AttributeNode
    * via a GreyChannel attribute.
    */
   public List getDisplayOptionsListByGreyChannel() {
-    return createAttrReferralNodes(DisplayOptionsNode.class,
-      "DisplayOptions", "GreyChannel");
+    return getAttrReferringNodes("DisplayOptions", "GreyChannel");
   }
 
   /**
@@ -243,8 +232,7 @@ public class DisplayChannelNode extends AttributeNode
    * via a GreyChannel attribute.
    */
   public int countDisplayOptionsListByGreyChannel() {
-    return getSize(getAttrReferrals("DisplayOptions",
-      "GreyChannel"));
+    return getAttrReferringCount("DisplayOptions", "GreyChannel");
   }
 
 }

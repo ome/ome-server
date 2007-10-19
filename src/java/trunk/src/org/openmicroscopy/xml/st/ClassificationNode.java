@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -107,8 +107,7 @@ public class ClassificationNode extends AttributeNode
    */
   public Category getCategory() {
     return (Category)
-      createReferencedNode(CategoryNode.class,
-      "Category", "Category");
+      getAttrReferencedNode("Category", "Category");
   }
 
   /**
@@ -119,7 +118,7 @@ public class ClassificationNode extends AttributeNode
    *   if parameter is not an instance of CategoryNode
    */
   public void setCategory(Category value) {
-    setReferencedNode((OMEXMLNode) value, "Category", "Category");
+    setAttrReferencedNode((OMEXMLNode) value, "Category");
   }
 
   /**
@@ -135,8 +134,7 @@ public class ClassificationNode extends AttributeNode
    * for the Classification element.
    */
   public void setConfidence(Float value) {
-    setFloatAttribute("Confidence", value);
-  }
+    setAttribute("Confidence", value);  }
 
   /**
    * Gets Valid attribute
@@ -151,7 +149,6 @@ public class ClassificationNode extends AttributeNode
    * for the Classification element.
    */
   public void setValid(Boolean value) {
-    setBooleanAttribute("Valid", value);
-  }
+    setAttribute("Valid", value);  }
 
 }

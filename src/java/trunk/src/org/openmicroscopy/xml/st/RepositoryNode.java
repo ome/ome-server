@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,8 +51,9 @@ import org.w3c.dom.Element;
  * Name: Repository
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/OMEIS/Repository.ome
- * Description: A repository is a portion of the server-side file system
- *   devoted to OME. It is used primarily to store the pixels of OME images.
+ * Description: Un repositorio es una porcion del sistema de archivos del
+ *   servidor dedicado a OME. Esta usado primariamente para almacenar los
+ *   pixeles de las imagenes de OME.
  */
 public class RepositoryNode extends AttributeNode
   implements Repository
@@ -116,8 +117,7 @@ public class RepositoryNode extends AttributeNode
    * for the Repository element.
    */
   public void setLocal(Boolean value) {
-    setBooleanAttribute("IsLocal", value);
-  }
+    setAttribute("IsLocal", value);  }
 
   /**
    * Gets Path attribute
@@ -132,8 +132,7 @@ public class RepositoryNode extends AttributeNode
    * for the Repository element.
    */
   public void setPath(String value) {
-    setAttribute("Path", value);
-  }
+    setAttribute("Path", value);  }
 
   /**
    * Gets ImageServerURL attribute
@@ -148,16 +147,14 @@ public class RepositoryNode extends AttributeNode
    * for the Repository element.
    */
   public void setImageServerURL(String value) {
-    setAttribute("ImageServerURL", value);
-  }
+    setAttribute("ImageServerURL", value);  }
 
   /**
    * Gets a list of Thumbnail elements
    * referencing this Repository node.
    */
   public List getThumbnailList() {
-    return createAttrReferralNodes(ThumbnailNode.class,
-      "Thumbnail", "Repository");
+    return getAttrReferringNodes("Thumbnail", "Repository");
   }
 
   /**
@@ -165,8 +162,7 @@ public class RepositoryNode extends AttributeNode
    * referencing this Repository node.
    */
   public int countThumbnailList() {
-    return getSize(getAttrReferrals("Thumbnail",
-      "Repository"));
+    return getAttrReferringCount("Thumbnail", "Repository");
   }
 
   /**
@@ -174,8 +170,7 @@ public class RepositoryNode extends AttributeNode
    * referencing this Repository node.
    */
   public List getPixelsList() {
-    return createAttrReferralNodes(PixelsNode.class,
-      "Pixels", "Repository");
+    return getAttrReferringNodes("Pixels", "Repository");
   }
 
   /**
@@ -183,8 +178,7 @@ public class RepositoryNode extends AttributeNode
    * referencing this Repository node.
    */
   public int countPixelsList() {
-    return getSize(getAttrReferrals("Pixels",
-      "Repository"));
+    return getAttrReferringCount("Pixels", "Repository");
   }
 
   /**
@@ -192,8 +186,7 @@ public class RepositoryNode extends AttributeNode
    * referencing this Repository node.
    */
   public List getOTFList() {
-    return createAttrReferralNodes(OTFNode.class,
-      "OTF", "Repository");
+    return getAttrReferringNodes("OTF", "Repository");
   }
 
   /**
@@ -201,8 +194,7 @@ public class RepositoryNode extends AttributeNode
    * referencing this Repository node.
    */
   public int countOTFList() {
-    return getSize(getAttrReferrals("OTF",
-      "Repository"));
+    return getAttrReferringCount("OTF", "Repository");
   }
 
   /**
@@ -210,8 +202,7 @@ public class RepositoryNode extends AttributeNode
    * referencing this Repository node.
    */
   public List getOriginalFileList() {
-    return createAttrReferralNodes(OriginalFileNode.class,
-      "OriginalFile", "Repository");
+    return getAttrReferringNodes("OriginalFile", "Repository");
   }
 
   /**
@@ -219,8 +210,7 @@ public class RepositoryNode extends AttributeNode
    * referencing this Repository node.
    */
   public int countOriginalFileList() {
-    return getSize(getAttrReferrals("OriginalFile",
-      "Repository"));
+    return getAttrReferringCount("OriginalFile", "Repository");
   }
 
 }

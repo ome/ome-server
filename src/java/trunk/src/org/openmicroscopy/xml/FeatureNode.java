@@ -99,8 +99,7 @@ public class FeatureNode extends OMEXMLNode implements Feature {
 
   /** Gets node corresponding to CustomAttributes child element. */
   public CustomAttributesNode getCustomAttributes() {
-    return (CustomAttributesNode)
-      createChildNode(CustomAttributesNode.class, "CustomAttributes");
+    return (CustomAttributesNode) getChildNode("CustomAttributes");
   }
 
 
@@ -113,9 +112,7 @@ public class FeatureNode extends OMEXMLNode implements Feature {
   public void setID(int value) { }
 
   /** Gets the Image element ancestor to this Feature element. */
-  public Image getImage() {
-    return (Image) createAncestorNode(ImageNode.class, "Image");
-  }
+  public Image getImage() { return (Image) getAncestorNode("Image"); }
 
   /**
    * Sets the Image element ancestor for this Feature element.
@@ -129,7 +126,7 @@ public class FeatureNode extends OMEXMLNode implements Feature {
 
   /** Gets the Feature element ancestor to this Feature element. */
   public Feature getParentFeature() {
-    return (Feature) createAncestorNode(FeatureNode.class, "Feature");
+    return (Feature) getAncestorNode("Feature");
   }
 
   /**
@@ -155,11 +152,9 @@ public class FeatureNode extends OMEXMLNode implements Feature {
   public void setName(String value) { setAttribute("Name", value); }
 
   /** Gets nodes corresponding to Feature child elements. */
-  public List getChildren() {
-    return createChildNodes(FeatureNode.class, "Feature");
-  }
+  public List getChildren() { return getChildNodes("Feature"); }
 
   /** Gets the number of Feature child elements. */
-  public int countChildren() { return getSize(getChildElements("Feature")); }
+  public int countChildren() { return getChildCount("Feature"); }
 
 }

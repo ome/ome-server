@@ -98,7 +98,7 @@ public class Xmlgen {
     " *---------------------------------------------------------------------" +
     "--------" + LN +
     " *" + LN +
-    " *  Copyright (C) 2006 Open Microscopy Environment" + LN +
+    " *  Copyright (C) 2007 Open Microscopy Environment" + LN +
     " *      Massachusetts Institute of Technology," + LN +
     " *      National Institutes of Health," + LN +
     " *      University of Dundee," + LN +
@@ -533,9 +533,8 @@ public class Xmlgen {
         fout.println("  public " + dataType + " " + get + name + "() {");
         if (isRef) {
           fout.println("    return (" + dataType + ")");
-          fout.println("      createReferencedNode(" +
-            dataType + "Node.class,");
-          fout.println("      \"" + dataType + "\", \"" + attrName + "\");");
+          fout.println("      getAttrReferencedNode(\"" +
+            dataType + "\", \"" + attrName + "\");");
         }
         else {
           fout.print("    return get");
@@ -563,13 +562,11 @@ public class Xmlgen {
         fout.println("  public void set" + name +
           "(" + dataType + " value) {");
         if (isRef) {
-          fout.println("    setReferencedNode((OMEXMLNode) value, \"" +
-            dataType + "\", \"" + attrName + "\");");
+          fout.println("    setAttrReferencedNode((OMEXMLNode) value, " +
+            "\"" + attrName + "\");");
         }
         else {
-          fout.print("    set");
-          if (!dataType.equals("String")) fout.print(dataType);
-          fout.println("Attribute(\"" + attrName + "\", value);");
+          fout.print("    setAttribute(\"" + attrName + "\", value);");
         }
         fout.println("  }");
         fout.println();
@@ -593,9 +590,8 @@ public class Xmlgen {
           fout.print("  public List get" + linkName + "List");
           if (dup) fout.print("By" + attrName);
           fout.println("() {");
-          fout.println("    return createAttrReferralNodes(" + linkName +
-            "Node.class,");
-          fout.println("      \"" + linkName + "\", \"" + attrName + "\");");
+          fout.println("    return getAttrReferringNodes(" +
+            "\"" + linkName + "\", \"" + attrName + "\");");
           fout.println("  }");
           fout.println();
           fout.println("  /**");
@@ -610,9 +606,8 @@ public class Xmlgen {
           fout.print("  public int count" + linkName + "List");
           if (dup) fout.print("By" + attrName);
           fout.println("() {");
-          fout.println("    return getSize(getAttrReferrals(\"" +
-            linkName + "\",");
-          fout.println("      \"" + attrName + "\"));");
+          fout.println("    return getAttrReferringCount(" +
+            "\"" + linkName + "\", \"" + attrName + "\");");
           fout.println("  }");
           fout.println();
         }

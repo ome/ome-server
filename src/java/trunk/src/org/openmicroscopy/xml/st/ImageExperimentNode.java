@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,7 +50,7 @@ import org.w3c.dom.Element;
  * Name: ImageExperiment
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: This specifies the Experiment an Image belongs to
+ * Description: Especifica el Experimento al que una Imagen pertenece
  */
 public class ImageExperimentNode extends AttributeNode
   implements ImageExperiment
@@ -105,8 +105,7 @@ public class ImageExperimentNode extends AttributeNode
    */
   public Experiment getExperiment() {
     return (Experiment)
-      createReferencedNode(ExperimentNode.class,
-      "Experiment", "Experiment");
+      getAttrReferencedNode("Experiment", "Experiment");
   }
 
   /**
@@ -117,7 +116,7 @@ public class ImageExperimentNode extends AttributeNode
    *   if parameter is not an instance of ExperimentNode
    */
   public void setExperiment(Experiment value) {
-    setReferencedNode((OMEXMLNode) value, "Experiment", "Experiment");
+    setAttrReferencedNode((OMEXMLNode) value, "Experiment");
   }
 
 }

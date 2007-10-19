@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -114,8 +114,7 @@ public class TrajectoryNode extends AttributeNode
    * for the Trajectory element.
    */
   public void setName(String value) {
-    setAttribute("Name", value);
-  }
+    setAttribute("Name", value);  }
 
   /**
    * Gets TotalDistance attribute
@@ -130,8 +129,7 @@ public class TrajectoryNode extends AttributeNode
    * for the Trajectory element.
    */
   public void setTotalDistance(Float value) {
-    setFloatAttribute("TotalDistance", value);
-  }
+    setAttribute("TotalDistance", value);  }
 
   /**
    * Gets AverageVelocity attribute
@@ -146,16 +144,14 @@ public class TrajectoryNode extends AttributeNode
    * for the Trajectory element.
    */
   public void setAverageVelocity(Float value) {
-    setFloatAttribute("AverageVelocity", value);
-  }
+    setAttribute("AverageVelocity", value);  }
 
   /**
    * Gets a list of TrajectoryEntry elements
    * referencing this Trajectory node.
    */
   public List getTrajectoryEntryList() {
-    return createAttrReferralNodes(TrajectoryEntryNode.class,
-      "TrajectoryEntry", "Trajectory");
+    return getAttrReferringNodes("TrajectoryEntry", "Trajectory");
   }
 
   /**
@@ -163,8 +159,7 @@ public class TrajectoryNode extends AttributeNode
    * referencing this Trajectory node.
    */
   public int countTrajectoryEntryList() {
-    return getSize(getAttrReferrals("TrajectoryEntry",
-      "Trajectory"));
+    return getAttrReferringCount("TrajectoryEntry", "Trajectory");
   }
 
 }

@@ -46,7 +46,11 @@ import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.*;
 
 /** DOMUtil contains useful functions for traversing and manipulating a DOM. */
-public abstract class DOMUtil {
+public final class DOMUtil {
+
+  // -- Constructor --
+
+  private DOMUtil() { }
 
   // -- Static fields --
 
@@ -198,6 +202,20 @@ public abstract class DOMUtil {
   }
 
   /**
+   * Gets the given element's first ancestor DOM element
+   * with the specified name.
+   */
+  public static Element getAncestorElement(String name, Element el) {
+    if (name == null || el == null) return null;
+    Node parent = el.getParentNode();
+    while (parent != null && !name.equals(getName(parent))) {
+      parent = parent.getParentNode();
+    }
+    if (parent == null || (!(parent instanceof Element))) return null;
+    return (Element) parent;
+  }
+
+  /**
    * Finds the first (breadth first) DOM element with the specified
    * name that has an attribute with the given name and value.
    */
@@ -218,6 +236,47 @@ public abstract class DOMUtil {
       }
     }
     return null;
+  }
+
+  /**
+   * Gets a list of DOM elements with the specified name throughout
+   * the document (not just children of a specific element).
+   */
+  public static Vector findElementList(String name, Document doc) {
+    return findElementList(name, null, null, doc);
+  }
+
+  /**
+   * Gets a list of DOM elements with the specified name
+   * that have an attribute with the given name and value.
+   */
+  public static Vector findElementList(String name, String attrName,
+    String attrValue, Document doc)
+  {
+    if (name == null) return null;
+    Vector v = new Vector();
+    NodeList list = doc.getElementsByTagName(name);
+    int size = list.getLength();
+    for (int i=0; i<size; i++) {
+      Node node = list.item(i);
+      if (!(node instanceof Element)) continue;
+      Element el = (Element) node;
+      if (attrName == null || attrValue == null ||
+        attrValue.equals(getAttribute(attrName, el)))
+      {
+        v.add(el);
+      }
+    }
+    return v;
+  }
+
+  /**
+   * Creates a child element with the given name beneath the specified element.
+   */
+  public static Element createChild(Element el, String name) {
+    Element child = el.getOwnerDocument().createElement(name);
+    el.appendChild(child);
+    return child;
   }
 
   // -- Attribute methods --

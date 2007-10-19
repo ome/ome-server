@@ -101,7 +101,7 @@ public final class SampleTest {
 
     // check OME/Experiment node
     ExperimentNode experiment = (ExperimentNode) experimentList.get(0);
-    String experimentID = experiment.getID();
+    String experimentID = experiment.getNodeID();
     checkValue("Experiment ID", experimentID,
       "urn:lsid:foo.bar.com:Experiment:123456");
     String experimentDescription = experiment.getDescription();
@@ -125,7 +125,7 @@ public final class SampleTest {
 
     // check OME/Experimenter node
     ExperimenterNode experimenter = (ExperimenterNode) experimenterList.get(0);
-    String experimenterID = experimenter.getID();
+    String experimenterID = experimenter.getNodeID();
     checkValue("Experimenter ID", experimenterID,
       "urn:lsid:foo.bar.com:Experimenter:123456");
     String experimenterFirstName = experimenter.getFirstName();
@@ -183,7 +183,7 @@ public final class SampleTest {
     // check OME/Image node
     ImageNode image = (ImageNode) imageList.get(0);
     checkNotNull("Image", image);
-    String imageID = image.getID();
+    String imageID = image.getNodeID();
     checkValue("Image ID", imageID, "urn:lsid:foo.bar.com:Image:123456");
     String imageCreationDate = image.getCreationDate();
     checkValue("Image CreationDate", imageCreationDate, "1988-04-07T18:39:09");
@@ -259,7 +259,7 @@ public final class SampleTest {
 
     // check OME/Instrument/Filter-1
     FilterNode instrumentFilter1 = (FilterNode) instrumentFilterList.get(0);
-    String instrumentFilter1ID = instrumentFilter1.getID();
+    String instrumentFilter1ID = instrumentFilter1.getNodeID();
     checkValue("Instrument Filter-1 ID", instrumentFilter1ID,
       "urn:lsid:foo.bar.com:Filter:123456");
     String instrumentFilter1Manufacturer = instrumentFilter1.getManufacturer();
@@ -281,7 +281,7 @@ public final class SampleTest {
 
     // check OME/Instrument/Filter-2
     FilterNode instrumentFilter2 = (FilterNode) instrumentFilterList.get(1);
-    String instrumentFilter2ID = instrumentFilter2.getID();
+    String instrumentFilter2ID = instrumentFilter2.getNodeID();
     checkValue("Instrument Filter-2 ID", instrumentFilter2ID,
       "urn:lsid:foo.bar.com:Filter:1234567");
     String instrumentFilter2Manufacturer = instrumentFilter2.getManufacturer();
@@ -311,7 +311,7 @@ public final class SampleTest {
     LogicalChannelNode imageLogicalChannel =
       (LogicalChannelNode) imageLogicalChannelList.get(0);
     checkNotNull("Image LogicalChannel", imageLogicalChannel);
-    String imageLogicalChannelID = imageLogicalChannel.getID();
+    String imageLogicalChannelID = imageLogicalChannel.getNodeID();
     checkValue("Image LogicalChannel ID", imageLogicalChannelID,
       "urn:lsid:foo.bar.com:LogicalChannel:123456");
     LightSourceNode imageLogicalChannelLightSource =
@@ -384,7 +384,7 @@ public final class SampleTest {
       imageLogicalChannelPockelCellSetting);
 
     // check OME/Image/DisplayOptions
-    String imageDisplayOptionsID = imageDisplayOptions.getID();
+    String imageDisplayOptionsID = imageDisplayOptions.getNodeID();
     checkValue("Image DisplayOptions ID", imageDisplayOptionsID,
       "urn:lsid:foo.bar.com:DisplayOptions:123456");
     ChannelSpecTypeNode imageDisplayOptionsRedChannel =
@@ -622,12 +622,12 @@ public final class SampleTest {
     // create OME/Project
     ProjectNode project = new ProjectNode(ome, "Stress Response Pathway",
       null, null, null);
-    project.setID("urn:lsid:foo.bar.com:Project:123456");
+    project.setNodeID("urn:lsid:foo.bar.com:Project:123456");
 
     // create OME/Dataset
     DatasetNode dataset = new DatasetNode(ome, "Controls",
       null, Boolean.FALSE, null, null);
-    dataset.setID("urn:lsid:foo.bar.com:Dataset:123456");
+    dataset.setNodeID("urn:lsid:foo.bar.com:Dataset:123456");
 
     // create OME/Experiment
 
@@ -644,7 +644,7 @@ public final class SampleTest {
     // create OME/Image
     ImageNode image = new ImageNode(ome,
       "P1W1S1", "1988-04-07T18:39:09", "This is an Image");
-    image.setID("urn:lsid:foo.bar.com:Image:123456");
+    image.setNodeID("urn:lsid:foo.bar.com:Image:123456");
 
     // -- Depth 2 --
 
@@ -660,7 +660,7 @@ public final class SampleTest {
     // create OME/CA/Experimenter
     ExperimenterNode experimenter = new ExperimenterNode(ca,
       "Nicola", "Sacco", "Nicola.Sacco@justice.net", null, null, null);
-    experimenter.setID("urn:lsid:foo.bar.com:Experimenter:123456");
+    experimenter.setNodeID("urn:lsid:foo.bar.com:Experimenter:123456");
     project.setOwner(experimenter);
     dataset.setOwner(experimenter);
     image.setOwner(experimenter);
@@ -671,13 +671,13 @@ public final class SampleTest {
 
     // create second OME/CA/ExperimenterGroup
     GroupNode dummyGroup = new GroupNode(ca, false);
-    dummyGroup.setID("urn:lsid:foo.bar.com:Group:123789");
+    dummyGroup.setNodeID("urn:lsid:foo.bar.com:Group:123789");
     ExperimenterGroupNode experimenterGroup2 = new ExperimenterGroupNode(ca,
       experimenter, dummyGroup);
 
     // create OME/CA/Group
     GroupNode group = new GroupNode(ca, "IICBU", experimenter, experimenter);
-    group.setID("urn:lsid:foo.bar.com:Group:123456");
+    group.setNodeID("urn:lsid:foo.bar.com:Group:123456");
     project.setGroup(group);
     dataset.setGroup(group);
     image.setGroup(group);
@@ -687,28 +687,28 @@ public final class SampleTest {
     // create OME/CA/Experiment
     ExperimentNode experiment = new ExperimentNode(ca,
       "Time-lapse", "This was an experiment.", experimenter);
-    experiment.setID("urn:lsid:foo.bar.com:Experiment:123456");
+    experiment.setNodeID("urn:lsid:foo.bar.com:Experiment:123456");
 
     // create OME/CA/Instrument
     InstrumentNode instrument = new InstrumentNode(ca,
       "Zeiss", "foo", "bar", "Upright");
-    instrument.setID("urn:lsid:foo.bar.com:Instrument:123456");
+    instrument.setNodeID("urn:lsid:foo.bar.com:Instrument:123456");
 
     // create first OME/CA/LightSource
     LightSourceNode lightSource1 = new LightSourceNode(ca,
       "Olympus", "WMD Laser", "123skdjhf1234", instrument);
-    lightSource1.setID("urn:lsid:foo.bar.com:LightSource:123456");
+    lightSource1.setNodeID("urn:lsid:foo.bar.com:LightSource:123456");
 
     // create OME/CA/Laser
     LightSourceNode dummyLightSource = new LightSourceNode(ca, false);
-    dummyLightSource.setID("urn:lsid:foo.bar.com:LightSource:123789");
+    dummyLightSource.setNodeID("urn:lsid:foo.bar.com:LightSource:123789");
     LaserNode laser = new LaserNode(ca, "Semiconductor", "GaAs",
       null, null, null, null, null, lightSource1, dummyLightSource);
 
     // create second OME/CA/LightSource
     LightSourceNode lightSource2 = new LightSourceNode(ca,
       "Olympus", "Realy Bright Lite", "123skdjhf1456", instrument);
-    lightSource2.setID("urn:lsid:foo.bar.com:LightSource:123123");
+    lightSource2.setNodeID("urn:lsid:foo.bar.com:LightSource:123123");
 
     // create OME/CA/Arc
     ArcNode arc = new ArcNode(ca, "Hg", null, lightSource2);
@@ -716,16 +716,16 @@ public final class SampleTest {
     // create OME/CA/Detector
     DetectorNode detector = new DetectorNode(ca, "Kodak", "Instamatic",
       "fnuiprf89uh123498", "CCD", null, null, null, instrument);
-    detector.setID("urn:lsid:foo.bar.com:Detector:123456");
+    detector.setNodeID("urn:lsid:foo.bar.com:Detector:123456");
 
     // create OME/CA/Objective
     ObjectiveNode objective = new ObjectiveNode(ca, "Olympus", "SPlanL",
       "456anxcoas123", new Float(2.4f), new Float(40), instrument);
-    objective.setID("urn:lsid:foo.bar.com:Objective:123456");
+    objective.setNodeID("urn:lsid:foo.bar.com:Objective:123456");
 
     // create OME/CA/Filter
     FilterNode filter = new FilterNode(ca, instrument);
-    filter.setID("urn:lsid:foo.bar.com:Filter:123456");
+    filter.setNodeID("urn:lsid:foo.bar.com:Filter:123456");
 
     // create OME/CA/FilterSet
     FilterSetNode filterSet = new FilterSetNode(ca,
@@ -734,24 +734,24 @@ public final class SampleTest {
     // create OME/CA/OTF
     OTFNode otf = new OTFNode(ca, objective, filter, new Integer(512),
       new Integer(512), "int8", null, null, Boolean.TRUE, instrument);
-    otf.setID("urn:lsid:foo.bar.com:OTF:123456");
+    otf.setNodeID("urn:lsid:foo.bar.com:OTF:123456");
 
     // create OME/CA/Plate
     PlateNode plate = new PlateNode(ca, "SRP001", "PID.SRP001", null);
-    plate.setID("urn:lsid:foo.bar.com:Plate:123456");
+    plate.setNodeID("urn:lsid:foo.bar.com:Plate:123456");
 
     // create first OME/CA/PlateScreen
     PlateScreenNode plateScreen1 = new PlateScreenNode(ca, plate, null);
 
     // create second OME/CA/PlateScreen
     ScreenNode dummyScreen = new ScreenNode(ca, false);
-    dummyScreen.setID("urn:lsid:foo.bar.com:Screen:123789");
+    dummyScreen.setNodeID("urn:lsid:foo.bar.com:Screen:123789");
     PlateScreenNode plateScreen2 = new PlateScreenNode(ca, plate, dummyScreen);
 
     // create OME/CA/Screen
     ScreenNode screen = new ScreenNode(ca,
       "Stress Response Pathway Controls", null, "SID.SRPC001");
-    screen.setID("urn:lsid:foo.bar.com:Screen:123456");
+    screen.setNodeID("urn:lsid:foo.bar.com:Screen:123456");
     plateScreen1.setScreen(screen);
 
     // -- Depth 3 --
@@ -783,7 +783,7 @@ public final class SampleTest {
       null, "Epifluorescence", null, null, null, null, lightSource1, null,
       "Photobleaching", null, new Integer(490), new Integer(528), "GFP",
       new Float(0));
-    logicalChannel.setID("urn:lsid:foo.bar.com:LogicalChannel:123456");
+    logicalChannel.setNodeID("urn:lsid:foo.bar.com:LogicalChannel:123456");
 
     // create OME/Image/CA/PixelChannelComponent
     PixelChannelComponentNode pixelChannelComponent =
@@ -795,7 +795,7 @@ public final class SampleTest {
       null, new Float(1), null, Boolean.TRUE, null, Boolean.TRUE, null,
       Boolean.TRUE, Boolean.TRUE, null, null, new Integer(3), new Integer(3),
       new Integer(3), new Integer(3));
-    displayOptions.setID("urn:lsid:foo.bar.com:DisplayOptions:123456");
+    displayOptions.setNodeID("urn:lsid:foo.bar.com:DisplayOptions:123456");
 
     // create first OME/Image/CA/DisplayChannel
     DisplayChannelNode displayChannelRed = new DisplayChannelNode(imageCA,
@@ -835,7 +835,7 @@ public final class SampleTest {
     PixelsNode pixels = new PixelsNode(imageCA, new Integer(20),
       new Integer(20), new Integer(5), new Integer(1), new Integer(6),
       "int16", null, null, null);
-    pixels.setID("urn:lsid:foo.bar.com:Pixels:123456");
+    pixels.setNodeID("urn:lsid:foo.bar.com:Pixels:123456");
     pixels.setBigEndian(Boolean.TRUE);
     pixels.setDimensionOrder("XYZCT");
     pixelChannelComponent.setPixels(pixels);

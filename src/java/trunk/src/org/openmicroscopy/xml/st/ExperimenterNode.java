@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,9 +51,8 @@ import org.w3c.dom.Element;
  * Name: Experimenter
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/Experimenter.ome
- * Description: Defines the people who perform imaging experimenters. Each
- *   experimenter may belong to one or more groups. The ExperimenterGroup ST
- *   defines the relationships between Groups and Experimenters
+ * Description: Define a la persona que realiza experimentos con imagenes. Cada
+ *   investigador puede pertenecer a uno o mas grupos.
  */
 public class ExperimenterNode extends AttributeNode
   implements Experimenter
@@ -121,8 +120,7 @@ public class ExperimenterNode extends AttributeNode
    * for the Experimenter element.
    */
   public void setFirstName(String value) {
-    setAttribute("FirstName", value);
-  }
+    setAttribute("FirstName", value);  }
 
   /**
    * Gets LastName attribute
@@ -137,8 +135,7 @@ public class ExperimenterNode extends AttributeNode
    * for the Experimenter element.
    */
   public void setLastName(String value) {
-    setAttribute("LastName", value);
-  }
+    setAttribute("LastName", value);  }
 
   /**
    * Gets Email attribute
@@ -153,8 +150,7 @@ public class ExperimenterNode extends AttributeNode
    * for the Experimenter element.
    */
   public void setEmail(String value) {
-    setAttribute("Email", value);
-  }
+    setAttribute("Email", value);  }
 
   /**
    * Gets Institution attribute
@@ -169,8 +165,7 @@ public class ExperimenterNode extends AttributeNode
    * for the Experimenter element.
    */
   public void setInstitution(String value) {
-    setAttribute("Institution", value);
-  }
+    setAttribute("Institution", value);  }
 
   /**
    * Gets DataDirectory attribute
@@ -185,8 +180,7 @@ public class ExperimenterNode extends AttributeNode
    * for the Experimenter element.
    */
   public void setDataDirectory(String value) {
-    setAttribute("DataDirectory", value);
-  }
+    setAttribute("DataDirectory", value);  }
 
   /**
    * Gets Group referenced by Group
@@ -194,8 +188,7 @@ public class ExperimenterNode extends AttributeNode
    */
   public Group getGroup() {
     return (Group)
-      createReferencedNode(GroupNode.class,
-      "Group", "Group");
+      getAttrReferencedNode("Group", "Group");
   }
 
   /**
@@ -206,7 +199,7 @@ public class ExperimenterNode extends AttributeNode
    *   if parameter is not an instance of GroupNode
    */
   public void setGroup(Group value) {
-    setReferencedNode((OMEXMLNode) value, "Group", "Group");
+    setAttrReferencedNode((OMEXMLNode) value, "Group");
   }
 
   /**
@@ -214,8 +207,7 @@ public class ExperimenterNode extends AttributeNode
    * referencing this Experimenter node.
    */
   public List getRenderingSettingsList() {
-    return createAttrReferralNodes(RenderingSettingsNode.class,
-      "RenderingSettings", "Experimenter");
+    return getAttrReferringNodes("RenderingSettings", "Experimenter");
   }
 
   /**
@@ -223,8 +215,7 @@ public class ExperimenterNode extends AttributeNode
    * referencing this Experimenter node.
    */
   public int countRenderingSettingsList() {
-    return getSize(getAttrReferrals("RenderingSettings",
-      "Experimenter"));
+    return getAttrReferringCount("RenderingSettings", "Experimenter");
   }
 
   /**
@@ -232,8 +223,7 @@ public class ExperimenterNode extends AttributeNode
    * referencing this Experimenter node.
    */
   public List getExperimentList() {
-    return createAttrReferralNodes(ExperimentNode.class,
-      "Experiment", "Experimenter");
+    return getAttrReferringNodes("Experiment", "Experimenter");
   }
 
   /**
@@ -241,8 +231,7 @@ public class ExperimenterNode extends AttributeNode
    * referencing this Experimenter node.
    */
   public int countExperimentList() {
-    return getSize(getAttrReferrals("Experiment",
-      "Experimenter"));
+    return getAttrReferringCount("Experiment", "Experimenter");
   }
 
   /**
@@ -251,8 +240,7 @@ public class ExperimenterNode extends AttributeNode
    * via a Leader attribute.
    */
   public List getGroupListByLeader() {
-    return createAttrReferralNodes(GroupNode.class,
-      "Group", "Leader");
+    return getAttrReferringNodes("Group", "Leader");
   }
 
   /**
@@ -261,8 +249,7 @@ public class ExperimenterNode extends AttributeNode
    * via a Leader attribute.
    */
   public int countGroupListByLeader() {
-    return getSize(getAttrReferrals("Group",
-      "Leader"));
+    return getAttrReferringCount("Group", "Leader");
   }
 
   /**
@@ -271,8 +258,7 @@ public class ExperimenterNode extends AttributeNode
    * via a Contact attribute.
    */
   public List getGroupListByContact() {
-    return createAttrReferralNodes(GroupNode.class,
-      "Group", "Contact");
+    return getAttrReferringNodes("Group", "Contact");
   }
 
   /**
@@ -281,8 +267,7 @@ public class ExperimenterNode extends AttributeNode
    * via a Contact attribute.
    */
   public int countGroupListByContact() {
-    return getSize(getAttrReferrals("Group",
-      "Contact"));
+    return getAttrReferringCount("Group", "Contact");
   }
 
   /**
@@ -290,8 +275,7 @@ public class ExperimenterNode extends AttributeNode
    * referencing this Experimenter node.
    */
   public List getExperimenterGroupList() {
-    return createAttrReferralNodes(ExperimenterGroupNode.class,
-      "ExperimenterGroup", "Experimenter");
+    return getAttrReferringNodes("ExperimenterGroup", "Experimenter");
   }
 
   /**
@@ -299,8 +283,7 @@ public class ExperimenterNode extends AttributeNode
    * referencing this Experimenter node.
    */
   public int countExperimenterGroupList() {
-    return getSize(getAttrReferrals("ExperimenterGroup",
-      "Experimenter"));
+    return getAttrReferringCount("ExperimenterGroup", "Experimenter");
   }
 
 }

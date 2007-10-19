@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -118,8 +118,7 @@ public class ObjectiveNode extends AttributeNode
    * for the Objective element.
    */
   public void setManufacturer(String value) {
-    setAttribute("Manufacturer", value);
-  }
+    setAttribute("Manufacturer", value);  }
 
   /**
    * Gets Model attribute
@@ -134,8 +133,7 @@ public class ObjectiveNode extends AttributeNode
    * for the Objective element.
    */
   public void setModel(String value) {
-    setAttribute("Model", value);
-  }
+    setAttribute("Model", value);  }
 
   /**
    * Gets SerialNumber attribute
@@ -150,8 +148,7 @@ public class ObjectiveNode extends AttributeNode
    * for the Objective element.
    */
   public void setSerialNumber(String value) {
-    setAttribute("SerialNumber", value);
-  }
+    setAttribute("SerialNumber", value);  }
 
   /**
    * Gets LensNA attribute
@@ -166,8 +163,7 @@ public class ObjectiveNode extends AttributeNode
    * for the Objective element.
    */
   public void setLensNA(Float value) {
-    setFloatAttribute("LensNA", value);
-  }
+    setAttribute("LensNA", value);  }
 
   /**
    * Gets Magnification attribute
@@ -182,8 +178,7 @@ public class ObjectiveNode extends AttributeNode
    * for the Objective element.
    */
   public void setMagnification(Float value) {
-    setFloatAttribute("Magnification", value);
-  }
+    setAttribute("Magnification", value);  }
 
   /**
    * Gets Instrument referenced by Instrument
@@ -191,8 +186,7 @@ public class ObjectiveNode extends AttributeNode
    */
   public Instrument getInstrument() {
     return (Instrument)
-      createReferencedNode(InstrumentNode.class,
-      "Instrument", "Instrument");
+      getAttrReferencedNode("Instrument", "Instrument");
   }
 
   /**
@@ -203,7 +197,7 @@ public class ObjectiveNode extends AttributeNode
    *   if parameter is not an instance of InstrumentNode
    */
   public void setInstrument(Instrument value) {
-    setReferencedNode((OMEXMLNode) value, "Instrument", "Instrument");
+    setAttrReferencedNode((OMEXMLNode) value, "Instrument");
   }
 
   /**
@@ -211,8 +205,7 @@ public class ObjectiveNode extends AttributeNode
    * referencing this Objective node.
    */
   public List getImageInstrumentList() {
-    return createAttrReferralNodes(ImageInstrumentNode.class,
-      "ImageInstrument", "Objective");
+    return getAttrReferringNodes("ImageInstrument", "Objective");
   }
 
   /**
@@ -220,8 +213,7 @@ public class ObjectiveNode extends AttributeNode
    * referencing this Objective node.
    */
   public int countImageInstrumentList() {
-    return getSize(getAttrReferrals("ImageInstrument",
-      "Objective"));
+    return getAttrReferringCount("ImageInstrument", "Objective");
   }
 
   /**
@@ -229,8 +221,7 @@ public class ObjectiveNode extends AttributeNode
    * referencing this Objective node.
    */
   public List getOTFList() {
-    return createAttrReferralNodes(OTFNode.class,
-      "OTF", "Objective");
+    return getAttrReferringNodes("OTF", "Objective");
   }
 
   /**
@@ -238,8 +229,7 @@ public class ObjectiveNode extends AttributeNode
    * referencing this Objective node.
    */
   public int countOTFList() {
-    return getSize(getAttrReferrals("OTF",
-      "Objective"));
+    return getAttrReferringCount("OTF", "Objective");
   }
 
 }

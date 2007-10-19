@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,7 +50,7 @@ import org.w3c.dom.Element;
  * Name: ImageInstrument
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: This specifies the Instrument associated with an Image
+ * Description: Especifica el Instrumento asociado con la imagen
  */
 public class ImageInstrumentNode extends AttributeNode
   implements ImageInstrument
@@ -106,8 +106,7 @@ public class ImageInstrumentNode extends AttributeNode
    */
   public Instrument getInstrument() {
     return (Instrument)
-      createReferencedNode(InstrumentNode.class,
-      "Instrument", "Instrument");
+      getAttrReferencedNode("Instrument", "Instrument");
   }
 
   /**
@@ -118,7 +117,7 @@ public class ImageInstrumentNode extends AttributeNode
    *   if parameter is not an instance of InstrumentNode
    */
   public void setInstrument(Instrument value) {
-    setReferencedNode((OMEXMLNode) value, "Instrument", "Instrument");
+    setAttrReferencedNode((OMEXMLNode) value, "Instrument");
   }
 
   /**
@@ -127,8 +126,7 @@ public class ImageInstrumentNode extends AttributeNode
    */
   public Objective getObjective() {
     return (Objective)
-      createReferencedNode(ObjectiveNode.class,
-      "Objective", "Objective");
+      getAttrReferencedNode("Objective", "Objective");
   }
 
   /**
@@ -139,7 +137,7 @@ public class ImageInstrumentNode extends AttributeNode
    *   if parameter is not an instance of ObjectiveNode
    */
   public void setObjective(Objective value) {
-    setReferencedNode((OMEXMLNode) value, "Objective", "Objective");
+    setAttrReferencedNode((OMEXMLNode) value, "Objective");
   }
 
 }

@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,8 +50,8 @@ import org.w3c.dom.Element;
  * Name: Thumbnail
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: A thumbnail is used to display a quick small representation of
- *   the image to the user.
+ * Description: Una vista previa es usada para mostrar una rapida y pequena
+ *   representacion de la imagen al usuario.
  */
 public class ThumbnailNode extends AttributeNode
   implements Thumbnail
@@ -115,8 +115,7 @@ public class ThumbnailNode extends AttributeNode
    * for the Thumbnail element.
    */
   public void setMimeType(String value) {
-    setAttribute("MimeType", value);
-  }
+    setAttribute("MimeType", value);  }
 
   /**
    * Gets Repository referenced by Repository
@@ -124,8 +123,7 @@ public class ThumbnailNode extends AttributeNode
    */
   public Repository getRepository() {
     return (Repository)
-      createReferencedNode(RepositoryNode.class,
-      "Repository", "Repository");
+      getAttrReferencedNode("Repository", "Repository");
   }
 
   /**
@@ -136,7 +134,7 @@ public class ThumbnailNode extends AttributeNode
    *   if parameter is not an instance of RepositoryNode
    */
   public void setRepository(Repository value) {
-    setReferencedNode((OMEXMLNode) value, "Repository", "Repository");
+    setAttrReferencedNode((OMEXMLNode) value, "Repository");
   }
 
   /**
@@ -152,7 +150,6 @@ public class ThumbnailNode extends AttributeNode
    * for the Thumbnail element.
    */
   public void setPath(String value) {
-    setAttribute("Path", value);
-  }
+    setAttribute("Path", value);  }
 
 }

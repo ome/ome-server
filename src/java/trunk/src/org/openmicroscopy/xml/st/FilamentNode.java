@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -113,8 +113,7 @@ public class FilamentNode extends AttributeNode
    * for the Filament element.
    */
   public void setType(String value) {
-    setAttribute("Type", value);
-  }
+    setAttribute("Type", value);  }
 
   /**
    * Gets Power attribute
@@ -129,8 +128,7 @@ public class FilamentNode extends AttributeNode
    * for the Filament element.
    */
   public void setPower(Float value) {
-    setFloatAttribute("Power", value);
-  }
+    setAttribute("Power", value);  }
 
   /**
    * Gets LightSource referenced by LightSource
@@ -138,8 +136,7 @@ public class FilamentNode extends AttributeNode
    */
   public LightSource getLightSource() {
     return (LightSource)
-      createReferencedNode(LightSourceNode.class,
-      "LightSource", "LightSource");
+      getAttrReferencedNode("LightSource", "LightSource");
   }
 
   /**
@@ -150,7 +147,7 @@ public class FilamentNode extends AttributeNode
    *   if parameter is not an instance of LightSourceNode
    */
   public void setLightSource(LightSource value) {
-    setReferencedNode((OMEXMLNode) value, "LightSource", "LightSource");
+    setAttrReferencedNode((OMEXMLNode) value, "LightSource");
   }
 
 }

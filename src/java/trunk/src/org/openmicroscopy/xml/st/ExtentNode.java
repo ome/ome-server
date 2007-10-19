@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -126,8 +126,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setMinX(Integer value) {
-    setIntegerAttribute("MinX", value);
-  }
+    setAttribute("MinX", value);  }
 
   /**
    * Gets MinY attribute
@@ -142,8 +141,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setMinY(Integer value) {
-    setIntegerAttribute("MinY", value);
-  }
+    setAttribute("MinY", value);  }
 
   /**
    * Gets MinZ attribute
@@ -158,8 +156,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setMinZ(Integer value) {
-    setIntegerAttribute("MinZ", value);
-  }
+    setAttribute("MinZ", value);  }
 
   /**
    * Gets MaxX attribute
@@ -174,8 +171,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setMaxX(Integer value) {
-    setIntegerAttribute("MaxX", value);
-  }
+    setAttribute("MaxX", value);  }
 
   /**
    * Gets MaxY attribute
@@ -190,8 +186,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setMaxY(Integer value) {
-    setIntegerAttribute("MaxY", value);
-  }
+    setAttribute("MaxY", value);  }
 
   /**
    * Gets MaxZ attribute
@@ -206,8 +201,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setMaxZ(Integer value) {
-    setIntegerAttribute("MaxZ", value);
-  }
+    setAttribute("MaxZ", value);  }
 
   /**
    * Gets SigmaX attribute
@@ -222,8 +216,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setSigmaX(Float value) {
-    setFloatAttribute("SigmaX", value);
-  }
+    setAttribute("SigmaX", value);  }
 
   /**
    * Gets SigmaY attribute
@@ -238,8 +231,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setSigmaY(Float value) {
-    setFloatAttribute("SigmaY", value);
-  }
+    setAttribute("SigmaY", value);  }
 
   /**
    * Gets SigmaZ attribute
@@ -254,8 +246,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setSigmaZ(Float value) {
-    setFloatAttribute("SigmaZ", value);
-  }
+    setAttribute("SigmaZ", value);  }
 
   /**
    * Gets Volume attribute
@@ -270,8 +261,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setVolume(Integer value) {
-    setIntegerAttribute("Volume", value);
-  }
+    setAttribute("Volume", value);  }
 
   /**
    * Gets SurfaceArea attribute
@@ -286,8 +276,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setSurfaceArea(Float value) {
-    setFloatAttribute("SurfaceArea", value);
-  }
+    setAttribute("SurfaceArea", value);  }
 
   /**
    * Gets Perimeter attribute
@@ -302,8 +291,7 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setPerimeter(Float value) {
-    setFloatAttribute("Perimeter", value);
-  }
+    setAttribute("Perimeter", value);  }
 
   /**
    * Gets FormFactor attribute
@@ -318,7 +306,6 @@ public class ExtentNode extends AttributeNode
    * for the Extent element.
    */
   public void setFormFactor(Float value) {
-    setFloatAttribute("FormFactor", value);
-  }
+    setAttribute("FormFactor", value);  }
 
 }

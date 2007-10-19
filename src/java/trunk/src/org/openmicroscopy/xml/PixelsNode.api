@@ -5,7 +5,7 @@
 
   /** Sets BigEndian attribute for the Pixels element. */
   public void setBigEndian(Boolean value) {
-    setBooleanAttribute("BigEndian", value);
+    setAttribute("BigEndian", value);
   }
 
   /** Gets DimensionOrder attribute of the Pixels element. */

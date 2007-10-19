@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -116,8 +116,7 @@ public class StageLabelNode extends AttributeNode
    * for the StageLabel element.
    */
   public void setName(String value) {
-    setAttribute("Name", value);
-  }
+    setAttribute("Name", value);  }
 
   /**
    * Gets X attribute
@@ -132,8 +131,7 @@ public class StageLabelNode extends AttributeNode
    * for the StageLabel element.
    */
   public void setX(Float value) {
-    setFloatAttribute("X", value);
-  }
+    setAttribute("X", value);  }
 
   /**
    * Gets Y attribute
@@ -148,8 +146,7 @@ public class StageLabelNode extends AttributeNode
    * for the StageLabel element.
    */
   public void setY(Float value) {
-    setFloatAttribute("Y", value);
-  }
+    setAttribute("Y", value);  }
 
   /**
    * Gets Z attribute
@@ -164,7 +161,6 @@ public class StageLabelNode extends AttributeNode
    * for the StageLabel element.
    */
   public void setZ(Float value) {
-    setFloatAttribute("Z", value);
-  }
+    setAttribute("Z", value);  }
 
 }

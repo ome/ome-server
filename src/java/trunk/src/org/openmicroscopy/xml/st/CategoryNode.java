@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -115,8 +115,7 @@ public class CategoryNode extends AttributeNode
    * for the Category element.
    */
   public void setName(String value) {
-    setAttribute("Name", value);
-  }
+    setAttribute("Name", value);  }
 
   /**
    * Gets CategoryGroup referenced by CategoryGroup
@@ -124,8 +123,7 @@ public class CategoryNode extends AttributeNode
    */
   public CategoryGroup getCategoryGroup() {
     return (CategoryGroup)
-      createReferencedNode(CategoryGroupNode.class,
-      "CategoryGroup", "CategoryGroup");
+      getAttrReferencedNode("CategoryGroup", "CategoryGroup");
   }
 
   /**
@@ -136,7 +134,7 @@ public class CategoryNode extends AttributeNode
    *   if parameter is not an instance of CategoryGroupNode
    */
   public void setCategoryGroup(CategoryGroup value) {
-    setReferencedNode((OMEXMLNode) value, "CategoryGroup", "CategoryGroup");
+    setAttrReferencedNode((OMEXMLNode) value, "CategoryGroup");
   }
 
   /**
@@ -152,16 +150,14 @@ public class CategoryNode extends AttributeNode
    * for the Category element.
    */
   public void setDescription(String value) {
-    setAttribute("Description", value);
-  }
+    setAttribute("Description", value);  }
 
   /**
    * Gets a list of Classification elements
    * referencing this Category node.
    */
   public List getClassificationList() {
-    return createAttrReferralNodes(ClassificationNode.class,
-      "Classification", "Category");
+    return getAttrReferringNodes("Classification", "Category");
   }
 
   /**
@@ -169,8 +165,7 @@ public class CategoryNode extends AttributeNode
    * referencing this Category node.
    */
   public int countClassificationList() {
-    return getSize(getAttrReferrals("Classification",
-      "Category"));
+    return getAttrReferringCount("Classification", "Category");
   }
 
 }

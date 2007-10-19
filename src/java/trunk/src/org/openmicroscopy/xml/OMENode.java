@@ -127,32 +127,27 @@ public class OMENode extends OMEXMLNode {
 
   /** Gets nodes corresponding to Project child elements. */
   public List getProjects() {
-    return createChildNodes(ProjectNode.class, "Project");
+    return getChildNodes("Project");
   }
 
   /** Gets the number of Project child elements. */
-  public int countProjects() { return getSize(getChildElements("Project")); }
+  public int countProjects() { return getChildCount("Project"); }
 
   /** Gets nodes corresponding to Dataset child elements. */
-  public List getDatasets() {
-    return createChildNodes(DatasetNode.class, "Dataset");
-  }
+  public List getDatasets() { return getChildNodes("Dataset"); }
 
   /** Gets the number of Dataset child elements. */
-  public int countDatasets() { return getSize(getChildElements("Dataset")); }
+  public int countDatasets() { return getChildCount("Dataset"); }
 
   /** Gets nodes corresponding to Image child elements. */
-  public List getImages() {
-    return createChildNodes(ImageNode.class, "Image");
-  }
+  public List getImages() { return getChildNodes("Image"); }
 
   /** Gets the number of Image child elements. */
-  public int countImages() { return getSize(getChildElements("Image")); }
+  public int countImages() { return getChildCount("Image"); }
 
   /** Gets node corresponding to CustomAttributes child element. */
   public CustomAttributesNode getCustomAttributes() {
-    return (CustomAttributesNode)
-      createChildNode(CustomAttributesNode.class, "CustomAttributes");
+    return (CustomAttributesNode) getChildNode("CustomAttributes");
   }
 
   /**

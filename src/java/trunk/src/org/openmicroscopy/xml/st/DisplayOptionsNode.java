@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,7 +51,7 @@ import org.w3c.dom.Element;
  * Name: DisplayOptions
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: Parameters for viewers to optimally display an image
+ * Description: Parametros para visores para mostrar de forma optima la imagen.
  */
 public class DisplayOptionsNode extends AttributeNode
   implements DisplayOptions
@@ -124,8 +124,7 @@ public class DisplayOptionsNode extends AttributeNode
    */
   public Pixels getPixels() {
     return (Pixels)
-      createReferencedNode(PixelsNode.class,
-      "Pixels", "Pixels");
+      getAttrReferencedNode("Pixels", "Pixels");
   }
 
   /**
@@ -136,7 +135,7 @@ public class DisplayOptionsNode extends AttributeNode
    *   if parameter is not an instance of PixelsNode
    */
   public void setPixels(Pixels value) {
-    setReferencedNode((OMEXMLNode) value, "Pixels", "Pixels");
+    setAttrReferencedNode((OMEXMLNode) value, "Pixels");
   }
 
   /**
@@ -152,8 +151,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setZoom(Float value) {
-    setFloatAttribute("Zoom", value);
-  }
+    setAttribute("Zoom", value);  }
 
   /**
    * Gets RedChannel referenced by DisplayChannel
@@ -161,8 +159,7 @@ public class DisplayOptionsNode extends AttributeNode
    */
   public DisplayChannel getRedChannel() {
     return (DisplayChannel)
-      createReferencedNode(DisplayChannelNode.class,
-      "DisplayChannel", "RedChannel");
+      getAttrReferencedNode("DisplayChannel", "RedChannel");
   }
 
   /**
@@ -173,7 +170,7 @@ public class DisplayOptionsNode extends AttributeNode
    *   if parameter is not an instance of DisplayChannelNode
    */
   public void setRedChannel(DisplayChannel value) {
-    setReferencedNode((OMEXMLNode) value, "DisplayChannel", "RedChannel");
+    setAttrReferencedNode((OMEXMLNode) value, "RedChannel");
   }
 
   /**
@@ -189,8 +186,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setRedChannelOn(Boolean value) {
-    setBooleanAttribute("RedChannelOn", value);
-  }
+    setAttribute("RedChannelOn", value);  }
 
   /**
    * Gets GreenChannel referenced by DisplayChannel
@@ -198,8 +194,7 @@ public class DisplayOptionsNode extends AttributeNode
    */
   public DisplayChannel getGreenChannel() {
     return (DisplayChannel)
-      createReferencedNode(DisplayChannelNode.class,
-      "DisplayChannel", "GreenChannel");
+      getAttrReferencedNode("DisplayChannel", "GreenChannel");
   }
 
   /**
@@ -210,7 +205,7 @@ public class DisplayOptionsNode extends AttributeNode
    *   if parameter is not an instance of DisplayChannelNode
    */
   public void setGreenChannel(DisplayChannel value) {
-    setReferencedNode((OMEXMLNode) value, "DisplayChannel", "GreenChannel");
+    setAttrReferencedNode((OMEXMLNode) value, "GreenChannel");
   }
 
   /**
@@ -226,8 +221,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setGreenChannelOn(Boolean value) {
-    setBooleanAttribute("GreenChannelOn", value);
-  }
+    setAttribute("GreenChannelOn", value);  }
 
   /**
    * Gets BlueChannel referenced by DisplayChannel
@@ -235,8 +229,7 @@ public class DisplayOptionsNode extends AttributeNode
    */
   public DisplayChannel getBlueChannel() {
     return (DisplayChannel)
-      createReferencedNode(DisplayChannelNode.class,
-      "DisplayChannel", "BlueChannel");
+      getAttrReferencedNode("DisplayChannel", "BlueChannel");
   }
 
   /**
@@ -247,7 +240,7 @@ public class DisplayOptionsNode extends AttributeNode
    *   if parameter is not an instance of DisplayChannelNode
    */
   public void setBlueChannel(DisplayChannel value) {
-    setReferencedNode((OMEXMLNode) value, "DisplayChannel", "BlueChannel");
+    setAttrReferencedNode((OMEXMLNode) value, "BlueChannel");
   }
 
   /**
@@ -263,8 +256,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setBlueChannelOn(Boolean value) {
-    setBooleanAttribute("BlueChannelOn", value);
-  }
+    setAttribute("BlueChannelOn", value);  }
 
   /**
    * Gets DisplayRGB attribute
@@ -279,8 +271,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setDisplayRGB(Boolean value) {
-    setBooleanAttribute("DisplayRGB", value);
-  }
+    setAttribute("DisplayRGB", value);  }
 
   /**
    * Gets GreyChannel referenced by DisplayChannel
@@ -288,8 +279,7 @@ public class DisplayOptionsNode extends AttributeNode
    */
   public DisplayChannel getGreyChannel() {
     return (DisplayChannel)
-      createReferencedNode(DisplayChannelNode.class,
-      "DisplayChannel", "GreyChannel");
+      getAttrReferencedNode("DisplayChannel", "GreyChannel");
   }
 
   /**
@@ -300,7 +290,7 @@ public class DisplayOptionsNode extends AttributeNode
    *   if parameter is not an instance of DisplayChannelNode
    */
   public void setGreyChannel(DisplayChannel value) {
-    setReferencedNode((OMEXMLNode) value, "DisplayChannel", "GreyChannel");
+    setAttrReferencedNode((OMEXMLNode) value, "GreyChannel");
   }
 
   /**
@@ -316,8 +306,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setColorMap(String value) {
-    setAttribute("ColorMap", value);
-  }
+    setAttribute("ColorMap", value);  }
 
   /**
    * Gets ZStart attribute
@@ -332,8 +321,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setZStart(Integer value) {
-    setIntegerAttribute("ZStart", value);
-  }
+    setAttribute("ZStart", value);  }
 
   /**
    * Gets ZStop attribute
@@ -348,8 +336,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setZStop(Integer value) {
-    setIntegerAttribute("ZStop", value);
-  }
+    setAttribute("ZStop", value);  }
 
   /**
    * Gets TStart attribute
@@ -364,8 +351,7 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setTStart(Integer value) {
-    setIntegerAttribute("TStart", value);
-  }
+    setAttribute("TStart", value);  }
 
   /**
    * Gets TStop attribute
@@ -380,16 +366,14 @@ public class DisplayOptionsNode extends AttributeNode
    * for the DisplayOptions element.
    */
   public void setTStop(Integer value) {
-    setIntegerAttribute("TStop", value);
-  }
+    setAttribute("TStop", value);  }
 
   /**
    * Gets a list of DisplayROI elements
    * referencing this DisplayOptions node.
    */
   public List getDisplayROIList() {
-    return createAttrReferralNodes(DisplayROINode.class,
-      "DisplayROI", "DisplayOptions");
+    return getAttrReferringNodes("DisplayROI", "DisplayOptions");
   }
 
   /**
@@ -397,8 +381,7 @@ public class DisplayOptionsNode extends AttributeNode
    * referencing this DisplayOptions node.
    */
   public int countDisplayROIList() {
-    return getSize(getAttrReferrals("DisplayROI",
-      "DisplayOptions"));
+    return getAttrReferringCount("DisplayROI", "DisplayOptions");
   }
 
 }

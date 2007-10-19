@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,8 +51,8 @@ import org.w3c.dom.Element;
  * Name: Pixels
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: Storage location and data type of the image pixels, including
- *   the extent of each dimension in the 5-D array.
+ * Description: Lugar de almacenamiento y tipo de dato de los pixeles de la
+ *   imagen, incluyendo todas las dimensiones del arreglo 5-D.
  */
 public class PixelsNode extends AttributeNode
   implements Pixels
@@ -115,7 +115,7 @@ public class PixelsNode extends AttributeNode
 
   /** Sets BigEndian attribute for the Pixels element. */
   public void setBigEndian(Boolean value) {
-    setBooleanAttribute("BigEndian", value);
+    setAttribute("BigEndian", value);
   }
 
   /** Gets DimensionOrder attribute of the Pixels element. */
@@ -142,8 +142,7 @@ public class PixelsNode extends AttributeNode
    * for the Pixels element.
    */
   public void setSizeX(Integer value) {
-    setIntegerAttribute("SizeX", value);
-  }
+    setAttribute("SizeX", value);  }
 
   /**
    * Gets SizeY attribute
@@ -158,8 +157,7 @@ public class PixelsNode extends AttributeNode
    * for the Pixels element.
    */
   public void setSizeY(Integer value) {
-    setIntegerAttribute("SizeY", value);
-  }
+    setAttribute("SizeY", value);  }
 
   /**
    * Gets SizeZ attribute
@@ -174,8 +172,7 @@ public class PixelsNode extends AttributeNode
    * for the Pixels element.
    */
   public void setSizeZ(Integer value) {
-    setIntegerAttribute("SizeZ", value);
-  }
+    setAttribute("SizeZ", value);  }
 
   /**
    * Gets SizeC attribute
@@ -190,8 +187,7 @@ public class PixelsNode extends AttributeNode
    * for the Pixels element.
    */
   public void setSizeC(Integer value) {
-    setIntegerAttribute("SizeC", value);
-  }
+    setAttribute("SizeC", value);  }
 
   /**
    * Gets SizeT attribute
@@ -206,8 +202,7 @@ public class PixelsNode extends AttributeNode
    * for the Pixels element.
    */
   public void setSizeT(Integer value) {
-    setIntegerAttribute("SizeT", value);
-  }
+    setAttribute("SizeT", value);  }
 
   /**
    * Gets PixelType attribute
@@ -222,8 +217,7 @@ public class PixelsNode extends AttributeNode
    * for the Pixels element.
    */
   public void setPixelType(String value) {
-    setAttribute("PixelType", value);
-  }
+    setAttribute("PixelType", value);  }
 
   /**
    * Gets FileSHA1 attribute
@@ -238,8 +232,7 @@ public class PixelsNode extends AttributeNode
    * for the Pixels element.
    */
   public void setFileSHA1(String value) {
-    setAttribute("FileSHA1", value);
-  }
+    setAttribute("FileSHA1", value);  }
 
   /**
    * Gets Repository referenced by Repository
@@ -247,8 +240,7 @@ public class PixelsNode extends AttributeNode
    */
   public Repository getRepository() {
     return (Repository)
-      createReferencedNode(RepositoryNode.class,
-      "Repository", "Repository");
+      getAttrReferencedNode("Repository", "Repository");
   }
 
   /**
@@ -259,7 +251,7 @@ public class PixelsNode extends AttributeNode
    *   if parameter is not an instance of RepositoryNode
    */
   public void setRepository(Repository value) {
-    setReferencedNode((OMEXMLNode) value, "Repository", "Repository");
+    setAttrReferencedNode((OMEXMLNode) value, "Repository");
   }
 
   /**
@@ -275,16 +267,14 @@ public class PixelsNode extends AttributeNode
    * for the Pixels element.
    */
   public void setImageServerID(Long value) {
-    setLongAttribute("ImageServerID", value);
-  }
+    setAttribute("ImageServerID", value);  }
 
   /**
    * Gets a list of PixelChannelComponent elements
    * referencing this Pixels node.
    */
   public List getPixelChannelComponentList() {
-    return createAttrReferralNodes(PixelChannelComponentNode.class,
-      "PixelChannelComponent", "Pixels");
+    return getAttrReferringNodes("PixelChannelComponent", "Pixels");
   }
 
   /**
@@ -292,8 +282,7 @@ public class PixelsNode extends AttributeNode
    * referencing this Pixels node.
    */
   public int countPixelChannelComponentList() {
-    return getSize(getAttrReferrals("PixelChannelComponent",
-      "Pixels"));
+    return getAttrReferringCount("PixelChannelComponent", "Pixels");
   }
 
   /**
@@ -301,8 +290,7 @@ public class PixelsNode extends AttributeNode
    * referencing this Pixels node.
    */
   public List getDisplayOptionsList() {
-    return createAttrReferralNodes(DisplayOptionsNode.class,
-      "DisplayOptions", "Pixels");
+    return getAttrReferringNodes("DisplayOptions", "Pixels");
   }
 
   /**
@@ -310,8 +298,7 @@ public class PixelsNode extends AttributeNode
    * referencing this Pixels node.
    */
   public int countDisplayOptionsList() {
-    return getSize(getAttrReferrals("DisplayOptions",
-      "Pixels"));
+    return getAttrReferringCount("DisplayOptions", "Pixels");
   }
 
 }

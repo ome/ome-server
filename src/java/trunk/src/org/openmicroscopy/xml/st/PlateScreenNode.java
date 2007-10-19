@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,7 +50,7 @@ import org.w3c.dom.Element;
  * Name: PlateScreen
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/Screen.ome
- * Description: Defines the relationship between Plates and Screens.
+ * Description: Define la relacion entre platos y pantallas.
  */
 public class PlateScreenNode extends AttributeNode
   implements PlateScreen
@@ -106,8 +106,7 @@ public class PlateScreenNode extends AttributeNode
    */
   public Plate getPlate() {
     return (Plate)
-      createReferencedNode(PlateNode.class,
-      "Plate", "Plate");
+      getAttrReferencedNode("Plate", "Plate");
   }
 
   /**
@@ -118,7 +117,7 @@ public class PlateScreenNode extends AttributeNode
    *   if parameter is not an instance of PlateNode
    */
   public void setPlate(Plate value) {
-    setReferencedNode((OMEXMLNode) value, "Plate", "Plate");
+    setAttrReferencedNode((OMEXMLNode) value, "Plate");
   }
 
   /**
@@ -127,8 +126,7 @@ public class PlateScreenNode extends AttributeNode
    */
   public Screen getScreen() {
     return (Screen)
-      createReferencedNode(ScreenNode.class,
-      "Screen", "Screen");
+      getAttrReferencedNode("Screen", "Screen");
   }
 
   /**
@@ -139,7 +137,7 @@ public class PlateScreenNode extends AttributeNode
    *   if parameter is not an instance of ScreenNode
    */
   public void setScreen(Screen value) {
-    setReferencedNode((OMEXMLNode) value, "Screen", "Screen");
+    setAttrReferencedNode((OMEXMLNode) value, "Screen");
   }
 
 }

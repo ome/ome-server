@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -115,8 +115,7 @@ public class OTFNode extends AttributeNode
    */
   public Objective getObjective() {
     return (Objective)
-      createReferencedNode(ObjectiveNode.class,
-      "Objective", "Objective");
+      getAttrReferencedNode("Objective", "Objective");
   }
 
   /**
@@ -127,7 +126,7 @@ public class OTFNode extends AttributeNode
    *   if parameter is not an instance of ObjectiveNode
    */
   public void setObjective(Objective value) {
-    setReferencedNode((OMEXMLNode) value, "Objective", "Objective");
+    setAttrReferencedNode((OMEXMLNode) value, "Objective");
   }
 
   /**
@@ -136,8 +135,7 @@ public class OTFNode extends AttributeNode
    */
   public Filter getFilter() {
     return (Filter)
-      createReferencedNode(FilterNode.class,
-      "Filter", "Filter");
+      getAttrReferencedNode("Filter", "Filter");
   }
 
   /**
@@ -148,7 +146,7 @@ public class OTFNode extends AttributeNode
    *   if parameter is not an instance of FilterNode
    */
   public void setFilter(Filter value) {
-    setReferencedNode((OMEXMLNode) value, "Filter", "Filter");
+    setAttrReferencedNode((OMEXMLNode) value, "Filter");
   }
 
   /**
@@ -164,8 +162,7 @@ public class OTFNode extends AttributeNode
    * for the OTF element.
    */
   public void setSizeX(Integer value) {
-    setIntegerAttribute("SizeX", value);
-  }
+    setAttribute("SizeX", value);  }
 
   /**
    * Gets SizeY attribute
@@ -180,8 +177,7 @@ public class OTFNode extends AttributeNode
    * for the OTF element.
    */
   public void setSizeY(Integer value) {
-    setIntegerAttribute("SizeY", value);
-  }
+    setAttribute("SizeY", value);  }
 
   /**
    * Gets PixelType attribute
@@ -196,8 +192,7 @@ public class OTFNode extends AttributeNode
    * for the OTF element.
    */
   public void setPixelType(String value) {
-    setAttribute("PixelType", value);
-  }
+    setAttribute("PixelType", value);  }
 
   /**
    * Gets Repository referenced by Repository
@@ -205,8 +200,7 @@ public class OTFNode extends AttributeNode
    */
   public Repository getRepository() {
     return (Repository)
-      createReferencedNode(RepositoryNode.class,
-      "Repository", "Repository");
+      getAttrReferencedNode("Repository", "Repository");
   }
 
   /**
@@ -217,7 +211,7 @@ public class OTFNode extends AttributeNode
    *   if parameter is not an instance of RepositoryNode
    */
   public void setRepository(Repository value) {
-    setReferencedNode((OMEXMLNode) value, "Repository", "Repository");
+    setAttrReferencedNode((OMEXMLNode) value, "Repository");
   }
 
   /**
@@ -233,8 +227,7 @@ public class OTFNode extends AttributeNode
    * for the OTF element.
    */
   public void setPath(String value) {
-    setAttribute("Path", value);
-  }
+    setAttribute("Path", value);  }
 
   /**
    * Gets OpticalAxisAverage attribute
@@ -249,8 +242,7 @@ public class OTFNode extends AttributeNode
    * for the OTF element.
    */
   public void setOpticalAxisAverage(Boolean value) {
-    setBooleanAttribute("OpticalAxisAverage", value);
-  }
+    setAttribute("OpticalAxisAverage", value);  }
 
   /**
    * Gets Instrument referenced by Instrument
@@ -258,8 +250,7 @@ public class OTFNode extends AttributeNode
    */
   public Instrument getInstrument() {
     return (Instrument)
-      createReferencedNode(InstrumentNode.class,
-      "Instrument", "Instrument");
+      getAttrReferencedNode("Instrument", "Instrument");
   }
 
   /**
@@ -270,7 +261,7 @@ public class OTFNode extends AttributeNode
    *   if parameter is not an instance of InstrumentNode
    */
   public void setInstrument(Instrument value) {
-    setReferencedNode((OMEXMLNode) value, "Instrument", "Instrument");
+    setAttrReferencedNode((OMEXMLNode) value, "Instrument");
   }
 
   /**
@@ -278,8 +269,7 @@ public class OTFNode extends AttributeNode
    * referencing this OTF node.
    */
   public List getLogicalChannelList() {
-    return createAttrReferralNodes(LogicalChannelNode.class,
-      "LogicalChannel", "OTF");
+    return getAttrReferringNodes("LogicalChannel", "OTF");
   }
 
   /**
@@ -287,8 +277,7 @@ public class OTFNode extends AttributeNode
    * referencing this OTF node.
    */
   public int countLogicalChannelList() {
-    return getSize(getAttrReferrals("LogicalChannel",
-      "OTF"));
+    return getAttrReferringCount("LogicalChannel", "OTF");
   }
 
 }

@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -120,8 +120,7 @@ public class FilenamePatternNode extends AttributeNode
    * for the FilenamePattern element.
    */
   public void setFormat(String value) {
-    setAttribute("Format", value);
-  }
+    setAttribute("Format", value);  }
 
   /**
    * Gets RegEx attribute
@@ -136,8 +135,7 @@ public class FilenamePatternNode extends AttributeNode
    * for the FilenamePattern element.
    */
   public void setRegEx(String value) {
-    setAttribute("RegEx", value);
-  }
+    setAttribute("RegEx", value);  }
 
   /**
    * Gets Name attribute
@@ -152,8 +150,7 @@ public class FilenamePatternNode extends AttributeNode
    * for the FilenamePattern element.
    */
   public void setName(String value) {
-    setAttribute("Name", value);
-  }
+    setAttribute("Name", value);  }
 
   /**
    * Gets BaseName attribute
@@ -168,8 +165,7 @@ public class FilenamePatternNode extends AttributeNode
    * for the FilenamePattern element.
    */
   public void setBaseName(String value) {
-    setAttribute("BaseName", value);
-  }
+    setAttribute("BaseName", value);  }
 
   /**
    * Gets TheZ attribute
@@ -184,8 +180,7 @@ public class FilenamePatternNode extends AttributeNode
    * for the FilenamePattern element.
    */
   public void setTheZ(Integer value) {
-    setIntegerAttribute("TheZ", value);
-  }
+    setAttribute("TheZ", value);  }
 
   /**
    * Gets TheT attribute
@@ -200,8 +195,7 @@ public class FilenamePatternNode extends AttributeNode
    * for the FilenamePattern element.
    */
   public void setTheT(Integer value) {
-    setIntegerAttribute("TheT", value);
-  }
+    setAttribute("TheT", value);  }
 
   /**
    * Gets TheC attribute
@@ -216,7 +210,6 @@ public class FilenamePatternNode extends AttributeNode
    * for the FilenamePattern element.
    */
   public void setTheC(Integer value) {
-    setIntegerAttribute("TheC", value);
-  }
+    setAttribute("TheC", value);  }
 
 }

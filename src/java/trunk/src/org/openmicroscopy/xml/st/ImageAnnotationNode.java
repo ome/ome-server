@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -118,8 +118,7 @@ public class ImageAnnotationNode extends AttributeNode
    * for the ImageAnnotation element.
    */
   public void setContent(String value) {
-    setAttribute("Content", value);
-  }
+    setAttribute("Content", value);  }
 
   /**
    * Gets TheC attribute
@@ -134,8 +133,7 @@ public class ImageAnnotationNode extends AttributeNode
    * for the ImageAnnotation element.
    */
   public void setTheC(Integer value) {
-    setIntegerAttribute("TheC", value);
-  }
+    setAttribute("TheC", value);  }
 
   /**
    * Gets TheT attribute
@@ -150,8 +148,7 @@ public class ImageAnnotationNode extends AttributeNode
    * for the ImageAnnotation element.
    */
   public void setTheT(Integer value) {
-    setIntegerAttribute("TheT", value);
-  }
+    setAttribute("TheT", value);  }
 
   /**
    * Gets TheZ attribute
@@ -166,8 +163,7 @@ public class ImageAnnotationNode extends AttributeNode
    * for the ImageAnnotation element.
    */
   public void setTheZ(Integer value) {
-    setIntegerAttribute("TheZ", value);
-  }
+    setAttribute("TheZ", value);  }
 
   /**
    * Gets Valid attribute
@@ -182,7 +178,6 @@ public class ImageAnnotationNode extends AttributeNode
    * for the ImageAnnotation element.
    */
   public void setValid(Boolean value) {
-    setBooleanAttribute("Valid", value);
-  }
+    setAttribute("Valid", value);  }
 
 }

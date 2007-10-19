@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -122,8 +122,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setTheC(Integer value) {
-    setIntegerAttribute("TheC", value);
-  }
+    setAttribute("TheC", value);  }
 
   /**
    * Gets CentroidX attribute
@@ -138,8 +137,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setCentroidX(Float value) {
-    setFloatAttribute("CentroidX", value);
-  }
+    setAttribute("CentroidX", value);  }
 
   /**
    * Gets CentroidY attribute
@@ -154,8 +152,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setCentroidY(Float value) {
-    setFloatAttribute("CentroidY", value);
-  }
+    setAttribute("CentroidY", value);  }
 
   /**
    * Gets CentroidZ attribute
@@ -170,8 +167,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setCentroidZ(Float value) {
-    setFloatAttribute("CentroidZ", value);
-  }
+    setAttribute("CentroidZ", value);  }
 
   /**
    * Gets Integral attribute
@@ -186,8 +182,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setIntegral(Float value) {
-    setFloatAttribute("Integral", value);
-  }
+    setAttribute("Integral", value);  }
 
   /**
    * Gets Mean attribute
@@ -202,8 +197,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setMean(Float value) {
-    setFloatAttribute("Mean", value);
-  }
+    setAttribute("Mean", value);  }
 
   /**
    * Gets GeometricMean attribute
@@ -218,8 +212,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setGeometricMean(Float value) {
-    setFloatAttribute("GeometricMean", value);
-  }
+    setAttribute("GeometricMean", value);  }
 
   /**
    * Gets Sigma attribute
@@ -234,8 +227,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setSigma(Float value) {
-    setFloatAttribute("Sigma", value);
-  }
+    setAttribute("Sigma", value);  }
 
   /**
    * Gets GeometricSigma attribute
@@ -250,8 +242,7 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setGeometricSigma(Float value) {
-    setFloatAttribute("GeometricSigma", value);
-  }
+    setAttribute("GeometricSigma", value);  }
 
   /**
    * Gets Background attribute
@@ -266,7 +257,6 @@ public class SignalNode extends AttributeNode
    * for the Signal element.
    */
   public void setBackground(Float value) {
-    setFloatAttribute("Background", value);
-  }
+    setAttribute("Background", value);  }
 
 }

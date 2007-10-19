@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -114,8 +114,7 @@ public class CategoryGroupNode extends AttributeNode
    * for the CategoryGroup element.
    */
   public void setName(String value) {
-    setAttribute("Name", value);
-  }
+    setAttribute("Name", value);  }
 
   /**
    * Gets Description attribute
@@ -130,16 +129,14 @@ public class CategoryGroupNode extends AttributeNode
    * for the CategoryGroup element.
    */
   public void setDescription(String value) {
-    setAttribute("Description", value);
-  }
+    setAttribute("Description", value);  }
 
   /**
    * Gets a list of Category elements
    * referencing this CategoryGroup node.
    */
   public List getCategoryList() {
-    return createAttrReferralNodes(CategoryNode.class,
-      "Category", "CategoryGroup");
+    return getAttrReferringNodes("Category", "CategoryGroup");
   }
 
   /**
@@ -147,8 +144,7 @@ public class CategoryGroupNode extends AttributeNode
    * referencing this CategoryGroup node.
    */
   public int countCategoryList() {
-    return getSize(getAttrReferrals("Category",
-      "CategoryGroup"));
+    return getAttrReferringCount("Category", "CategoryGroup");
   }
 
 }

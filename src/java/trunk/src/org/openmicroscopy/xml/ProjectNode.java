@@ -89,7 +89,7 @@ public class ProjectNode extends OMEXMLNode implements Project {
 
   /** Gets Group referenced by Group attribute of the Project element. */
   public Group getGroup() {
-    return (Group) createReferencedNode(GroupNode.class, "Group", "Group");
+    return (Group) getAttrReferencedNode("Group", "Group");
   }
 
   /**
@@ -99,7 +99,7 @@ public class ProjectNode extends OMEXMLNode implements Project {
    *   if parameter is not an instance of GroupNode
    */
   public void setGroup(Group value) {
-    setReferencedNode((OMEXMLNode) value, "Group", "Group");
+    setAttrReferencedNode((OMEXMLNode) value, "Group");
   }
 
 
@@ -130,8 +130,7 @@ public class ProjectNode extends OMEXMLNode implements Project {
    * attribute of the Project element.
    */
   public Experimenter getOwner() {
-    return (Experimenter) createReferencedNode(ExperimenterNode.class,
-      "Experimenter", "Experimenter");
+    return (Experimenter) getAttrReferencedNode("Experimenter", "Experimenter");
   }
 
   /**
@@ -142,15 +141,13 @@ public class ProjectNode extends OMEXMLNode implements Project {
    *   if parameter is not an instance of ExperimenterNode
    */
   public void setOwner(Experimenter value) {
-    setReferencedNode((OMEXMLNode) value, "Experimenter", "Experimenter");
+    setAttrReferencedNode((OMEXMLNode) value, "Experimenter");
   }
 
   /** Gets a list of Datasets referencing this Project. */
-  public List getDatasets() {
-    return createReferralNodes(DatasetNode.class, "Dataset");
-  }
+  public List getDatasets() { return getReferringNodes("Dataset"); }
 
   /** Gets the number of Datasets referencing this Project. */
-  public int countDatasets() { return getSize(getReferrals("Dataset")); }
+  public int countDatasets() { return getReferringCount("Dataset"); }
 
 }

@@ -42,7 +42,6 @@ import java.util.Calendar;
 import java.util.List;
 import org.openmicroscopy.ds.dto.Image;
 import org.openmicroscopy.ds.st.*;
-import org.openmicroscopy.xml.st.*;
 import org.w3c.dom.Element;
 
 /** ImageNode is the node corresponding to the "Image" XML element. */
@@ -82,12 +81,11 @@ public class ImageNode extends OMEXMLNode implements Image {
     setDescription(description);
   }
 
-
   // -- ImageNode API methods --
 
   /** Gets Group referenced by Group attribute of the Image element. */
   public Group getGroup() {
-    return (Group) createReferencedNode(GroupNode.class, "Group", "Group");
+    return (Group) getAttrReferencedNode("Group", "Group");
   }
 
   /**
@@ -97,18 +95,16 @@ public class ImageNode extends OMEXMLNode implements Image {
    *   if parameter is not an instance of GroupNode
    */
   public void setGroup(Group value) {
-    setReferencedNode((OMEXMLNode) value, "Group", "Group");
+    setAttrReferencedNode((OMEXMLNode) value, "Group");
   }
 
   /** Gets node corresponding to CustomAttributes child element. */
   public CustomAttributesNode getCustomAttributes() {
-    return (CustomAttributesNode)
-      createChildNode(CustomAttributesNode.class, "CustomAttributes");
+    return (CustomAttributesNode) getChildNode("CustomAttributes");
   }
 
   /** Adds this Image to a Dataset. */
   public void addToDataset(DatasetNode dataset) { createReference(dataset); }
-
 
   // -- Image API methods --
 
@@ -137,8 +133,8 @@ public class ImageNode extends OMEXMLNode implements Image {
    * attribute of the Image element.
    */
   public Experimenter getOwner() {
-    return (Experimenter) createReferencedNode(ExperimenterNode.class,
-      "Experimenter", "Experimenter");
+    return (Experimenter)
+      getAttrReferencedNode("Experimenter", "Experimenter");
   }
 
   /**
@@ -149,7 +145,7 @@ public class ImageNode extends OMEXMLNode implements Image {
    *   if parameter is not an instance of ExperimenterNode
    */
   public void setOwner(Experimenter value) {
-    setReferencedNode((OMEXMLNode) value, "Experimenter", "Experimenter");
+    setAttrReferencedNode((OMEXMLNode) value, "Experimenter");
   }
 
   /** Gets CreationDate attribute of the Image element. */
@@ -199,8 +195,7 @@ public class ImageNode extends OMEXMLNode implements Image {
    * Gets Pixels referenced by DefaultPixels attribute of the Image element.
    */
   public Pixels getDefaultPixels() {
-    return (Pixels) createReferencedNode(PixelsNode.class,
-      "Pixels", "DefaultPixels");
+    return (Pixels) getAttrReferencedNode("Pixels", "DefaultPixels");
   }
 
   /**
@@ -210,25 +205,21 @@ public class ImageNode extends OMEXMLNode implements Image {
    *   if parameter is not an instance of PixelsNode
    */
   public void setDefaultPixels(Pixels value) {
-    setReferencedNode((OMEXMLNode) value, "Pixels", "DefaultPixels");
+    setAttrReferencedNode((OMEXMLNode) value, "DefaultPixels");
   }
 
   /** Gets a list of Datasets referenced by the Image. */
   public List getDatasets() {
-    return createReferencedNodes(DatasetNode.class, "Dataset");
+    return getReferencedNodes("Dataset", "DatasetRef");
   }
 
   /** Gets the number of Datasets referenced by the Image. */
-  public int countDatasets() {
-    return getSize(getChildElements("DatasetRef"));
-  }
+  public int countDatasets() { return getChildCount("DatasetRef"); }
 
   /** Gets Feature child nodes. */
-  public List getFeatures() {
-    return createChildNodes(FeatureNode.class, "Feature");
-  }
+  public List getFeatures() { return getChildNodes("Feature"); }
 
   /** Gets the number of Feature child nodes. */
-  public int countFeatures() { return getSize(getChildElements("Feature")); }
+  public int countFeatures() { return getChildCount("Feature"); }
 
 }

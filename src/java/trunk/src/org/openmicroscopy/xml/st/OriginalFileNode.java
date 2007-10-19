@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,7 +50,7 @@ import org.w3c.dom.Element;
  * Name: OriginalFile
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/OMEIS/OriginalFile.ome
- * Description: An original proprietary or XML file.
+ * Description: Un archivo propietario o XML original.
  */
 public class OriginalFileNode extends AttributeNode
   implements OriginalFile
@@ -109,8 +109,7 @@ public class OriginalFileNode extends AttributeNode
    */
   public Repository getRepository() {
     return (Repository)
-      createReferencedNode(RepositoryNode.class,
-      "Repository", "Repository");
+      getAttrReferencedNode("Repository", "Repository");
   }
 
   /**
@@ -121,7 +120,7 @@ public class OriginalFileNode extends AttributeNode
    *   if parameter is not an instance of RepositoryNode
    */
   public void setRepository(Repository value) {
-    setReferencedNode((OMEXMLNode) value, "Repository", "Repository");
+    setAttrReferencedNode((OMEXMLNode) value, "Repository");
   }
 
   /**
@@ -137,8 +136,7 @@ public class OriginalFileNode extends AttributeNode
    * for the OriginalFile element.
    */
   public void setPath(String value) {
-    setAttribute("Path", value);
-  }
+    setAttribute("Path", value);  }
 
   /**
    * Gets FileID attribute
@@ -153,8 +151,7 @@ public class OriginalFileNode extends AttributeNode
    * for the OriginalFile element.
    */
   public void setFileID(Long value) {
-    setLongAttribute("FileID", value);
-  }
+    setAttribute("FileID", value);  }
 
   /**
    * Gets SHA1 attribute
@@ -169,8 +166,7 @@ public class OriginalFileNode extends AttributeNode
    * for the OriginalFile element.
    */
   public void setSHA1(String value) {
-    setAttribute("SHA1", value);
-  }
+    setAttribute("SHA1", value);  }
 
   /**
    * Gets Format attribute
@@ -185,7 +181,6 @@ public class OriginalFileNode extends AttributeNode
    * for the OriginalFile element.
    */
   public void setFormat(String value) {
-    setAttribute("Format", value);
-  }
+    setAttribute("Format", value);  }
 
 }

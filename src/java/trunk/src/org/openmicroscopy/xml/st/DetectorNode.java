@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -120,8 +120,7 @@ public class DetectorNode extends AttributeNode
    * for the Detector element.
    */
   public void setManufacturer(String value) {
-    setAttribute("Manufacturer", value);
-  }
+    setAttribute("Manufacturer", value);  }
 
   /**
    * Gets Model attribute
@@ -136,8 +135,7 @@ public class DetectorNode extends AttributeNode
    * for the Detector element.
    */
   public void setModel(String value) {
-    setAttribute("Model", value);
-  }
+    setAttribute("Model", value);  }
 
   /**
    * Gets SerialNumber attribute
@@ -152,8 +150,7 @@ public class DetectorNode extends AttributeNode
    * for the Detector element.
    */
   public void setSerialNumber(String value) {
-    setAttribute("SerialNumber", value);
-  }
+    setAttribute("SerialNumber", value);  }
 
   /**
    * Gets Type attribute
@@ -168,8 +165,7 @@ public class DetectorNode extends AttributeNode
    * for the Detector element.
    */
   public void setType(String value) {
-    setAttribute("Type", value);
-  }
+    setAttribute("Type", value);  }
 
   /**
    * Gets Gain attribute
@@ -184,8 +180,7 @@ public class DetectorNode extends AttributeNode
    * for the Detector element.
    */
   public void setGain(Float value) {
-    setFloatAttribute("Gain", value);
-  }
+    setAttribute("Gain", value);  }
 
   /**
    * Gets Voltage attribute
@@ -200,8 +195,7 @@ public class DetectorNode extends AttributeNode
    * for the Detector element.
    */
   public void setVoltage(Float value) {
-    setFloatAttribute("Voltage", value);
-  }
+    setAttribute("Voltage", value);  }
 
   /**
    * Gets Offset attribute
@@ -216,8 +210,7 @@ public class DetectorNode extends AttributeNode
    * for the Detector element.
    */
   public void setOffset(Float value) {
-    setFloatAttribute("Offset", value);
-  }
+    setAttribute("Offset", value);  }
 
   /**
    * Gets Instrument referenced by Instrument
@@ -225,8 +218,7 @@ public class DetectorNode extends AttributeNode
    */
   public Instrument getInstrument() {
     return (Instrument)
-      createReferencedNode(InstrumentNode.class,
-      "Instrument", "Instrument");
+      getAttrReferencedNode("Instrument", "Instrument");
   }
 
   /**
@@ -237,7 +229,7 @@ public class DetectorNode extends AttributeNode
    *   if parameter is not an instance of InstrumentNode
    */
   public void setInstrument(Instrument value) {
-    setReferencedNode((OMEXMLNode) value, "Instrument", "Instrument");
+    setAttrReferencedNode((OMEXMLNode) value, "Instrument");
   }
 
   /**
@@ -245,8 +237,7 @@ public class DetectorNode extends AttributeNode
    * referencing this Detector node.
    */
   public List getLogicalChannelList() {
-    return createAttrReferralNodes(LogicalChannelNode.class,
-      "LogicalChannel", "Detector");
+    return getAttrReferringNodes("LogicalChannel", "Detector");
   }
 
   /**
@@ -254,8 +245,7 @@ public class DetectorNode extends AttributeNode
    * referencing this Detector node.
    */
   public int countLogicalChannelList() {
-    return getSize(getAttrReferrals("LogicalChannel",
-      "Detector"));
+    return getAttrReferringCount("LogicalChannel", "Detector");
   }
 
 }

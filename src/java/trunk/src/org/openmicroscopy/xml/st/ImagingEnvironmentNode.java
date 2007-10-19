@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,8 +50,8 @@ import org.w3c.dom.Element;
  * Name: ImagingEnvironment
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: Various environmental conditions at the time of image
- *   acquisition.
+ * Description: Variadas condiciones ambientales al tiempo de la adquisicion de
+ *   la imagen.
  */
 public class ImagingEnvironmentNode extends AttributeNode
   implements ImagingEnvironment
@@ -116,8 +116,7 @@ public class ImagingEnvironmentNode extends AttributeNode
    * for the ImagingEnvironment element.
    */
   public void setTemperature(Float value) {
-    setFloatAttribute("Temperature", value);
-  }
+    setAttribute("Temperature", value);  }
 
   /**
    * Gets AirPressure attribute
@@ -132,8 +131,7 @@ public class ImagingEnvironmentNode extends AttributeNode
    * for the ImagingEnvironment element.
    */
   public void setAirPressure(Float value) {
-    setFloatAttribute("AirPressure", value);
-  }
+    setAttribute("AirPressure", value);  }
 
   /**
    * Gets Humidity attribute
@@ -148,8 +146,7 @@ public class ImagingEnvironmentNode extends AttributeNode
    * for the ImagingEnvironment element.
    */
   public void setHumidity(Float value) {
-    setFloatAttribute("Humidity", value);
-  }
+    setAttribute("Humidity", value);  }
 
   /**
    * Gets CO2Percent attribute
@@ -164,7 +161,6 @@ public class ImagingEnvironmentNode extends AttributeNode
    * for the ImagingEnvironment element.
    */
   public void setCO2Percent(Float value) {
-    setFloatAttribute("CO2Percent", value);
-  }
+    setAttribute("CO2Percent", value);  }
 
 }

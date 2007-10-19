@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -90,7 +90,8 @@ public class FindSpotsInputsNode extends AttributeNode
    */
   public FindSpotsInputsNode(CustomAttributesNode parent, Integer timeStart,
     Integer timeStop, String channel, Float minimumSpotVolume,
-    String thresholdType, Float thresholdValue, Integer fadeSpotsTheT)
+    String thresholdType, Float thresholdValue, Integer fadeSpotsTheT,
+    Boolean darkSpots)
   {
     this(parent, true);
     setTimeStart(timeStart);
@@ -100,6 +101,7 @@ public class FindSpotsInputsNode extends AttributeNode
     setThresholdType(thresholdType);
     setThresholdValue(thresholdValue);
     setFadeSpotsTheT(fadeSpotsTheT);
+    setDarkSpots(darkSpots);
   }
 
 
@@ -118,8 +120,7 @@ public class FindSpotsInputsNode extends AttributeNode
    * for the FindSpotsInputs element.
    */
   public void setTimeStart(Integer value) {
-    setIntegerAttribute("TimeStart", value);
-  }
+    setAttribute("TimeStart", value);  }
 
   /**
    * Gets TimeStop attribute
@@ -134,8 +135,7 @@ public class FindSpotsInputsNode extends AttributeNode
    * for the FindSpotsInputs element.
    */
   public void setTimeStop(Integer value) {
-    setIntegerAttribute("TimeStop", value);
-  }
+    setAttribute("TimeStop", value);  }
 
   /**
    * Gets Channel attribute
@@ -150,8 +150,7 @@ public class FindSpotsInputsNode extends AttributeNode
    * for the FindSpotsInputs element.
    */
   public void setChannel(String value) {
-    setAttribute("Channel", value);
-  }
+    setAttribute("Channel", value);  }
 
   /**
    * Gets MinimumSpotVolume attribute
@@ -166,8 +165,7 @@ public class FindSpotsInputsNode extends AttributeNode
    * for the FindSpotsInputs element.
    */
   public void setMinimumSpotVolume(Float value) {
-    setFloatAttribute("MinimumSpotVolume", value);
-  }
+    setAttribute("MinimumSpotVolume", value);  }
 
   /**
    * Gets ThresholdType attribute
@@ -182,8 +180,7 @@ public class FindSpotsInputsNode extends AttributeNode
    * for the FindSpotsInputs element.
    */
   public void setThresholdType(String value) {
-    setAttribute("ThresholdType", value);
-  }
+    setAttribute("ThresholdType", value);  }
 
   /**
    * Gets ThresholdValue attribute
@@ -198,8 +195,7 @@ public class FindSpotsInputsNode extends AttributeNode
    * for the FindSpotsInputs element.
    */
   public void setThresholdValue(Float value) {
-    setFloatAttribute("ThresholdValue", value);
-  }
+    setAttribute("ThresholdValue", value);  }
 
   /**
    * Gets FadeSpotsTheT attribute
@@ -214,7 +210,21 @@ public class FindSpotsInputsNode extends AttributeNode
    * for the FindSpotsInputs element.
    */
   public void setFadeSpotsTheT(Integer value) {
-    setIntegerAttribute("FadeSpotsTheT", value);
+    setAttribute("FadeSpotsTheT", value);  }
+
+  /**
+   * Gets DarkSpots attribute
+   * of the FindSpotsInputs element.
+   */
+  public Boolean isDarkSpots() {
+    return getBooleanAttribute("DarkSpots");
   }
+
+  /**
+   * Sets DarkSpots attribute
+   * for the FindSpotsInputs element.
+   */
+  public void setDarkSpots(Boolean value) {
+    setAttribute("DarkSpots", value);  }
 
 }

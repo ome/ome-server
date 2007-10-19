@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -104,8 +104,7 @@ public class FilterNode extends AttributeNode
    */
   public Instrument getInstrument() {
     return (Instrument)
-      createReferencedNode(InstrumentNode.class,
-      "Instrument", "Instrument");
+      getAttrReferencedNode("Instrument", "Instrument");
   }
 
   /**
@@ -116,7 +115,7 @@ public class FilterNode extends AttributeNode
    *   if parameter is not an instance of InstrumentNode
    */
   public void setInstrument(Instrument value) {
-    setReferencedNode((OMEXMLNode) value, "Instrument", "Instrument");
+    setAttrReferencedNode((OMEXMLNode) value, "Instrument");
   }
 
   /**
@@ -124,8 +123,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public List getLogicalChannelList() {
-    return createAttrReferralNodes(LogicalChannelNode.class,
-      "LogicalChannel", "Filter");
+    return getAttrReferringNodes("LogicalChannel", "Filter");
   }
 
   /**
@@ -133,8 +131,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public int countLogicalChannelList() {
-    return getSize(getAttrReferrals("LogicalChannel",
-      "Filter"));
+    return getAttrReferringCount("LogicalChannel", "Filter");
   }
 
   /**
@@ -142,8 +139,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public List getExcitationFilterList() {
-    return createAttrReferralNodes(ExcitationFilterNode.class,
-      "ExcitationFilter", "Filter");
+    return getAttrReferringNodes("ExcitationFilter", "Filter");
   }
 
   /**
@@ -151,8 +147,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public int countExcitationFilterList() {
-    return getSize(getAttrReferrals("ExcitationFilter",
-      "Filter"));
+    return getAttrReferringCount("ExcitationFilter", "Filter");
   }
 
   /**
@@ -160,8 +155,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public List getDichroicList() {
-    return createAttrReferralNodes(DichroicNode.class,
-      "Dichroic", "Filter");
+    return getAttrReferringNodes("Dichroic", "Filter");
   }
 
   /**
@@ -169,8 +163,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public int countDichroicList() {
-    return getSize(getAttrReferrals("Dichroic",
-      "Filter"));
+    return getAttrReferringCount("Dichroic", "Filter");
   }
 
   /**
@@ -178,8 +171,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public List getEmissionFilterList() {
-    return createAttrReferralNodes(EmissionFilterNode.class,
-      "EmissionFilter", "Filter");
+    return getAttrReferringNodes("EmissionFilter", "Filter");
   }
 
   /**
@@ -187,8 +179,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public int countEmissionFilterList() {
-    return getSize(getAttrReferrals("EmissionFilter",
-      "Filter"));
+    return getAttrReferringCount("EmissionFilter", "Filter");
   }
 
   /**
@@ -196,8 +187,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public List getFilterSetList() {
-    return createAttrReferralNodes(FilterSetNode.class,
-      "FilterSet", "Filter");
+    return getAttrReferringNodes("FilterSet", "Filter");
   }
 
   /**
@@ -205,8 +195,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public int countFilterSetList() {
-    return getSize(getAttrReferrals("FilterSet",
-      "Filter"));
+    return getAttrReferringCount("FilterSet", "Filter");
   }
 
   /**
@@ -214,8 +203,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public List getOTFList() {
-    return createAttrReferralNodes(OTFNode.class,
-      "OTF", "Filter");
+    return getAttrReferringNodes("OTF", "Filter");
   }
 
   /**
@@ -223,8 +211,7 @@ public class FilterNode extends AttributeNode
    * referencing this Filter node.
    */
   public int countOTFList() {
-    return getSize(getAttrReferrals("OTF",
-      "Filter"));
+    return getAttrReferringCount("OTF", "Filter");
   }
 
 }

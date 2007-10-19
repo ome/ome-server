@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -111,8 +111,7 @@ public class TrajectoryEntryNode extends AttributeNode
    */
   public Trajectory getTrajectory() {
     return (Trajectory)
-      createReferencedNode(TrajectoryNode.class,
-      "Trajectory", "Trajectory");
+      getAttrReferencedNode("Trajectory", "Trajectory");
   }
 
   /**
@@ -123,7 +122,7 @@ public class TrajectoryEntryNode extends AttributeNode
    *   if parameter is not an instance of TrajectoryNode
    */
   public void setTrajectory(Trajectory value) {
-    setReferencedNode((OMEXMLNode) value, "Trajectory", "Trajectory");
+    setAttrReferencedNode((OMEXMLNode) value, "Trajectory");
   }
 
   /**
@@ -139,8 +138,7 @@ public class TrajectoryEntryNode extends AttributeNode
    * for the TrajectoryEntry element.
    */
   public void setOrder(Integer value) {
-    setIntegerAttribute("Order", value);
-  }
+    setAttribute("Order", value);  }
 
   /**
    * Gets DeltaX attribute
@@ -155,8 +153,7 @@ public class TrajectoryEntryNode extends AttributeNode
    * for the TrajectoryEntry element.
    */
   public void setDeltaX(Float value) {
-    setFloatAttribute("DeltaX", value);
-  }
+    setAttribute("DeltaX", value);  }
 
   /**
    * Gets DeltaY attribute
@@ -171,8 +168,7 @@ public class TrajectoryEntryNode extends AttributeNode
    * for the TrajectoryEntry element.
    */
   public void setDeltaY(Float value) {
-    setFloatAttribute("DeltaY", value);
-  }
+    setAttribute("DeltaY", value);  }
 
   /**
    * Gets DeltaZ attribute
@@ -187,8 +183,7 @@ public class TrajectoryEntryNode extends AttributeNode
    * for the TrajectoryEntry element.
    */
   public void setDeltaZ(Float value) {
-    setFloatAttribute("DeltaZ", value);
-  }
+    setAttribute("DeltaZ", value);  }
 
   /**
    * Gets Distance attribute
@@ -203,8 +198,7 @@ public class TrajectoryEntryNode extends AttributeNode
    * for the TrajectoryEntry element.
    */
   public void setDistance(Float value) {
-    setFloatAttribute("Distance", value);
-  }
+    setAttribute("Distance", value);  }
 
   /**
    * Gets Velocity attribute
@@ -219,7 +213,6 @@ public class TrajectoryEntryNode extends AttributeNode
    * for the TrajectoryEntry element.
    */
   public void setVelocity(Float value) {
-    setFloatAttribute("Velocity", value);
-  }
+    setAttribute("Velocity", value);  }
 
 }

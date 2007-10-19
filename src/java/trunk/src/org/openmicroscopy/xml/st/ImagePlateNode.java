@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,7 +50,7 @@ import org.w3c.dom.Element;
  * Name: ImagePlate
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: Defines the relationship between Plates and Images.
+ * Description: Define la relacion entre Platos e Imagenes.
  */
 public class ImagePlateNode extends AttributeNode
   implements ImagePlate
@@ -107,8 +107,7 @@ public class ImagePlateNode extends AttributeNode
    */
   public Plate getPlate() {
     return (Plate)
-      createReferencedNode(PlateNode.class,
-      "Plate", "Plate");
+      getAttrReferencedNode("Plate", "Plate");
   }
 
   /**
@@ -119,7 +118,7 @@ public class ImagePlateNode extends AttributeNode
    *   if parameter is not an instance of PlateNode
    */
   public void setPlate(Plate value) {
-    setReferencedNode((OMEXMLNode) value, "Plate", "Plate");
+    setAttrReferencedNode((OMEXMLNode) value, "Plate");
   }
 
   /**
@@ -135,8 +134,7 @@ public class ImagePlateNode extends AttributeNode
    * for the ImagePlate element.
    */
   public void setSample(Integer value) {
-    setIntegerAttribute("Sample", value);
-  }
+    setAttribute("Sample", value);  }
 
   /**
    * Gets Well attribute
@@ -151,7 +149,6 @@ public class ImagePlateNode extends AttributeNode
    * for the ImagePlate element.
    */
   public void setWell(String value) {
-    setAttribute("Well", value);
-  }
+    setAttribute("Well", value);  }
 
 }

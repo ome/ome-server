@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,8 +50,8 @@ import org.w3c.dom.Element;
  * Name: PixelChannelComponent
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: This describes how each channel in the pixel array relates to
- *   LogicalChannels
+ * Description: Describe como cada canal en el arreglo de pixeles se relacion
+ *   con los Canales Logicos.
  */
 public class PixelChannelComponentNode extends AttributeNode
   implements PixelChannelComponent
@@ -109,8 +109,7 @@ public class PixelChannelComponentNode extends AttributeNode
    */
   public Pixels getPixels() {
     return (Pixels)
-      createReferencedNode(PixelsNode.class,
-      "Pixels", "Pixels");
+      getAttrReferencedNode("Pixels", "Pixels");
   }
 
   /**
@@ -121,7 +120,7 @@ public class PixelChannelComponentNode extends AttributeNode
    *   if parameter is not an instance of PixelsNode
    */
   public void setPixels(Pixels value) {
-    setReferencedNode((OMEXMLNode) value, "Pixels", "Pixels");
+    setAttrReferencedNode((OMEXMLNode) value, "Pixels");
   }
 
   /**
@@ -137,8 +136,7 @@ public class PixelChannelComponentNode extends AttributeNode
    * for the PixelChannelComponent element.
    */
   public void setIndex(Integer value) {
-    setIntegerAttribute("Index", value);
-  }
+    setAttribute("Index", value);  }
 
   /**
    * Gets ColorDomain attribute
@@ -153,8 +151,7 @@ public class PixelChannelComponentNode extends AttributeNode
    * for the PixelChannelComponent element.
    */
   public void setColorDomain(String value) {
-    setAttribute("ColorDomain", value);
-  }
+    setAttribute("ColorDomain", value);  }
 
   /**
    * Gets LogicalChannel referenced by LogicalChannel
@@ -162,8 +159,7 @@ public class PixelChannelComponentNode extends AttributeNode
    */
   public LogicalChannel getLogicalChannel() {
     return (LogicalChannel)
-      createReferencedNode(LogicalChannelNode.class,
-      "LogicalChannel", "LogicalChannel");
+      getAttrReferencedNode("LogicalChannel", "LogicalChannel");
   }
 
   /**
@@ -174,7 +170,7 @@ public class PixelChannelComponentNode extends AttributeNode
    *   if parameter is not an instance of LogicalChannelNode
    */
   public void setLogicalChannel(LogicalChannel value) {
-    setReferencedNode((OMEXMLNode) value, "LogicalChannel", "LogicalChannel");
+    setAttrReferencedNode((OMEXMLNode) value, "LogicalChannel");
   }
 
 }

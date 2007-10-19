@@ -43,8 +43,7 @@ import org.w3c.dom.Element;
 
 /**
  * AttributeNode is the superclass of nodes (semantic types) implementing the
- * Attribute DTO interface. It can also be used for custom semantic types that
- * do not have an explicit implementation in org.openmicroscopy.xml.st.
+ * Attribute DTO interface.
  */
 public class AttributeNode extends OMEXMLNode implements Attribute {
 
@@ -86,7 +85,7 @@ public class AttributeNode extends OMEXMLNode implements Attribute {
    * or null if the attribute does not have dataset granularity.
    */
   public Dataset getDataset() {
-    return (Dataset) createAncestorNode(DatasetNode.class, "Dataset");
+    return (Dataset) getAncestorNode("Dataset");
   }
 
   /**
@@ -105,7 +104,7 @@ public class AttributeNode extends OMEXMLNode implements Attribute {
    * or null if the attribute does not have image granularity.
    */
   public Image getImage() {
-    return (Image) createAncestorNode(ImageNode.class, "Image");
+    return (Image) getAncestorNode("Image");
   }
 
   /**
@@ -124,7 +123,7 @@ public class AttributeNode extends OMEXMLNode implements Attribute {
    * or null if the attribute does not have feature granularity.
    */
   public Feature getFeature() {
-    return (Feature) createAncestorNode(FeatureNode.class, "Feature");
+    return (Feature) getAncestorNode("Feature");
   }
 
   /**

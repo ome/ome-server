@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -114,8 +114,7 @@ public class ExperimentNode extends AttributeNode
    * for the Experiment element.
    */
   public void setType(String value) {
-    setAttribute("Type", value);
-  }
+    setAttribute("Type", value);  }
 
   /**
    * Gets Description attribute
@@ -130,8 +129,7 @@ public class ExperimentNode extends AttributeNode
    * for the Experiment element.
    */
   public void setDescription(String value) {
-    setAttribute("Description", value);
-  }
+    setAttribute("Description", value);  }
 
   /**
    * Gets Experimenter referenced by Experimenter
@@ -139,8 +137,7 @@ public class ExperimentNode extends AttributeNode
    */
   public Experimenter getExperimenter() {
     return (Experimenter)
-      createReferencedNode(ExperimenterNode.class,
-      "Experimenter", "Experimenter");
+      getAttrReferencedNode("Experimenter", "Experimenter");
   }
 
   /**
@@ -151,7 +148,7 @@ public class ExperimentNode extends AttributeNode
    *   if parameter is not an instance of ExperimenterNode
    */
   public void setExperimenter(Experimenter value) {
-    setReferencedNode((OMEXMLNode) value, "Experimenter", "Experimenter");
+    setAttrReferencedNode((OMEXMLNode) value, "Experimenter");
   }
 
   /**
@@ -159,8 +156,7 @@ public class ExperimentNode extends AttributeNode
    * referencing this Experiment node.
    */
   public List getImageExperimentList() {
-    return createAttrReferralNodes(ImageExperimentNode.class,
-      "ImageExperiment", "Experiment");
+    return getAttrReferringNodes("ImageExperiment", "Experiment");
   }
 
   /**
@@ -168,8 +164,7 @@ public class ExperimentNode extends AttributeNode
    * referencing this Experiment node.
    */
   public int countImageExperimentList() {
-    return getSize(getAttrReferrals("ImageExperiment",
-      "Experiment"));
+    return getAttrReferringCount("ImageExperiment", "Experiment");
   }
 
 }

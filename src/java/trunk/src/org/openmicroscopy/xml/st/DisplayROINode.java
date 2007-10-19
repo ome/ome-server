@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,7 +50,8 @@ import org.w3c.dom.Element;
  * Name: DisplayROI
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: A region of interest within the image for display purposes
+ * Description: Una region de interes dentro de la imagen para propositos de
+ *   muestra.
  */
 public class DisplayROINode extends AttributeNode
   implements DisplayROI
@@ -121,8 +122,7 @@ public class DisplayROINode extends AttributeNode
    * for the DisplayROI element.
    */
   public void setX0(Integer value) {
-    setIntegerAttribute("X0", value);
-  }
+    setAttribute("X0", value);  }
 
   /**
    * Gets Y0 attribute
@@ -137,8 +137,7 @@ public class DisplayROINode extends AttributeNode
    * for the DisplayROI element.
    */
   public void setY0(Integer value) {
-    setIntegerAttribute("Y0", value);
-  }
+    setAttribute("Y0", value);  }
 
   /**
    * Gets Z0 attribute
@@ -153,8 +152,7 @@ public class DisplayROINode extends AttributeNode
    * for the DisplayROI element.
    */
   public void setZ0(Integer value) {
-    setIntegerAttribute("Z0", value);
-  }
+    setAttribute("Z0", value);  }
 
   /**
    * Gets X1 attribute
@@ -169,8 +167,7 @@ public class DisplayROINode extends AttributeNode
    * for the DisplayROI element.
    */
   public void setX1(Integer value) {
-    setIntegerAttribute("X1", value);
-  }
+    setAttribute("X1", value);  }
 
   /**
    * Gets Y1 attribute
@@ -185,8 +182,7 @@ public class DisplayROINode extends AttributeNode
    * for the DisplayROI element.
    */
   public void setY1(Integer value) {
-    setIntegerAttribute("Y1", value);
-  }
+    setAttribute("Y1", value);  }
 
   /**
    * Gets Z1 attribute
@@ -201,8 +197,7 @@ public class DisplayROINode extends AttributeNode
    * for the DisplayROI element.
    */
   public void setZ1(Integer value) {
-    setIntegerAttribute("Z1", value);
-  }
+    setAttribute("Z1", value);  }
 
   /**
    * Gets T0 attribute
@@ -217,8 +212,7 @@ public class DisplayROINode extends AttributeNode
    * for the DisplayROI element.
    */
   public void setT0(Integer value) {
-    setIntegerAttribute("T0", value);
-  }
+    setAttribute("T0", value);  }
 
   /**
    * Gets T1 attribute
@@ -233,8 +227,7 @@ public class DisplayROINode extends AttributeNode
    * for the DisplayROI element.
    */
   public void setT1(Integer value) {
-    setIntegerAttribute("T1", value);
-  }
+    setAttribute("T1", value);  }
 
   /**
    * Gets DisplayOptions referenced by DisplayOptions
@@ -242,8 +235,7 @@ public class DisplayROINode extends AttributeNode
    */
   public DisplayOptions getDisplayOptions() {
     return (DisplayOptions)
-      createReferencedNode(DisplayOptionsNode.class,
-      "DisplayOptions", "DisplayOptions");
+      getAttrReferencedNode("DisplayOptions", "DisplayOptions");
   }
 
   /**
@@ -254,7 +246,7 @@ public class DisplayROINode extends AttributeNode
    *   if parameter is not an instance of DisplayOptionsNode
    */
   public void setDisplayOptions(DisplayOptions value) {
-    setReferencedNode((OMEXMLNode) value, "DisplayOptions", "DisplayOptions");
+    setAttrReferencedNode((OMEXMLNode) value, "DisplayOptions");
   }
 
 }

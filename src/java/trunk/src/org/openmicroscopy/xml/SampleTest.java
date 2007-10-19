@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.xml.OMENodeTest
+ * org.openmicroscopy.xml.SampleTest
  *
  *-----------------------------------------------------------------------------
  *
@@ -43,13 +43,14 @@ import java.util.List;
 import org.openmicroscopy.xml.st.*;
 
 /** Tests the org.openmicroscopy.xml package. */
-public abstract class OMENodeTest {
+public abstract class SampleTest {
 
   // -- Constants --
 
   /** Path to Sample.ome. */
   private static final String SAMPLE_PATH =
-    System.getProperty("user.home") + "/OME/src/xml/OME/Tests/Sample.ome";
+//    System.getProperty("user.home") + "/OME/src/xml/OME/Tests/Sample.ome";
+    System.getProperty("user.home") + "/data/ome-xml/Sample-2004.ome";
 
 
   // -- Testing methods --
@@ -85,7 +86,7 @@ public abstract class OMENodeTest {
 
     // check OME/Project node
     ProjectNode project = (ProjectNode) projectList.get(0);
-    String projectID = project.getLSID();
+    String projectID = project.getNodeID();
     if (!projectID.equals("urn:lsid:foo.bar.com:Project:123456")) {
       System.out.println("Error: Incorrect Project ID (" + projectID + ")");
     }
@@ -109,7 +110,7 @@ public abstract class OMENodeTest {
 
     // check OME/Dataset node
     DatasetNode dataset = (DatasetNode) datasetList.get(0);
-    String datasetID = dataset.getLSID();
+    String datasetID = dataset.getNodeID();
     if (!datasetID.equals("urn:lsid:foo.bar.com:Dataset:123456")) {
       System.out.println("Error: Incorrect Dataset ID (" + datasetID + ")");
     }
@@ -145,7 +146,7 @@ public abstract class OMENodeTest {
 
     // check OME/Image node
     ImageNode image = (ImageNode) imageList.get(0);
-    String imageID = image.getLSID();
+    String imageID = image.getNodeID();
     if (!imageID.equals("urn:lsid:foo.bar.com:Image:123456")) {
       System.out.println("Error: Incorrect Image ID (" + imageID + ")");
     }
@@ -193,7 +194,7 @@ public abstract class OMENodeTest {
 
     // check OME/Project/Group node
     GroupNode projectGroup = (GroupNode) project.getGroup();
-    String projectGroupID = projectGroup.getLSID();
+    String projectGroupID = projectGroup.getNodeID();
     if (!projectGroupID.equals("urn:lsid:foo.bar.com:Group:123456")) {
       System.out.println("Error: Incorrect Project Group ID (" +
         projectGroupID + ")");
@@ -241,7 +242,7 @@ public abstract class OMENodeTest {
 
     // check OME/Project/Owner node
     ExperimenterNode projectOwner = (ExperimenterNode) project.getOwner();
-    String projectOwnerID = projectOwner.getLSID();
+    String projectOwnerID = projectOwner.getNodeID();
     if (!projectOwnerID.equals("urn:lsid:foo.bar.com:Experimenter:123456")) {
       System.out.println("Error: Incorrect Project Owner ID (" +
         projectOwnerID + ")");
@@ -389,7 +390,7 @@ public abstract class OMENodeTest {
 
     // check OME/Image/DefaultPixels node
     PixelsNode imagePixels = (PixelsNode) image.getDefaultPixels();
-    String imagePixelsID = imagePixels.getLSID();
+    String imagePixelsID = imagePixels.getNodeID();
     if (!imagePixelsID.equals("urn:lsid:foo.bar.com:Pixels:123456")) {
       System.out.println("Error: Incorrect Image Pixels ID (" +
         imagePixelsID + ")");
@@ -512,7 +513,7 @@ public abstract class OMENodeTest {
 
     // check OME/CA/Experiment node
     ExperimentNode experiment = (ExperimentNode) omeCAList.get(4);
-    String experimentID = experiment.getLSID();
+    String experimentID = experiment.getNodeID();
     if (!experimentID.equals("urn:lsid:foo.bar.com:Experiment:123456")) {
       System.out.println("Error: Incorrect CA Experiment ID (" +
         experimentID + ")");
@@ -542,7 +543,7 @@ public abstract class OMENodeTest {
 
     // check OME/CA/Instrument node
     InstrumentNode instrument = (InstrumentNode) omeCAList.get(5);
-    String instrumentID = instrument.getLSID();
+    String instrumentID = instrument.getNodeID();
     if (!instrumentID.equals("urn:lsid:foo.bar.com:Instrument:123456")) {
       System.out.println("Error: Incorrect CA Instrument ID (" +
         instrumentID + ")");
@@ -629,7 +630,7 @@ public abstract class OMENodeTest {
 
     // check first OME/CA/LightSource node
     LightSourceNode lightSource1 = (LightSourceNode) omeCAList.get(6);
-    String lightSource1ID = lightSource1.getLSID();
+    String lightSource1ID = lightSource1.getNodeID();
     if (!lightSource1ID.equals("urn:lsid:foo.bar.com:LightSource:123456")) {
       System.out.println("Error: Incorrect first CA LightSource ID (" +
         lightSource1ID + ")");
@@ -760,7 +761,7 @@ public abstract class OMENodeTest {
 
     // check second OME/CA/LightSource node
     LightSourceNode lightSource2 = (LightSourceNode) omeCAList.get(8);
-    String lightSource2ID = lightSource2.getLSID();
+    String lightSource2ID = lightSource2.getNodeID();
     if (!lightSource2ID.equals("urn:lsid:foo.bar.com:LightSource:123123")) {
       System.out.println("Error: Incorrect second CA LightSource ID (" +
         lightSource2ID + ")");
@@ -865,7 +866,7 @@ public abstract class OMENodeTest {
 
     // check OME/CA/Detector node
     DetectorNode detector = (DetectorNode) omeCAList.get(10);
-    String detectorID = detector.getLSID();
+    String detectorID = detector.getNodeID();
     if (!detectorID.equals("urn:lsid:foo.bar.com:Detector:123456")) {
       System.out.println("Error: Incorrect CA Detector ID (" +
         detectorID + ")");
@@ -919,7 +920,7 @@ public abstract class OMENodeTest {
 
     // check OME/CA/Objective node
     ObjectiveNode objective = (ObjectiveNode) omeCAList.get(11);
-    String objectiveID = objective.getLSID();
+    String objectiveID = objective.getNodeID();
     if (!objectiveID.equals("urn:lsid:foo.bar.com:Objective:123456")) {
       System.out.println("Error: Incorrect CA Objective ID (" +
         objectiveID + ")");
@@ -972,7 +973,7 @@ public abstract class OMENodeTest {
 
     // check OME/CA/Filter node
     FilterNode filter = (FilterNode) omeCAList.get(12);
-    String filterID = filter.getLSID();
+    String filterID = filter.getNodeID();
     if (!filterID.equals("urn:lsid:foo.bar.com:Filter:123456")) {
       System.out.println("Error: Incorrect CA Filter ID (" + filterID + ")");
     }
@@ -1049,7 +1050,7 @@ public abstract class OMENodeTest {
 
     // check OME/CA/OTF node
     OTFNode otf = (OTFNode) omeCAList.get(14);
-    String otfID = otf.getLSID();
+    String otfID = otf.getNodeID();
     if (!otfID.equals("urn:lsid:foo.bar.com:OTF:123456")) {
       System.out.println("Error: Incorrect CA OTF ID (" + otfID + ")");
     }
@@ -1087,7 +1088,7 @@ public abstract class OMENodeTest {
 
     // check OME/CA/Plate node
     PlateNode plate = (PlateNode) omeCAList.get(15);
-    String plateID = plate.getLSID();
+    String plateID = plate.getNodeID();
     if (!plateID.equals("urn:lsid:foo.bar.com:Plate:123456")) {
       System.out.println("Error: Incorrect CA Plate ID (" + plateID + ")");
     }
@@ -1126,7 +1127,7 @@ public abstract class OMENodeTest {
 
     // check OME/CA/Screen node
     ScreenNode screen = (ScreenNode) omeCAList.get(18);
-    String screenID = screen.getLSID();
+    String screenID = screen.getNodeID();
     if (!screenID.equals("urn:lsid:foo.bar.com:Screen:123456")) {
       System.out.println("Error: Incorrect CA Screen ID (" + screenID + ")");
     }
@@ -1327,7 +1328,7 @@ public abstract class OMENodeTest {
     // check OME/Image/CA/LogicalChannel node
     LogicalChannelNode imageLogicalChannel =
       (LogicalChannelNode) imageCAList.get(5);
-    String imageLogicalChannelID = imageLogicalChannel.getLSID();
+    String imageLogicalChannelID = imageLogicalChannel.getNodeID();
     if (!imageLogicalChannelID.equals(
       "urn:lsid:foo.bar.com:LogicalChannel:123456"))
     {
@@ -1478,7 +1479,7 @@ public abstract class OMENodeTest {
     // check OME/Image/CA/DisplayOptions node
     DisplayOptionsNode imageDisplayOptions =
       (DisplayOptionsNode) imageCAList.get(7);
-    String imageDisplayOptionsID = imageDisplayOptions.getLSID();
+    String imageDisplayOptionsID = imageDisplayOptions.getNodeID();
     if (!imageDisplayOptionsID.equals(
       "urn:lsid:foo.bar.com:DisplayOptions:123456"))
     {
@@ -2570,29 +2571,6 @@ public abstract class OMENodeTest {
     }
   }
 
-  /** Outputs some information about the given OME node. */
-  public static void omeInfo(OMENode ome) throws Exception {
-    System.out.println();
-
-    // dump some information
-    CustomAttributesNode customNode = ome.getCustomAttributes();
-    if (customNode != null) {
-      System.out.println("Listing global custom attributes...");
-      List caList = customNode.getCAList();
-      for (int i=0; i<caList.size(); i++) {
-        AttributeNode caNode = (AttributeNode) caList.get(i);
-        String name = caNode.getElementName();
-        String[] attrNames = caNode.getAttributeNames();
-        String[] attrValues = caNode.getAttributeValues();
-        System.out.print("  " + name + ":");
-        for (int j=0; j<attrNames.length; j++) {
-          System.out.print(" " + attrNames[j] + "=" + attrValues[j]);
-        }
-        System.out.println();
-      }
-    }
-  }
-
   /** Builds a node from scratch (to match the Sample.ome file). */
   public static OMENode createNode() throws Exception {
     OMENode ome = new OMENode();
@@ -2602,17 +2580,17 @@ public abstract class OMENodeTest {
     // create OME/Project
     ProjectNode project = new ProjectNode(ome, "Stress Response Pathway",
       null, null, null);
-    project.setLSID("urn:lsid:foo.bar.com:Project:123456");
+    project.setNodeID("urn:lsid:foo.bar.com:Project:123456");
 
     // create OME/Dataset
     DatasetNode dataset = new DatasetNode(ome, "Controls",
       null, Boolean.FALSE, null, null);
-    dataset.setLSID("urn:lsid:foo.bar.com:Dataset:123456");
+    dataset.setNodeID("urn:lsid:foo.bar.com:Dataset:123456");
 
     // create OME/Image
     ImageNode image = new ImageNode(ome,
       "P1W1S1", "1988-04-07T18:39:09", "This is an Image");
-    image.setLSID("urn:lsid:foo.bar.com:Image:123456");
+    image.setNodeID("urn:lsid:foo.bar.com:Image:123456");
 
     // create OME/CA
     CustomAttributesNode ca = new CustomAttributesNode(ome);
@@ -2631,7 +2609,7 @@ public abstract class OMENodeTest {
     // create OME/CA/Experimenter
     ExperimenterNode experimenter = new ExperimenterNode(ca,
       "Nicola", "Sacco", "Nicola.Sacco@justice.net", null, null, null);
-    experimenter.setLSID("urn:lsid:foo.bar.com:Experimenter:123456");
+    experimenter.setNodeID("urn:lsid:foo.bar.com:Experimenter:123456");
     project.setOwner(experimenter);
     dataset.setOwner(experimenter);
     image.setOwner(experimenter);
@@ -2642,13 +2620,13 @@ public abstract class OMENodeTest {
 
     // create second OME/CA/ExperimenterGroup
     GroupNode dummyGroup = new GroupNode(ca, false);
-    dummyGroup.setLSID("urn:lsid:foo.bar.com:Group:123789");
+    dummyGroup.setNodeID("urn:lsid:foo.bar.com:Group:123789");
     ExperimenterGroupNode experimenterGroup2 = new ExperimenterGroupNode(ca,
       experimenter, dummyGroup);
 
     // create OME/CA/Group
     GroupNode group = new GroupNode(ca, "IICBU", experimenter, experimenter);
-    group.setLSID("urn:lsid:foo.bar.com:Group:123456");
+    group.setNodeID("urn:lsid:foo.bar.com:Group:123456");
     project.setGroup(group);
     dataset.setGroup(group);
     image.setGroup(group);
@@ -2658,28 +2636,28 @@ public abstract class OMENodeTest {
     // create OME/CA/Experiment
     ExperimentNode experiment = new ExperimentNode(ca,
       "Time-lapse", "This was an experiment.", experimenter);
-    experiment.setLSID("urn:lsid:foo.bar.com:Experiment:123456");
+    experiment.setNodeID("urn:lsid:foo.bar.com:Experiment:123456");
 
     // create OME/CA/Instrument
     InstrumentNode instrument = new InstrumentNode(ca,
       "Zeiss", "foo", "bar", "Upright");
-    instrument.setLSID("urn:lsid:foo.bar.com:Instrument:123456");
+    instrument.setNodeID("urn:lsid:foo.bar.com:Instrument:123456");
 
     // create first OME/CA/LightSource
     LightSourceNode lightSource1 = new LightSourceNode(ca,
       "Olympus", "WMD Laser", "123skdjhf1234", instrument);
-    lightSource1.setLSID("urn:lsid:foo.bar.com:LightSource:123456");
+    lightSource1.setNodeID("urn:lsid:foo.bar.com:LightSource:123456");
 
     // create OME/CA/Laser
     LightSourceNode dummyLightSource = new LightSourceNode(ca, false);
-    dummyLightSource.setLSID("urn:lsid:foo.bar.com:LightSource:123789");
+    dummyLightSource.setNodeID("urn:lsid:foo.bar.com:LightSource:123789");
     LaserNode laser = new LaserNode(ca, "Semiconductor", "GaAs",
       null, null, null, null, null, lightSource1, dummyLightSource);
 
     // create second OME/CA/LightSource
     LightSourceNode lightSource2 = new LightSourceNode(ca,
       "Olympus", "Realy Bright Lite", "123skdjhf1456", instrument);
-    lightSource2.setLSID("urn:lsid:foo.bar.com:LightSource:123123");
+    lightSource2.setNodeID("urn:lsid:foo.bar.com:LightSource:123123");
 
     // create OME/CA/Arc
     ArcNode arc = new ArcNode(ca, "Hg", null, lightSource2);
@@ -2687,16 +2665,16 @@ public abstract class OMENodeTest {
     // create OME/CA/Detector
     DetectorNode detector = new DetectorNode(ca, "Kodak", "Instamatic",
       "fnuiprf89uh123498", "CCD", null, null, null, instrument);
-    detector.setLSID("urn:lsid:foo.bar.com:Detector:123456");
+    detector.setNodeID("urn:lsid:foo.bar.com:Detector:123456");
 
     // create OME/CA/Objective
     ObjectiveNode objective = new ObjectiveNode(ca, "Olympus", "SPlanL",
       "456anxcoas123", new Float(2.4f), new Float(40), instrument);
-    objective.setLSID("urn:lsid:foo.bar.com:Objective:123456");
+    objective.setNodeID("urn:lsid:foo.bar.com:Objective:123456");
 
     // create OME/CA/Filter
     FilterNode filter = new FilterNode(ca, instrument);
-    filter.setLSID("urn:lsid:foo.bar.com:Filter:123456");
+    filter.setNodeID("urn:lsid:foo.bar.com:Filter:123456");
 
     // create OME/CA/FilterSet
     FilterSetNode filterSet = new FilterSetNode(ca,
@@ -2705,24 +2683,24 @@ public abstract class OMENodeTest {
     // create OME/CA/OTF
     OTFNode otf = new OTFNode(ca, objective, filter, new Integer(512),
       new Integer(512), "int8", null, null, Boolean.TRUE, instrument);
-    otf.setLSID("urn:lsid:foo.bar.com:OTF:123456");
+    otf.setNodeID("urn:lsid:foo.bar.com:OTF:123456");
 
     // create OME/CA/Plate
     PlateNode plate = new PlateNode(ca, "SRP001", "PID.SRP001", null);
-    plate.setLSID("urn:lsid:foo.bar.com:Plate:123456");
+    plate.setNodeID("urn:lsid:foo.bar.com:Plate:123456");
 
     // create first OME/CA/PlateScreen
     PlateScreenNode plateScreen1 = new PlateScreenNode(ca, plate, null);
 
     // create second OME/CA/PlateScreen
     ScreenNode dummyScreen = new ScreenNode(ca, false);
-    dummyScreen.setLSID("urn:lsid:foo.bar.com:Screen:123789");
+    dummyScreen.setNodeID("urn:lsid:foo.bar.com:Screen:123789");
     PlateScreenNode plateScreen2 = new PlateScreenNode(ca, plate, dummyScreen);
 
     // create OME/CA/Screen
     ScreenNode screen = new ScreenNode(ca,
       "Stress Response Pathway Controls", null, "SID.SRPC001");
-    screen.setLSID("urn:lsid:foo.bar.com:Screen:123456");
+    screen.setNodeID("urn:lsid:foo.bar.com:Screen:123456");
     plateScreen1.setScreen(screen);
 
     // -- Depth 3 --
@@ -2754,7 +2732,7 @@ public abstract class OMENodeTest {
       null, "Epifluorescence", null, null, null, null, lightSource1, null,
       "Photobleaching", null, new Integer(490), new Integer(528), "GFP",
       new Float(0));
-    logicalChannel.setLSID("urn:lsid:foo.bar.com:LogicalChannel:123456");
+    logicalChannel.setNodeID("urn:lsid:foo.bar.com:LogicalChannel:123456");
 
     // create OME/Image/CA/PixelChannelComponent
     PixelChannelComponentNode pixelChannelComponent =
@@ -2766,7 +2744,7 @@ public abstract class OMENodeTest {
       null, new Float(1), null, Boolean.TRUE, null, Boolean.TRUE, null,
       Boolean.TRUE, Boolean.TRUE, null, null, new Integer(3), new Integer(3),
       new Integer(3), new Integer(3));
-    displayOptions.setLSID("urn:lsid:foo.bar.com:DisplayOptions:123456");
+    displayOptions.setNodeID("urn:lsid:foo.bar.com:DisplayOptions:123456");
 
     // create first OME/Image/CA/DisplayChannel
     DisplayChannelNode displayChannelRed = new DisplayChannelNode(imageCA,
@@ -2806,7 +2784,7 @@ public abstract class OMENodeTest {
     PixelsNode pixels = new PixelsNode(imageCA, new Integer(20),
       new Integer(20), new Integer(5), new Integer(1), new Integer(6),
       "int16", null, null, null);
-    pixels.setLSID("urn:lsid:foo.bar.com:Pixels:123456");
+    pixels.setNodeID("urn:lsid:foo.bar.com:Pixels:123456");
     pixels.setBigEndian(Boolean.TRUE);
     pixels.setDimensionOrder("XYZCT");
     pixelChannelComponent.setPixels(pixels);
@@ -2849,7 +2827,6 @@ public abstract class OMENodeTest {
         ome = new OMENode(xml);
       }
       else ome = new OMENode(new File(args[0]));
-      omeInfo(ome);
     }
     else {
       // perform some tests on Sample.ome structure

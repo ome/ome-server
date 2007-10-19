@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,8 +50,8 @@ import org.w3c.dom.Element;
  * Name: Dimensions
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: Describes the physical size of each dimension of the pixels in
- *   an image in microns
+ * Description: Describe el tamano fisico de cada dimension de los pixeles en
+ *   una imagen, en micras.
  */
 public class DimensionsNode extends AttributeNode
   implements Dimensions
@@ -117,8 +117,7 @@ public class DimensionsNode extends AttributeNode
    * for the Dimensions element.
    */
   public void setPixelSizeX(Float value) {
-    setFloatAttribute("PixelSizeX", value);
-  }
+    setAttribute("PixelSizeX", value);  }
 
   /**
    * Gets PixelSizeY attribute
@@ -133,8 +132,7 @@ public class DimensionsNode extends AttributeNode
    * for the Dimensions element.
    */
   public void setPixelSizeY(Float value) {
-    setFloatAttribute("PixelSizeY", value);
-  }
+    setAttribute("PixelSizeY", value);  }
 
   /**
    * Gets PixelSizeZ attribute
@@ -149,8 +147,7 @@ public class DimensionsNode extends AttributeNode
    * for the Dimensions element.
    */
   public void setPixelSizeZ(Float value) {
-    setFloatAttribute("PixelSizeZ", value);
-  }
+    setAttribute("PixelSizeZ", value);  }
 
   /**
    * Gets PixelSizeC attribute
@@ -165,8 +162,7 @@ public class DimensionsNode extends AttributeNode
    * for the Dimensions element.
    */
   public void setPixelSizeC(Float value) {
-    setFloatAttribute("PixelSizeC", value);
-  }
+    setAttribute("PixelSizeC", value);  }
 
   /**
    * Gets PixelSizeT attribute
@@ -181,7 +177,6 @@ public class DimensionsNode extends AttributeNode
    * for the Dimensions element.
    */
   public void setPixelSizeT(Float value) {
-    setFloatAttribute("PixelSizeT", value);
-  }
+    setAttribute("PixelSizeT", value);  }
 
 }

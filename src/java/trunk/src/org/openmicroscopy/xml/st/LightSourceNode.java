@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -115,8 +115,7 @@ public class LightSourceNode extends AttributeNode
    * for the LightSource element.
    */
   public void setManufacturer(String value) {
-    setAttribute("Manufacturer", value);
-  }
+    setAttribute("Manufacturer", value);  }
 
   /**
    * Gets Model attribute
@@ -131,8 +130,7 @@ public class LightSourceNode extends AttributeNode
    * for the LightSource element.
    */
   public void setModel(String value) {
-    setAttribute("Model", value);
-  }
+    setAttribute("Model", value);  }
 
   /**
    * Gets SerialNumber attribute
@@ -147,8 +145,7 @@ public class LightSourceNode extends AttributeNode
    * for the LightSource element.
    */
   public void setSerialNumber(String value) {
-    setAttribute("SerialNumber", value);
-  }
+    setAttribute("SerialNumber", value);  }
 
   /**
    * Gets Instrument referenced by Instrument
@@ -156,8 +153,7 @@ public class LightSourceNode extends AttributeNode
    */
   public Instrument getInstrument() {
     return (Instrument)
-      createReferencedNode(InstrumentNode.class,
-      "Instrument", "Instrument");
+      getAttrReferencedNode("Instrument", "Instrument");
   }
 
   /**
@@ -168,7 +164,7 @@ public class LightSourceNode extends AttributeNode
    *   if parameter is not an instance of InstrumentNode
    */
   public void setInstrument(Instrument value) {
-    setReferencedNode((OMEXMLNode) value, "Instrument", "Instrument");
+    setAttrReferencedNode((OMEXMLNode) value, "Instrument");
   }
 
   /**
@@ -177,8 +173,7 @@ public class LightSourceNode extends AttributeNode
    * via a LightSource attribute.
    */
   public List getLogicalChannelListByLightSource() {
-    return createAttrReferralNodes(LogicalChannelNode.class,
-      "LogicalChannel", "LightSource");
+    return getAttrReferringNodes("LogicalChannel", "LightSource");
   }
 
   /**
@@ -186,8 +181,7 @@ public class LightSourceNode extends AttributeNode
    * referencing this LightSource node.
    */
   public int countLogicalChannelListByLightSource() {
-    return getSize(getAttrReferrals("LogicalChannel",
-      "LightSource"));
+    return getAttrReferringCount("LogicalChannel", "LightSource");
   }
 
   /**
@@ -196,8 +190,7 @@ public class LightSourceNode extends AttributeNode
    * via a AuxLightSource attribute.
    */
   public List getLogicalChannelListByAuxLightSource() {
-    return createAttrReferralNodes(LogicalChannelNode.class,
-      "LogicalChannel", "AuxLightSource");
+    return getAttrReferringNodes("LogicalChannel", "AuxLightSource");
   }
 
   /**
@@ -206,8 +199,7 @@ public class LightSourceNode extends AttributeNode
    * via a AuxLightSource attribute.
    */
   public int countLogicalChannelListByAuxLightSource() {
-    return getSize(getAttrReferrals("LogicalChannel",
-      "AuxLightSource"));
+    return getAttrReferringCount("LogicalChannel", "AuxLightSource");
   }
 
   /**
@@ -216,8 +208,7 @@ public class LightSourceNode extends AttributeNode
    * via a LightSource attribute.
    */
   public List getLaserListByLightSource() {
-    return createAttrReferralNodes(LaserNode.class,
-      "Laser", "LightSource");
+    return getAttrReferringNodes("Laser", "LightSource");
   }
 
   /**
@@ -225,8 +216,7 @@ public class LightSourceNode extends AttributeNode
    * referencing this LightSource node.
    */
   public int countLaserListByLightSource() {
-    return getSize(getAttrReferrals("Laser",
-      "LightSource"));
+    return getAttrReferringCount("Laser", "LightSource");
   }
 
   /**
@@ -235,8 +225,7 @@ public class LightSourceNode extends AttributeNode
    * via a Pump attribute.
    */
   public List getLaserListByPump() {
-    return createAttrReferralNodes(LaserNode.class,
-      "Laser", "Pump");
+    return getAttrReferringNodes("Laser", "Pump");
   }
 
   /**
@@ -245,8 +234,7 @@ public class LightSourceNode extends AttributeNode
    * via a Pump attribute.
    */
   public int countLaserListByPump() {
-    return getSize(getAttrReferrals("Laser",
-      "Pump"));
+    return getAttrReferringCount("Laser", "Pump");
   }
 
   /**
@@ -254,8 +242,7 @@ public class LightSourceNode extends AttributeNode
    * referencing this LightSource node.
    */
   public List getFilamentList() {
-    return createAttrReferralNodes(FilamentNode.class,
-      "Filament", "LightSource");
+    return getAttrReferringNodes("Filament", "LightSource");
   }
 
   /**
@@ -263,8 +250,7 @@ public class LightSourceNode extends AttributeNode
    * referencing this LightSource node.
    */
   public int countFilamentList() {
-    return getSize(getAttrReferrals("Filament",
-      "LightSource"));
+    return getAttrReferringCount("Filament", "LightSource");
   }
 
   /**
@@ -272,8 +258,7 @@ public class LightSourceNode extends AttributeNode
    * referencing this LightSource node.
    */
   public List getArcList() {
-    return createAttrReferralNodes(ArcNode.class,
-      "Arc", "LightSource");
+    return getAttrReferringNodes("Arc", "LightSource");
   }
 
   /**
@@ -281,8 +266,7 @@ public class LightSourceNode extends AttributeNode
    * referencing this LightSource node.
    */
   public int countArcList() {
-    return getSize(getAttrReferrals("Arc",
-      "LightSource"));
+    return getAttrReferringCount("Arc", "LightSource");
   }
 
 }

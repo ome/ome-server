@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -115,8 +115,7 @@ public class PlaneCentroidNode extends AttributeNode
    * for the PlaneCentroid element.
    */
   public void setTheZ(Integer value) {
-    setIntegerAttribute("TheZ", value);
-  }
+    setAttribute("TheZ", value);  }
 
   /**
    * Gets TheC attribute
@@ -131,8 +130,7 @@ public class PlaneCentroidNode extends AttributeNode
    * for the PlaneCentroid element.
    */
   public void setTheC(Integer value) {
-    setIntegerAttribute("TheC", value);
-  }
+    setAttribute("TheC", value);  }
 
   /**
    * Gets TheT attribute
@@ -147,8 +145,7 @@ public class PlaneCentroidNode extends AttributeNode
    * for the PlaneCentroid element.
    */
   public void setTheT(Integer value) {
-    setIntegerAttribute("TheT", value);
-  }
+    setAttribute("TheT", value);  }
 
   /**
    * Gets X attribute
@@ -163,8 +160,7 @@ public class PlaneCentroidNode extends AttributeNode
    * for the PlaneCentroid element.
    */
   public void setX(Float value) {
-    setFloatAttribute("X", value);
-  }
+    setAttribute("X", value);  }
 
   /**
    * Gets Y attribute
@@ -179,7 +175,6 @@ public class PlaneCentroidNode extends AttributeNode
    * for the PlaneCentroid element.
    */
   public void setY(Float value) {
-    setFloatAttribute("Y", value);
-  }
+    setAttribute("Y", value);  }
 
 }

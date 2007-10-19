@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -125,8 +125,7 @@ public class RenderingSettingsNode extends AttributeNode
    */
   public Experimenter getExperimenter() {
     return (Experimenter)
-      createReferencedNode(ExperimenterNode.class,
-      "Experimenter", "Experimenter");
+      getAttrReferencedNode("Experimenter", "Experimenter");
   }
 
   /**
@@ -137,7 +136,7 @@ public class RenderingSettingsNode extends AttributeNode
    *   if parameter is not an instance of ExperimenterNode
    */
   public void setExperimenter(Experimenter value) {
-    setReferencedNode((OMEXMLNode) value, "Experimenter", "Experimenter");
+    setAttrReferencedNode((OMEXMLNode) value, "Experimenter");
   }
 
   /**
@@ -153,8 +152,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setTheZ(Integer value) {
-    setIntegerAttribute("TheZ", value);
-  }
+    setAttribute("TheZ", value);  }
 
   /**
    * Gets TheT attribute
@@ -169,8 +167,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setTheT(Integer value) {
-    setIntegerAttribute("TheT", value);
-  }
+    setAttribute("TheT", value);  }
 
   /**
    * Gets Model attribute
@@ -185,8 +182,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setModel(Integer value) {
-    setIntegerAttribute("Model", value);
-  }
+    setAttribute("Model", value);  }
 
   /**
    * Gets Family attribute
@@ -201,8 +197,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setFamily(Integer value) {
-    setIntegerAttribute("Family", value);
-  }
+    setAttribute("Family", value);  }
 
   /**
    * Gets Coefficient attribute
@@ -217,8 +212,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setCoefficient(Double value) {
-    setDoubleAttribute("Coefficient", value);
-  }
+    setAttribute("Coefficient", value);  }
 
   /**
    * Gets CdStart attribute
@@ -233,8 +227,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setCdStart(Integer value) {
-    setIntegerAttribute("CdStart", value);
-  }
+    setAttribute("CdStart", value);  }
 
   /**
    * Gets CdEnd attribute
@@ -249,8 +242,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setCdEnd(Integer value) {
-    setIntegerAttribute("CdEnd", value);
-  }
+    setAttribute("CdEnd", value);  }
 
   /**
    * Gets BitResolution attribute
@@ -265,8 +257,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setBitResolution(Integer value) {
-    setIntegerAttribute("BitResolution", value);
-  }
+    setAttribute("BitResolution", value);  }
 
   /**
    * Gets TheC attribute
@@ -281,8 +272,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setTheC(Integer value) {
-    setIntegerAttribute("TheC", value);
-  }
+    setAttribute("TheC", value);  }
 
   /**
    * Gets InputStart attribute
@@ -297,8 +287,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setInputStart(Double value) {
-    setDoubleAttribute("InputStart", value);
-  }
+    setAttribute("InputStart", value);  }
 
   /**
    * Gets InputEnd attribute
@@ -313,8 +302,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setInputEnd(Double value) {
-    setDoubleAttribute("InputEnd", value);
-  }
+    setAttribute("InputEnd", value);  }
 
   /**
    * Gets Red attribute
@@ -329,8 +317,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setRed(Integer value) {
-    setIntegerAttribute("Red", value);
-  }
+    setAttribute("Red", value);  }
 
   /**
    * Gets Green attribute
@@ -345,8 +332,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setGreen(Integer value) {
-    setIntegerAttribute("Green", value);
-  }
+    setAttribute("Green", value);  }
 
   /**
    * Gets Blue attribute
@@ -361,8 +347,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setBlue(Integer value) {
-    setIntegerAttribute("Blue", value);
-  }
+    setAttribute("Blue", value);  }
 
   /**
    * Gets Alpha attribute
@@ -377,8 +362,7 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setAlpha(Integer value) {
-    setIntegerAttribute("Alpha", value);
-  }
+    setAttribute("Alpha", value);  }
 
   /**
    * Gets Active attribute
@@ -393,7 +377,6 @@ public class RenderingSettingsNode extends AttributeNode
    * for the RenderingSettings element.
    */
   public void setActive(Boolean value) {
-    setBooleanAttribute("Active", value);
-  }
+    setAttribute("Active", value);  }
 
 }

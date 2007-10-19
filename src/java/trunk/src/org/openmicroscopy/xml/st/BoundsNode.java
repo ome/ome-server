@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -115,8 +115,7 @@ public class BoundsNode extends AttributeNode
    * for the Bounds element.
    */
   public void setX(Integer value) {
-    setIntegerAttribute("X", value);
-  }
+    setAttribute("X", value);  }
 
   /**
    * Gets Y attribute
@@ -131,8 +130,7 @@ public class BoundsNode extends AttributeNode
    * for the Bounds element.
    */
   public void setY(Integer value) {
-    setIntegerAttribute("Y", value);
-  }
+    setAttribute("Y", value);  }
 
   /**
    * Gets Width attribute
@@ -147,8 +145,7 @@ public class BoundsNode extends AttributeNode
    * for the Bounds element.
    */
   public void setWidth(Integer value) {
-    setIntegerAttribute("Width", value);
-  }
+    setAttribute("Width", value);  }
 
   /**
    * Gets Height attribute
@@ -163,7 +160,6 @@ public class BoundsNode extends AttributeNode
    * for the Bounds element.
    */
   public void setHeight(Integer value) {
-    setIntegerAttribute("Height", value);
-  }
+    setAttribute("Height", value);  }
 
 }

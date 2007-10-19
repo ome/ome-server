@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -50,11 +50,11 @@ import org.w3c.dom.Element;
  * Name: Laser
  * AppliesTo: G
  * Location: OME/src/xml/OME/Core/Instrument.ome
- * Description: Laser types are specified using two attributes - the Type and
- *   the lasing medium (Medium). Additionally, the Wavelength (in nm), and
- *   whether or not the laser is FrequencyDoubled or Tunable may be specified.
- *   The Laser may optionally contain a Pump which refers to a LightSource used
- *   as a laser pump.
+ * Description: Los tipos de laser se especifican usando dos atributos - el
+ *   tipo del medio de "laseo". Adicionalmente, por la Longitud de Onda (medida
+ *   en nm), tambien se puede especificar si el laser es Ajustable o "Doblado
+ *   en Frecuencia". El laser puede opcionalmente contener una Bomba que se
+ *   refiere a la Fuente de Luz usada como bomba del laser.
  */
 public class LaserNode extends AttributeNode
   implements Laser
@@ -125,8 +125,7 @@ public class LaserNode extends AttributeNode
    * for the Laser element.
    */
   public void setType(String value) {
-    setAttribute("Type", value);
-  }
+    setAttribute("Type", value);  }
 
   /**
    * Gets Medium attribute
@@ -141,8 +140,7 @@ public class LaserNode extends AttributeNode
    * for the Laser element.
    */
   public void setMedium(String value) {
-    setAttribute("Medium", value);
-  }
+    setAttribute("Medium", value);  }
 
   /**
    * Gets Wavelength attribute
@@ -157,8 +155,7 @@ public class LaserNode extends AttributeNode
    * for the Laser element.
    */
   public void setWavelength(Integer value) {
-    setIntegerAttribute("Wavelength", value);
-  }
+    setAttribute("Wavelength", value);  }
 
   /**
    * Gets FrequencyDoubled attribute
@@ -173,8 +170,7 @@ public class LaserNode extends AttributeNode
    * for the Laser element.
    */
   public void setFrequencyDoubled(Boolean value) {
-    setBooleanAttribute("FrequencyDoubled", value);
-  }
+    setAttribute("FrequencyDoubled", value);  }
 
   /**
    * Gets Tunable attribute
@@ -189,8 +185,7 @@ public class LaserNode extends AttributeNode
    * for the Laser element.
    */
   public void setTunable(Boolean value) {
-    setBooleanAttribute("Tunable", value);
-  }
+    setAttribute("Tunable", value);  }
 
   /**
    * Gets Pulse attribute
@@ -205,8 +200,7 @@ public class LaserNode extends AttributeNode
    * for the Laser element.
    */
   public void setPulse(String value) {
-    setAttribute("Pulse", value);
-  }
+    setAttribute("Pulse", value);  }
 
   /**
    * Gets Power attribute
@@ -221,8 +215,7 @@ public class LaserNode extends AttributeNode
    * for the Laser element.
    */
   public void setPower(Float value) {
-    setFloatAttribute("Power", value);
-  }
+    setAttribute("Power", value);  }
 
   /**
    * Gets LightSource referenced by LightSource
@@ -230,8 +223,7 @@ public class LaserNode extends AttributeNode
    */
   public LightSource getLightSource() {
     return (LightSource)
-      createReferencedNode(LightSourceNode.class,
-      "LightSource", "LightSource");
+      getAttrReferencedNode("LightSource", "LightSource");
   }
 
   /**
@@ -242,7 +234,7 @@ public class LaserNode extends AttributeNode
    *   if parameter is not an instance of LightSourceNode
    */
   public void setLightSource(LightSource value) {
-    setReferencedNode((OMEXMLNode) value, "LightSource", "LightSource");
+    setAttrReferencedNode((OMEXMLNode) value, "LightSource");
   }
 
   /**
@@ -251,8 +243,7 @@ public class LaserNode extends AttributeNode
    */
   public LightSource getPump() {
     return (LightSource)
-      createReferencedNode(LightSourceNode.class,
-      "LightSource", "Pump");
+      getAttrReferencedNode("LightSource", "Pump");
   }
 
   /**
@@ -263,7 +254,7 @@ public class LaserNode extends AttributeNode
    *   if parameter is not an instance of LightSourceNode
    */
   public void setPump(LightSource value) {
-    setReferencedNode((OMEXMLNode) value, "LightSource", "Pump");
+    setAttrReferencedNode((OMEXMLNode) value, "Pump");
   }
 
 }

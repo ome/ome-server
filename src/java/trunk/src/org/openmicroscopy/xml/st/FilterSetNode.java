@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -114,8 +114,7 @@ public class FilterSetNode extends AttributeNode
    * for the FilterSet element.
    */
   public void setManufacturer(String value) {
-    setAttribute("Manufacturer", value);
-  }
+    setAttribute("Manufacturer", value);  }
 
   /**
    * Gets Model attribute
@@ -130,8 +129,7 @@ public class FilterSetNode extends AttributeNode
    * for the FilterSet element.
    */
   public void setModel(String value) {
-    setAttribute("Model", value);
-  }
+    setAttribute("Model", value);  }
 
   /**
    * Gets LotNumber attribute
@@ -146,8 +144,7 @@ public class FilterSetNode extends AttributeNode
    * for the FilterSet element.
    */
   public void setLotNumber(String value) {
-    setAttribute("LotNumber", value);
-  }
+    setAttribute("LotNumber", value);  }
 
   /**
    * Gets Filter referenced by Filter
@@ -155,8 +152,7 @@ public class FilterSetNode extends AttributeNode
    */
   public Filter getFilter() {
     return (Filter)
-      createReferencedNode(FilterNode.class,
-      "Filter", "Filter");
+      getAttrReferencedNode("Filter", "Filter");
   }
 
   /**
@@ -167,7 +163,7 @@ public class FilterSetNode extends AttributeNode
    *   if parameter is not an instance of FilterNode
    */
   public void setFilter(Filter value) {
-    setReferencedNode((OMEXMLNode) value, "Filter", "Filter");
+    setAttrReferencedNode((OMEXMLNode) value, "Filter");
   }
 
 }

@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2006 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Jul 26, 2006 3:09:05 PM CDT
+ * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
  *
  *-----------------------------------------------------------------------------
  */
@@ -51,8 +51,8 @@ import org.w3c.dom.Element;
  * Name: LogicalChannel
  * AppliesTo: I
  * Location: OME/src/xml/OME/Core/Image.ome
- * Description: Various pieces of information pertaining to each logical
- *   channel in an image
+ * Description: Varias piezas de informacion pertenecientes a cada canal logico
+ *   en una imagen
  */
 public class LogicalChannelNode extends AttributeNode
   implements LogicalChannel
@@ -144,8 +144,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setName(String value) {
-    setAttribute("Name", value);
-  }
+    setAttribute("Name", value);  }
 
   /**
    * Gets SamplesPerPixel attribute
@@ -160,8 +159,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setSamplesPerPixel(Integer value) {
-    setIntegerAttribute("SamplesPerPixel", value);
-  }
+    setAttribute("SamplesPerPixel", value);  }
 
   /**
    * Gets Filter referenced by Filter
@@ -169,8 +167,7 @@ public class LogicalChannelNode extends AttributeNode
    */
   public Filter getFilter() {
     return (Filter)
-      createReferencedNode(FilterNode.class,
-      "Filter", "Filter");
+      getAttrReferencedNode("Filter", "Filter");
   }
 
   /**
@@ -181,7 +178,7 @@ public class LogicalChannelNode extends AttributeNode
    *   if parameter is not an instance of FilterNode
    */
   public void setFilter(Filter value) {
-    setReferencedNode((OMEXMLNode) value, "Filter", "Filter");
+    setAttrReferencedNode((OMEXMLNode) value, "Filter");
   }
 
   /**
@@ -190,8 +187,7 @@ public class LogicalChannelNode extends AttributeNode
    */
   public LightSource getLightSource() {
     return (LightSource)
-      createReferencedNode(LightSourceNode.class,
-      "LightSource", "LightSource");
+      getAttrReferencedNode("LightSource", "LightSource");
   }
 
   /**
@@ -202,7 +198,7 @@ public class LogicalChannelNode extends AttributeNode
    *   if parameter is not an instance of LightSourceNode
    */
   public void setLightSource(LightSource value) {
-    setReferencedNode((OMEXMLNode) value, "LightSource", "LightSource");
+    setAttrReferencedNode((OMEXMLNode) value, "LightSource");
   }
 
   /**
@@ -218,8 +214,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setLightAttenuation(Float value) {
-    setFloatAttribute("LightAttenuation", value);
-  }
+    setAttribute("LightAttenuation", value);  }
 
   /**
    * Gets LightWavelength attribute
@@ -234,8 +229,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setLightWavelength(Integer value) {
-    setIntegerAttribute("LightWavelength", value);
-  }
+    setAttribute("LightWavelength", value);  }
 
   /**
    * Gets OTF referenced by OTF
@@ -243,8 +237,7 @@ public class LogicalChannelNode extends AttributeNode
    */
   public OTF getOTF() {
     return (OTF)
-      createReferencedNode(OTFNode.class,
-      "OTF", "OTF");
+      getAttrReferencedNode("OTF", "OTF");
   }
 
   /**
@@ -255,7 +248,7 @@ public class LogicalChannelNode extends AttributeNode
    *   if parameter is not an instance of OTFNode
    */
   public void setOTF(OTF value) {
-    setReferencedNode((OMEXMLNode) value, "OTF", "OTF");
+    setAttrReferencedNode((OMEXMLNode) value, "OTF");
   }
 
   /**
@@ -264,8 +257,7 @@ public class LogicalChannelNode extends AttributeNode
    */
   public Detector getDetector() {
     return (Detector)
-      createReferencedNode(DetectorNode.class,
-      "Detector", "Detector");
+      getAttrReferencedNode("Detector", "Detector");
   }
 
   /**
@@ -276,7 +268,7 @@ public class LogicalChannelNode extends AttributeNode
    *   if parameter is not an instance of DetectorNode
    */
   public void setDetector(Detector value) {
-    setReferencedNode((OMEXMLNode) value, "Detector", "Detector");
+    setAttrReferencedNode((OMEXMLNode) value, "Detector");
   }
 
   /**
@@ -292,8 +284,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setDetectorOffset(Float value) {
-    setFloatAttribute("DetectorOffset", value);
-  }
+    setAttribute("DetectorOffset", value);  }
 
   /**
    * Gets DetectorGain attribute
@@ -308,8 +299,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setDetectorGain(Float value) {
-    setFloatAttribute("DetectorGain", value);
-  }
+    setAttribute("DetectorGain", value);  }
 
   /**
    * Gets IlluminationType attribute
@@ -324,8 +314,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setIlluminationType(String value) {
-    setAttribute("IlluminationType", value);
-  }
+    setAttribute("IlluminationType", value);  }
 
   /**
    * Gets PinholeSize attribute
@@ -340,8 +329,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setPinholeSize(Integer value) {
-    setIntegerAttribute("PinholeSize", value);
-  }
+    setAttribute("PinholeSize", value);  }
 
   /**
    * Gets PhotometricInterpretation attribute
@@ -356,8 +344,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setPhotometricInterpretation(String value) {
-    setAttribute("PhotometricInterpretation", value);
-  }
+    setAttribute("PhotometricInterpretation", value);  }
 
   /**
    * Gets Mode attribute
@@ -372,8 +359,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setMode(String value) {
-    setAttribute("Mode", value);
-  }
+    setAttribute("Mode", value);  }
 
   /**
    * Gets ContrastMethod attribute
@@ -388,8 +374,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setContrastMethod(String value) {
-    setAttribute("ContrastMethod", value);
-  }
+    setAttribute("ContrastMethod", value);  }
 
   /**
    * Gets AuxLightSource referenced by LightSource
@@ -397,8 +382,7 @@ public class LogicalChannelNode extends AttributeNode
    */
   public LightSource getAuxLightSource() {
     return (LightSource)
-      createReferencedNode(LightSourceNode.class,
-      "LightSource", "AuxLightSource");
+      getAttrReferencedNode("LightSource", "AuxLightSource");
   }
 
   /**
@@ -409,7 +393,7 @@ public class LogicalChannelNode extends AttributeNode
    *   if parameter is not an instance of LightSourceNode
    */
   public void setAuxLightSource(LightSource value) {
-    setReferencedNode((OMEXMLNode) value, "LightSource", "AuxLightSource");
+    setAttrReferencedNode((OMEXMLNode) value, "AuxLightSource");
   }
 
   /**
@@ -425,8 +409,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setAuxLightAttenuation(Float value) {
-    setFloatAttribute("AuxLightAttenuation", value);
-  }
+    setAttribute("AuxLightAttenuation", value);  }
 
   /**
    * Gets AuxTechnique attribute
@@ -441,8 +424,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setAuxTechnique(String value) {
-    setAttribute("AuxTechnique", value);
-  }
+    setAttribute("AuxTechnique", value);  }
 
   /**
    * Gets AuxLightWavelength attribute
@@ -457,8 +439,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setAuxLightWavelength(Integer value) {
-    setIntegerAttribute("AuxLightWavelength", value);
-  }
+    setAttribute("AuxLightWavelength", value);  }
 
   /**
    * Gets ExcitationWavelength attribute
@@ -473,8 +454,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setExcitationWavelength(Integer value) {
-    setIntegerAttribute("ExcitationWavelength", value);
-  }
+    setAttribute("ExcitationWavelength", value);  }
 
   /**
    * Gets EmissionWavelength attribute
@@ -489,8 +469,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setEmissionWavelength(Integer value) {
-    setIntegerAttribute("EmissionWavelength", value);
-  }
+    setAttribute("EmissionWavelength", value);  }
 
   /**
    * Gets Fluor attribute
@@ -505,8 +484,7 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setFluor(String value) {
-    setAttribute("Fluor", value);
-  }
+    setAttribute("Fluor", value);  }
 
   /**
    * Gets NDFilter attribute
@@ -521,16 +499,14 @@ public class LogicalChannelNode extends AttributeNode
    * for the LogicalChannel element.
    */
   public void setNDFilter(Float value) {
-    setFloatAttribute("NDFilter", value);
-  }
+    setAttribute("NDFilter", value);  }
 
   /**
    * Gets a list of PixelChannelComponent elements
    * referencing this LogicalChannel node.
    */
   public List getPixelChannelComponentList() {
-    return createAttrReferralNodes(PixelChannelComponentNode.class,
-      "PixelChannelComponent", "LogicalChannel");
+    return getAttrReferringNodes("PixelChannelComponent", "LogicalChannel");
   }
 
   /**
@@ -538,8 +514,7 @@ public class LogicalChannelNode extends AttributeNode
    * referencing this LogicalChannel node.
    */
   public int countPixelChannelComponentList() {
-    return getSize(getAttrReferrals("PixelChannelComponent",
-      "LogicalChannel"));
+    return getAttrReferringCount("PixelChannelComponent", "LogicalChannel");
   }
 
 }
