@@ -96,8 +96,28 @@ public final class SampleTest {
     // -- Depth 2 --
 
     // check OME/Project node
+    ProjectNode project = (ProjectNode) projectList.get(0);
+    ExperimenterNode projectExperimenter = project.getExperimenter();
+    checkNotNull("Project Experimenter", projectExperimenter);
+    // TODO check projectExperimenter further
+    String projectDescription = project.getDescription();
+    checkNull("Project Description", projectDescription);
+    GroupNode projectGroup = project.getGroup();
+    checkNotNull("Project Group", projectGroup);
+    // TODO check projectGroup further
+    String projectName = project.getName();
+    checkValue("Project Name", projectName, "Stress Response Pathway");
 
     // check OME/Dataset node
+    DatasetNode dataset = (DatasetNode) datasetList.get(0);
+    Boolean datasetLocked = dataset.getLocked();
+    String datasetDescription = dataset.getDescription();
+    ExperimenterNode datasetExperimenter = dataset.getExperimenter();
+    int datasetProjectCount = dataset.getProjectCount();
+    Vector datasetProjectList = dataset.getProjectList();
+    GroupNode datasetGroup = dataset.getGroup();
+    String datasetCustomAttributes = dataset.getCustomAttributes();
+    String datasetName = dataset.getName();
 
     // check OME/Experiment node
     ExperimentNode experiment = (ExperimentNode) experimentList.get(0);
@@ -107,8 +127,9 @@ public final class SampleTest {
     String experimentDescription = experiment.getDescription();
     checkValue("Experiment Description", experimentDescription,
       "This was an experiment.");
-    ExperimenterNode experimentExperimenterNode = experiment.getExperimenter();
-    checkNotNull("Experiment Experimenter", experimentExperimenterNode);
+    ExperimenterNode experimentExperimenter = experiment.getExperimenter();
+    checkNotNull("Experiment Experimenter", experimentExperimenter);
+    // TODO check experimentExperimenter further
     int experimentMicrobeamManipulationCount =
       experiment.getMicrobeamManipulationCount();
     Vector experimentMicrobeamManipulationList =
@@ -120,8 +141,10 @@ public final class SampleTest {
     checkValue("Experiment Type", experimentType, "TimeLapse");
 
     // check OME/Plate node
+    // TODO
 
     // check OME/Screen node
+    // TODO
 
     // check OME/Experimenter node
     ExperimenterNode experimenter = (ExperimenterNode) experimenterList.get(0);
@@ -145,6 +168,8 @@ public final class SampleTest {
       experimenterGroupCount, experimenterGroupList, 2);
 
     // check OME/Group node
+    // TODO
+    // check against projectGroup, datasetGroup
 
     // check OME/Instrument node
     InstrumentNode instrument = (InstrumentNode) instrumentList.get(0);
@@ -189,17 +214,21 @@ public final class SampleTest {
     checkValue("Image CreationDate", imageCreationDate, "1988-04-07T18:39:09");
     ExperimenterNode imageExperimenter = image.getExperimenter();
     checkNotNull("Image Experimenter", imageExperimenter);
+    // TODO check imageExperimenter further
     String imageDescription = image.getDescription();
     checkValue("Image Description", imageDescription, "This is an Image");
     ExperimentNode imageExperiment = image.getExperiment();
     checkNotNull("Image Experiment", imageExperiment);
+    // TODO check imageExperiment further
     GroupNode imageGroup = image.getGroup();
     checkNotNull("Image Group", imageGroup);
+    // TODO check imageGroup further
     int imageDatasetCount = image.getDatasetCount();
     Vector imageDatasetList = image.getDatasetList();
     checkCount("Image Dataset", imageDatasetCount, imageDatasetList, 1);
     InstrumentNode imageInstrument = image.getInstrument();
     checkNotNull("Image Instrument", imageInstrument);
+    // TODO check imageInstrument further
     ObjectiveSettingsNode imageObjectiveSettings = image.getObjectiveSettings();
     checkNull("Image ObjectiveSettings", imageObjectiveSettings);
     ImagingEnvironmentNode imageImagingEnvironment =
@@ -223,8 +252,8 @@ public final class SampleTest {
     int imageRegionCount = image.getRegionCount();
     Vector imageRegionList = image.getRegionList();
     checkCount("Image Region", imageRegionCount, imageRegionList, 0);
-//    CustomAttributesNode imageCustomAttributes = image.getCustomAttributes();
-//    checkNull("Image CustomAttributes", imageCustomAttributes);
+    String imageCustomAttributes = image.getCustomAttributes();
+    checkNull("Image CustomAttributes", imageCustomAttributes);
     int imageROICount = image.getROICount();
     Vector imageROIList = image.getROIList();
     checkCount("Image ROI", imageROICount, imageROIList, 0);
@@ -240,22 +269,31 @@ public final class SampleTest {
     // -- Depth 3 --
 
     // check OME/Dataset/CustomAttributes
+    // TODO
 
     // check OME/Screen/Reagent
+    // TODO
 
     // check OME/Screen/ScreenAcquisition
+    // TODO
 
     // check OME/Instrument/Microscope
+    // TODO
 
     // check OME/Instrument/LightSource-1
+    // TODO
 
     // check OME/Instrument/LightSource-2
+    // TODO
 
     // check OME/Instrument/Detector
+    // TODO
 
     // check OME/Instrument/Objective
+    // TODO
 
     // check OME/Instrument/FilterSet
+    // TODO
 
     // check OME/Instrument/Filter-1
     FilterNode instrumentFilter1 = (FilterNode) instrumentFilterList.get(0);
@@ -302,10 +340,13 @@ public final class SampleTest {
     checkNull("Instrument Filter-2 FilterWheel", instrumentFilter2FilterWheel);
 
     // check OME/Instrument/OTF
+    // TODO
 
     // check OME/Image/ImagingEnvironment
+    // TODO
 
     // check OME/Image/Thumbnail
+    // TODO
 
     // check OME/Image/LogicalChannel
     LogicalChannelNode imageLogicalChannel =
@@ -318,15 +359,19 @@ public final class SampleTest {
       imageLogicalChannel.getLightSource();
     checkNotNull("Image LogicalChannel LightSource",
       imageLogicalChannelLightSource);
+    // TODO check imageLogicalChannelLightSource further
     OTFNode imageLogicalChannelOTF = imageLogicalChannel.getOTF();
     checkNotNull("Image LogicalChannel OTF", imageLogicalChannelOTF);
+    // TODO check imageLogicalChannelOTF further
     DetectorNode imageLogicalChannelDetector =
       imageLogicalChannel.getDetector();
     checkNotNull("Image LogicalChannel Detector", imageLogicalChannelDetector);
+    // TODO check imageLogicalChannelDetector further
     FilterSetNode imageLogicalChannelFilterSet =
       imageLogicalChannel.getFilterSet();
     checkNotNull("Image LogicalChannel FilterSet",
       imageLogicalChannelFilterSet);
+    // TODO check imageLogicalChannelFilterSet further
     int imageLogicalChannelChannelComponentCount =
       imageLogicalChannel.getChannelComponentCount();
     Vector imageLogicalChannelChannelComponentList =
@@ -479,18 +524,60 @@ public final class SampleTest {
     // -- Depth 4 --
 
     // check OME/Instrument/LightSource-1/Laser
+    // TODO
 
     // check OME/Instrument/LightSource-2/Arc
+    // TODO
 
     // check OME/Instrument/Filter-1/TransmittanceRange
-    // TODO START HERE
+    Integer instrumentFilter1TransmittanceRangeCutIn =
+      instrumentFilter1TransmittanceRange.getCutIn();
+    checkValue("Instrument Filter-1 TransmittanceRange CutIn",
+      instrumentFilter1TransmittanceRangeCutIn, new Integer(432));
+    Integer instrumentFilter1TransmittanceRangeTransmittance =
+      instrumentFilter1TransmittanceRange.getTransmittance();
+    checkValue("Instrument Filter-1 TransmittanceRange Transmittance",
+      instrumentFilter1TransmittanceRangeTransmittance, new Integer(20));
+    Integer instrumentFilter1TransmittanceRangeCutOut =
+      instrumentFilter1TransmittanceRange.getCutOut();
+    checkValue("Instrument Filter-1 TransmittanceRange CutOut",
+      instrumentFilter1TransmittanceRangeCutOut, new Integer(543));
+    Integer instrumentFilter1TransmittanceRangeCutInTolerance =
+      instrumentFilter1TransmittanceRange.getCutInTolerance();
+    checkNull("Instrument Filter-1 TransmittanceRange CutInTolerance",
+      instrumentFilter1TransmittanceRangeCutInTolerance);
+    Integer instrumentFilter1TransmittanceRangeCutOutTolerance =
+      instrumentFilter1TransmittanceRange.getCutOutTolerance();
+    checkNull("Instrument Filter-1 TransmittanceRange CutOutTolerance",
+      instrumentFilter1TransmittanceRangeCutOutTolerance);
 
     // check OME/Instrument/Filter-2/TransmittanceRange
-    // TODO START HERE
+    Integer instrumentFilter2TransmittanceRangeCutIn =
+      instrumentFilter2TransmittanceRange.getCutIn();
+    checkValue("Instrument Filter-2 TransmittanceRange CutIn",
+      instrumentFilter2TransmittanceRangeCutIn, new Integer(432));
+    Integer instrumentFilter2TransmittanceRangeTransmittance =
+      instrumentFilter2TransmittanceRange.getTransmittance();
+    checkValue("Instrument Filter-2 TransmittanceRange Transmittance",
+      instrumentFilter2TransmittanceRangeTransmittance, new Integer(20));
+    Integer instrumentFilter2TransmittanceRangeCutOut =
+      instrumentFilter2TransmittanceRange.getCutOut();
+    checkValue("Instrument Filter-2 TransmittanceRange CutOut",
+      instrumentFilter2TransmittanceRangeCutOut, new Integer(543));
+    Integer instrumentFilter2TransmittanceRangeCutInTolerance =
+      instrumentFilter2TransmittanceRange.getCutInTolerance();
+    checkNull("Instrument Filter-2 TransmittanceRange CutInTolerance",
+      instrumentFilter2TransmittanceRangeCutInTolerance);
+    Integer instrumentFilter2TransmittanceRangeCutOutTolerance =
+      instrumentFilter2TransmittanceRange.getCutOutTolerance();
+    checkNull("Instrument Filter-2 TransmittanceRange CutOutTolerance",
+      instrumentFilter2TransmittanceRangeCutOutTolerance);
 
     // check OME/Instrument/OTF/BinaryFile
+    // TODO
 
     // check OME/Image/LogicalChannel/ChannelComponent
+    // TODO
 
     // check OME/Image/DisplayOptions/RedChannel
     Integer imageDisplayOptionsRedChannelChannelNumber =
@@ -603,18 +690,23 @@ public final class SampleTest {
       imageDisplayOptionsTimeTStop, new Integer(3));
 
     // check OME/Image/DisplayOptions/ROI
+    // TODO
 
     // -- Depth 5 --
 
     // check OME/Instrument/LightSource-1/Laser/Pump
+    // TODO
 
     // check OME/Instrument/OTF/BinaryFile/External
+    // TODO
   }
 
   /** Builds a node from scratch (to match the Sample.ome file). */
   public static OMENode createNode() throws Exception {
     OMENode ome = null;
 /*
+    TODO
+
     OMENode ome = new OMENode();
 
     // -- Depth 1 --

@@ -43,7 +43,7 @@ import java.text.DateFormat;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.openmicroscopy.xml.DOMUtil;
+import ome.xml.DOMUtil;
 import org.w3c.dom.*;
 
 /**

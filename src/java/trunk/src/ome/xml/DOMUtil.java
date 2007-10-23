@@ -42,8 +42,11 @@ import java.util.Vector;
 import javax.xml.parsers.*;
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 /** DOMUtil contains useful functions for traversing and manipulating a DOM. */
 public final class DOMUtil {
@@ -62,6 +65,10 @@ public final class DOMUtil {
   public static final DocumentBuilderFactory DOC_FACT =
     DocumentBuilderFactory.newInstance();
 
+  /** Factory for generating SAX parsers. */
+  public static final SAXParserFactory SAX_FACT =
+    SAXParserFactory.newInstance();
+
   // -- I/O and XSLT methods --
 
   /** Writes the specified DOM to the given output stream. */
@@ -72,6 +79,32 @@ public final class DOMUtil {
     Source input = new DOMSource(doc);
     Result output = new StreamResult(os);
     idTransform.transform(input, output);
+  }
+
+  /**
+   * Transforms the given XML input stream using
+   * the specified cached XSLT stylesheet.
+   */
+  public static Document transform(Source source, Templates cachedXSLT)
+    throws IOException, ParserConfigurationException, SAXException,
+    TransformerConfigurationException, TransformerException
+  {
+    DocumentBuilder builder = DOC_FACT.newDocumentBuilder();
+    Document document = builder.newDocument();
+    Result result = new DOMResult(document);
+    Transformer trans = cachedXSLT.newTransformer();
+    trans.transform(source, result);
+    return document;
+  }
+
+  /** Creates a cached XSLT stylesheet object. */
+  public static Templates makeTemplates(String sheet)
+    throws IOException, TransformerConfigurationException
+  {
+    InputStream in = DOMUtil.class.getResource(sheet).openStream();
+    Templates t = TRANS_FACT.newTemplates(new StreamSource(in));
+    in.close();
+    return t;
   }
 
   // -- Node methods --
