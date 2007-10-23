@@ -45,14 +45,6 @@ import org.openmicroscopy.xml.st.*;
 /** Tests the org.openmicroscopy.xml package. */
 public abstract class SampleTest {
 
-  // -- Constants --
-
-  /** Path to Sample.ome. */
-  private static final String SAMPLE_PATH =
-//    System.getProperty("user.home") + "/OME/src/xml/OME/Tests/Sample.ome";
-    System.getProperty("user.home") + "/data/ome-xml/Sample-2004.ome";
-
-
   // -- Testing methods --
 
   /** Tests the integrity of the given node against the Sample.ome file. */
@@ -2260,12 +2252,6 @@ public abstract class SampleTest {
         "does not match Image CA LogicalChannel");
     }
 
-    // check OME/CA/Plate/Screen node
-    ScreenNode plateScreen = (ScreenNode) plate.getScreen();
-    if (!plateScreen.equals(screen)) {
-      System.out.println("Error: CA Plate Screen does not match CA Screen");
-    }
-
     // check OME/CA/Plate/ImagePlate node
     ImagePlateNode plateImagePlate =
       (ImagePlateNode) plateImagePlateList.get(0);
@@ -2434,7 +2420,7 @@ public abstract class SampleTest {
     {
       System.out.println("Error: Image CA LogicalChannel " +
         "PixelChannelComponent does not match " +
-        "Image DefaultPixels PixelChannelComponent");
+        "Image Pixels PixelChannelComponent");
     }
 
     // check OME/Image/CA/PixelChannelComponent/Pixels node
@@ -2453,14 +2439,6 @@ public abstract class SampleTest {
     {
       System.out.println("Error: Image CA PixelChannelComponent " +
         "LogicalChannel does not match Image CA LogicalChannel");
-    }
-
-    // check OME/Image/CA/DisplayOptions/Pixels node
-    PixelsNode imageDisplayOptionsPixels =
-      (PixelsNode) imageDisplayOptions.getPixels();
-    if (!imageDisplayOptionsPixels.equals(imagePixels)) {
-      System.out.println("Error: Image CA DisplayOptions Pixels " +
-        "does not match Image Pixels");
     }
 
     // check OME/Image/CA/DisplayOptions/RedChannel node
@@ -2788,56 +2766,51 @@ public abstract class SampleTest {
     pixels.setBigEndian(Boolean.TRUE);
     pixels.setDimensionOrder("XYZCT");
     pixelChannelComponent.setPixels(pixels);
+    image.setDefaultPixels(pixels);
 
     return ome;
   }
-
 
   // --  Main method --
 
   /**
    * Tests the org.openmicroscopy.xml package.
    *
-   * <li>Specify no arguments to parse Sample.ome, then check it for errors.
-   * <li>Specify filename to parse that XML file.
+   * <li>Specify path to Sample.ome to parse it and check it for errors.
    * <li>Specify -build flag to duplicate the structure in Sample.ome from
    *     scratch, then check it for errors.
-   * <li>Specify -string flag followed by filename to use OMENode's string
-   *     constructor (rather than the File constructor).
    */
   public static void main(String[] args) throws Exception {
-    boolean noArgs = args.length == 0;
-    boolean build = !noArgs && "-build".equalsIgnoreCase(args[0]);
-    boolean string = args.length >= 2 && "-string".equalsIgnoreCase(args[0]);
+    String path = null;
+    boolean build = false;
+    for (int i=0; i<args.length; i++) {
+      if (args[i] == null) continue;
+      if (args[i].equalsIgnoreCase("-build")) build = true;
+      else path = args[i];
+    }
+
+    if (path == null && !build) {
+      System.out.println("Usage: java org.openmicroscopy.xml.SampleTest " +
+        "[-build || /path/to/Sample.ome]");
+      return;
+    }
 
     System.out.println("Creating OME node...");
     System.out.println();
     OMENode ome = null;
     if (build) ome = createNode();
-    if (noArgs) ome = new OMENode(new File(SAMPLE_PATH));
-    if (ome == null) {
-      if (string) {
-        StringBuffer sb = new StringBuffer();
-        File file = new File(args[1]);
-        DataInputStream in  = new DataInputStream(new FileInputStream(file));
-        byte[] bytes = new byte[(int) file.length()];
-        in.readFully(bytes);
-        in.close();
-        String xml = new String(bytes);
-        ome = new OMENode(xml);
-      }
-      else ome = new OMENode(new File(args[0]));
-    }
-    else {
-      // perform some tests on Sample.ome structure
-      System.out.println("Performing API tests...");
-      testSample(ome);
-      System.out.println();
-    }
+    else ome = new OMENode(new File(path));
+
+    // perform some tests on Sample.ome structure
+    System.out.println("Performing API tests...");
+    testSample(ome);
+    System.out.println();
+
     System.out.println("Writing OME-XML to String...");
     String s = ome.writeOME(false);
     System.out.println(s);
     System.out.println();
+
     String filename = "omexml.tmp";
     System.out.println("Writing OME-XML to file " + filename + "...");
     ome.writeOME(new File(filename), false);

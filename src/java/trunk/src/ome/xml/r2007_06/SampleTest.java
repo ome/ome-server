@@ -895,25 +895,23 @@ public final class SampleTest {
    * </ul>
    */
   public static void main(String[] args) throws Exception {
-    String id = null;
+    String path = null;
     boolean build = false;
     for (int i=0; i<args.length; i++) {
       if (args[i] == null) continue;
       if (args[i].equalsIgnoreCase("-build")) build = true;
-      else id = args[i];
+      else path = args[i];
     }
-    if (id == null && !build) {
-      System.out.println("Usages:");
-      String name = SampleTest.class.getName();
-      System.out.println("java " + name + " /path/to/Sample-2007_06.ome");
-      System.out.println("java " + name + " -build");
-      System.exit(1);
+    if (path == null && !build) {
+      System.out.println("Usage: java " + SampleTest.class.getName() +
+        " [-build || /path/to/Sample-2007_06.ome]");
+      return;
     }
 
     System.out.println("Creating OME node...");
     OMENode ome = null;
     if (build) ome = createNode();
-    else ome = OMEXMLFactory.newOMEDocument(new File(id));
+    else ome = OMEXMLFactory.newOMEDocument(new File(path));
     System.out.println();
 
     // perform some tests on Sample.ome structure
