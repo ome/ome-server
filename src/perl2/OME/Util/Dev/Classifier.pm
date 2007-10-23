@@ -642,8 +642,7 @@ sub compile_sigs {
 			foreach my $fo (@formal_outputs) {
 				my @attributes = @{OME::Tasks::ModuleExecutionManager->getAttributesForMEX($mex, $fo->semantic_type, {feature =>$feature})};
 				my $attribute = $attributes[0];
-				die "wow batman no attributes" unless (defined $attribute);
-				
+				die "no attributes for MEX (".$mex->id().") Image (".$feature->image->id().") Feature (".$feature->id().")" unless (defined $attribute);
 				my @se_names = @{$FO_id_to_se_names{$fo->id}};
 				foreach my $se_name ( @se_names ) {
 					$signature_array->set($sig_row++, $image_feature_number, $attribute->$se_name);
