@@ -261,20 +261,20 @@ sub processDOM {
                     "existing declaration has no Semantic Element $seName."
                     unless defined $seCol and $seCol->name() eq $seName;
                 
-                my $seDBloc = $seCol->data_column()->data_table()->table_name().'.'.$seCol->data_column()->column_name();
+                my $actual_seDBloc = $seCol->data_column()->data_table()->table_name().'.'.$seCol->data_column()->column_name();
                 logdie ref ($self) . ": While processing Semantic Type $stName, ".
                     "existing semantic element $seName is stored in $seDBloc instead of $seDBloc."
-                    unless defined $seDBloc and $seDBloc eq $seDBloc;
+                    unless defined $actual_seDBloc and $actual_seDBloc eq $seDBloc;
 
-                my $seDataType = $seCol->data_column()->sql_type();
+                my $actual_seDataType = $seCol->data_column()->sql_type();
                 logdie ref ($self) . ": While processing Semantic Type $stName, ".
                     "existing semantic element $seName has data type $seDataType instead of $seDataType."
-                    unless defined $seDataType and $seDataType eq $seDataType;
+                    unless defined $actual_seDataType and $actual_seDataType eq $seDataType;
 
-                my $seReferenceTo = $seCol->data_column()->reference_type();
+                my $actual_seReferenceTo = $seCol->data_column()->reference_type();
                 logdie ref ($self) . ": While processing Semantic Type $stName, ".
                     "existing semantic element $seName refers to $seReferenceTo instead of $seReferenceTo."
-                    if defined $seReferenceTo and not ($seReferenceTo eq $seReferenceTo);
+                    unless defined $actual_seReferenceTo and not ($actual_seReferenceTo eq $seReferenceTo);
 			}
 			logdbg "debug", ref ($self) . 
 			  "->processDOM: Complete match between revious and current definition of $stName.";
