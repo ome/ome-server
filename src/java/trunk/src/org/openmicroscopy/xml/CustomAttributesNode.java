@@ -139,7 +139,13 @@ public class CustomAttributesNode extends OMEXMLNode {
    * (nodes from the org.openmicroscopy.xml.st package) and unknown ones
    * (CustomNodes).
    */
-  public List getCAList() {
+  public List getCAList() { return getCAList(null); }
+
+  /**
+   * Gets a list of DOM elements (custom attributes) of the given type
+   * (e.g., LogicalChannel) beneath the CustomAttributes element.
+   */
+  public List getCAList(String nodeType) {
     NodeList list = element.getChildNodes();
     int len = list.getLength();
     Vector v = new Vector();
@@ -147,6 +153,7 @@ public class CustomAttributesNode extends OMEXMLNode {
       Node node = list.item(i);
       if (!(node instanceof Element)) continue;
       Element el = (Element) node;
+      if (nodeType != null && !nodeType.equals(el.getTagName())) continue;
       v.add(createNode(el));
     }
     return v;
@@ -156,13 +163,22 @@ public class CustomAttributesNode extends OMEXMLNode {
    * Gets the number of DOM elements (custom attributes)
    * beneath the CustomAttributes element.
    */
-  public int countCAList() {
+  public int countCAList() { return countCAList(null); }
+
+  /**
+   * Gets the number of DOM elements (custom attributes) of the given type
+   * (e.g., LogicalChannel) beneath the CustomAttributes element.
+   */
+  public int countCAList(String nodeType) {
     NodeList list = element.getChildNodes();
     int len = list.getLength();
     int count = 0;
     for (int i=0; i<len; i++) {
       Node node = list.item(i);
-      if (node instanceof Element) count++;
+      if (!(node instanceof Element)) continue;
+      Element el = (Element) node;
+      if (nodeType != null && !nodeType.equals(el.getTagName())) continue;
+      count++;
     }
     return count;
   }
