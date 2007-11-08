@@ -570,9 +570,11 @@ sub executeNodeWithTarget {
     foreach my $formal_input (@inputs) {
         my $input_mex = $self->getPredecessorMEX($node,$formal_input,$target);
         
-		$mex_status_inputs_ready=0 and logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX. (Condition A)")
-			unless defined $input_mex;
-          
+        if (not defined $input_mex) {
+			$mex_status_inputs_ready=0;
+			logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX. (Condition A)");
+        }
+
         # check input_mexes to verify that the node is ready
      	my $input_mexes = $input_mex;
      	$input_mexes = [$input_mexes]
@@ -595,9 +597,10 @@ sub executeNodeWithTarget {
 				# If the predecessor has not finished successfully (i.e.,
 				# it's still running, or it finished with an error), then
 				# the current node cannot execute.
-
-				$mex_status_inputs_ready=0 and logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX. (Condition B)")
-					if ($in_mex->status() ne 'FINISHED');		
+				if ($in_mex->status() ne 'FINISHED') {
+					$mex_status_inputs_ready=0;
+					logdbg ("debug", "  PredecessorMEX not ready. Not executing MEX. (Condition B)");
+				}
 			}
 			
 			OME::Tasks::ModuleExecutionManager->
