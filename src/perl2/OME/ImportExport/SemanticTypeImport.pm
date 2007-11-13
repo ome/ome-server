@@ -135,7 +135,11 @@ sub processDOM {
 	my %reverseDataTypeConversion;
 	foreach my $key ( keys %dataTypeConversion ) {
 		$reverseDataTypeConversion{ $dataTypeConversion{ $key } } = $key;
-		$reverseDataTypeConversion{'string'} = 'string';
+		$reverseDataTypeConversion{'double'}    = 'double';
+		$reverseDataTypeConversion{'float'}     = 'float';
+		$reverseDataTypeConversion{'string'}    = 'string';
+		$reverseDataTypeConversion{'dateTime'}  = 'dateTime';
+		$reverseDataTypeConversion{'reference'} = 'reference';
 	}
 	
 	###############################################################################
@@ -263,18 +267,18 @@ sub processDOM {
                 
                 my $actual_seDBloc = $seCol->data_column()->data_table()->table_name().'.'.$seCol->data_column()->column_name();
                 logdie ref ($self) . ": While processing Semantic Type $stName, ".
-                    "existing semantic element $seName is stored in $seDBloc instead of $seDBloc."
+                    "existing semantic element $seName is stored in $actual_seDBloc instead of $seDBloc."
                     unless defined $actual_seDBloc and $actual_seDBloc eq $seDBloc;
 
                 my $actual_seDataType = $seCol->data_column()->sql_type();
                 logdie ref ($self) . ": While processing Semantic Type $stName, ".
-                    "existing semantic element $seName has data type $seDataType instead of $seDataType."
+                    "existing semantic element $seName has data type $actual_seDataType instead of $seDataType."
                     unless defined $actual_seDataType and $actual_seDataType eq $seDataType;
 
                 my $actual_seReferenceTo = $seCol->data_column()->reference_type();
                 logdie ref ($self) . ": While processing Semantic Type $stName, ".
-                    "existing semantic element $seName refers to $seReferenceTo instead of $seReferenceTo."
-                    unless defined $actual_seReferenceTo and not ($actual_seReferenceTo eq $seReferenceTo);
+                    "existing semantic element $seName refers to $actual_seReferenceTo instead of $seReferenceTo."
+                    if defined $actual_seReferenceTo and not ($actual_seReferenceTo eq $seReferenceTo);
 			}
 			logdbg "debug", ref ($self) . 
 			  "->processDOM: Complete match between revious and current definition of $stName.";
