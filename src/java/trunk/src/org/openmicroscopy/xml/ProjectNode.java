@@ -39,6 +39,7 @@
 package org.openmicroscopy.xml;
 
 import java.util.List;
+import ome.xml.DOMUtil;
 import org.openmicroscopy.ds.dto.Project;
 import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.st.Group;
@@ -65,8 +66,7 @@ public class ProjectNode extends OMEXMLNode implements Project {
    * creating its associated DOM element beneath the given parent.
    */
   public ProjectNode(OMENode parent, boolean attach) {
-    super(parent.getDOMElement().getOwnerDocument().createElement("Project"));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(DOMUtil.createChild(parent.getDOMElement(), "Project", attach));
   }
 
   /**

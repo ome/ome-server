@@ -40,6 +40,7 @@ package org.openmicroscopy.xml;
 
 import java.util.List;
 import java.util.Vector;
+import ome.xml.DOMUtil;
 import org.w3c.dom.*;
 
 /**
@@ -125,9 +126,8 @@ public class CustomAttributesNode extends OMEXMLNode {
    * given parent, using the specified parameter values.
    */
   protected CustomAttributesNode(OMEXMLNode parent, boolean attach) {
-    super(parent.getDOMElement().getOwnerDocument().
-      createElement("CA:CustomAttributes"));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(DOMUtil.createChild(parent.getDOMElement(),
+      "CA:CustomAttributes", attach));
   }
 
 

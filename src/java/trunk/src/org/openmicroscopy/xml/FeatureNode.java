@@ -39,6 +39,7 @@
 package org.openmicroscopy.xml;
 
 import java.util.List;
+import ome.xml.DOMUtil;
 import org.openmicroscopy.ds.dto.Feature;
 import org.openmicroscopy.ds.dto.Image;
 import org.w3c.dom.Element;
@@ -89,9 +90,7 @@ public class FeatureNode extends OMEXMLNode implements Feature {
    * given parent, using the specified parameter values.
    */
   protected FeatureNode(OMEXMLNode parent, boolean attach) {
-    super(parent.getDOMElement().getOwnerDocument().
-      createElement("Feature"));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(DOMUtil.createChild(parent.getDOMElement(), "Feature", attach));
   }
 
 

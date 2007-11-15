@@ -40,6 +40,7 @@ package org.openmicroscopy.xml;
 
 import java.util.Calendar;
 import java.util.List;
+import ome.xml.DOMUtil;
 import org.openmicroscopy.ds.dto.Image;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
@@ -63,8 +64,7 @@ public class ImageNode extends OMEXMLNode implements Image {
    * DOM element beneath the given parent.
    */
   public ImageNode(OMENode parent, boolean attach) {
-    super(parent.getDOMElement().getOwnerDocument().createElement("Image"));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(DOMUtil.createChild(parent.getDOMElement(), "Image", attach));
     setCreated(null);
   }
 

@@ -38,6 +38,7 @@
 
 package org.openmicroscopy.xml;
 
+import ome.xml.DOMUtil;
 import org.openmicroscopy.ds.dto.*;
 import org.w3c.dom.Element;
 
@@ -67,9 +68,7 @@ public class AttributeNode extends OMEXMLNode implements Attribute {
   public AttributeNode(CustomAttributesNode parent, String name,
     boolean attach)
   {
-    super(parent.getDOMElement().getOwnerDocument().
-      createElement(name));
-    if (attach) parent.getDOMElement().appendChild(element);
+    super(DOMUtil.createChild(parent.getDOMElement(), name, attach));
   }
 
   // -- Attribute API methods --

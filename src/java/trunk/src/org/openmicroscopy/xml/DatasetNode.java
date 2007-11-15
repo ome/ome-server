@@ -39,6 +39,7 @@
 package org.openmicroscopy.xml;
 
 import java.util.List;
+import ome.xml.DOMUtil;
 import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.st.Group;
@@ -64,14 +65,21 @@ public class DatasetNode extends OMEXMLNode implements Dataset {
 
   /**
    * Constructs a Dataset node,
+   * creating its associated DOM element beneath the given parent.
+   */
+  public DatasetNode(OMENode parent, boolean attach) {
+    super(DOMUtil.createChild(parent.getDOMElement(), "Dataset", attach));
+  }
+
+  /**
+   * Constructs a Dataset node,
    * creating its associated DOM element beneath the
    * given parent, using the specified parameter values.
    */
   public DatasetNode(OMENode parent, String name, String description,
     Boolean locked, ExperimenterNode experimenter, GroupNode group)
   {
-    super(parent.getDOMElement().getOwnerDocument().createElement("Dataset"));
-    parent.getDOMElement().appendChild(element);
+    this(parent, true);
     setName(name);
     setDescription(description);
     setLocked(locked);
