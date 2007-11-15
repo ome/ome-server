@@ -307,8 +307,17 @@ public final class DOMUtil {
    * Creates a child element with the given name beneath the specified element.
    */
   public static Element createChild(Element el, String name) {
+    return createChild(el, name, true);
+  }
+
+  /**
+   * Creates an element with the given name in the specified element's DOM,
+   * inserting it into the tree structure as a child of that element
+   * if the attach flag is set.
+   */
+  public static Element createChild(Element el, String name, boolean attach) {
     Element child = el.getOwnerDocument().createElement(name);
-    el.appendChild(child);
+    if (attach) el.appendChild(child);
     return child;
   }
 
