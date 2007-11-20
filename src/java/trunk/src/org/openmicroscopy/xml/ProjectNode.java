@@ -145,9 +145,17 @@ public class ProjectNode extends OMEXMLNode implements Project {
   }
 
   /** Gets a list of Datasets referencing this Project. */
-  public List getDatasets() { return getReferringNodes("Dataset"); }
+  public List getDatasetList() { return getReferringNodes("Dataset"); }
 
   /** Gets the number of Datasets referencing this Project. */
-  public int countDatasets() { return getReferringCount("Dataset"); }
+  public int countDatasetList() { return getReferringCount("Dataset"); }
+
+  // -- Deprecated methods --
+
+  /** @deprecated Replaced by {@link #getDatasetList()} */
+  public List getDatasets() { return getDatasetList(); }
+
+  /** @deprecated Replaced by {@link #countDatasetList()} */
+  public int countDatasets() { return countDatasetList(); }
 
 }

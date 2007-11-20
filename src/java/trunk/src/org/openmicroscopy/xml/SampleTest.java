@@ -52,22 +52,22 @@ public abstract class SampleTest {
     // -- Depth 1 --
 
     // check OME node
-    int projectCount = ome.countProjects();
-    List projectList = ome.getProjects();
+    int projectCount = ome.countProjectList();
+    List projectList = ome.getProjectList();
     if (projectCount != 1 || projectList.size() != 1) {
       System.out.println("Error: Incorrect number of Projects" +
         " (projectCount=" + projectCount +
         ", projectList.size()=" + projectList.size() + ")");
     }
-    int datasetCount = ome.countDatasets();
-    List datasetList = ome.getDatasets();
+    int datasetCount = ome.countDatasetList();
+    List datasetList = ome.getDatasetList();
     if (datasetCount != 1 || datasetList.size() != 1) {
       System.out.println("Error: Incorrect number of Datasets" +
         " (datasetCount=" + datasetCount +
         ", datasetList.size()=" + datasetList.size() + ")");
     }
-    int imageCount = ome.countImages();
-    List imageList = ome.getImages();
+    int imageCount = ome.countImageList();
+    List imageList = ome.getImageList();
     if (imageCount != 1 || imageList.size() != 1) {
       System.out.println("Error: Incorrect number of Images" +
         " (imageCount=" + imageCount +
@@ -92,8 +92,8 @@ public abstract class SampleTest {
       System.out.println("Error: Project Description " +
         "is not null as expected (" + projectDescription + ")");
     }
-    int projectDatasetCount = project.countDatasets();
-    List projectDatasetList = project.getDatasets();
+    int projectDatasetCount = project.countDatasetList();
+    List projectDatasetList = project.getDatasetList();
     if (projectDatasetCount != 1 || projectDatasetList.size() != 1) {
       System.out.println("Error: Incorrect number of Project Datasets" +
         " (projectDatasetCount=" + projectDatasetCount +
@@ -121,15 +121,15 @@ public abstract class SampleTest {
       System.out.println("Error: Dataset Description " +
         "is not null as expected (" + datasetDescription + ")");
     }
-    int datasetProjectCount = dataset.countProjects();
-    List datasetProjectList = dataset.getProjects();
+    int datasetProjectCount = dataset.countProjectList();
+    List datasetProjectList = dataset.getProjectList();
     if (datasetProjectCount != 1 || datasetProjectList.size() != 1) {
       System.out.println("Error: Incorrect number of Dataset Projects" +
         " (datasetProjectCount=" + datasetProjectCount +
         ", datasetProjectList.size()=" + datasetProjectList.size() + ")");
     }
-    int datasetImageCount = dataset.countImages();
-    List datasetImageList = dataset.getImages();
+    int datasetImageCount = dataset.countImageList();
+    List datasetImageList = dataset.getImageList();
     if (datasetImageCount != 1 || datasetImageList.size() != 1) {
       System.out.println("Error: Incorrect number of Dataset Images" +
         " (datasetImageCount=" + datasetImageCount +
@@ -157,15 +157,15 @@ public abstract class SampleTest {
       System.out.println("Error: Incorrect Image CreationDate (" +
         imageCreated + ")");
     }
-    int imageDatasetCount = image.countDatasets();
-    List imageDatasetList = image.getDatasets();
+    int imageDatasetCount = image.countDatasetList();
+    List imageDatasetList = image.getDatasetList();
     if (imageDatasetCount != 1 || imageDatasetList.size() != 1) {
       System.out.println("Error: Incorrect number of Image Datasets" +
         " (imageDatasetCount=" + imageDatasetCount +
         ", imageDatasetList.size()=" + imageDatasetList.size() + ")");
     }
-    int imageFeatureCount = image.countFeatures();
-    List imageFeatureList = image.getFeatures();
+    int imageFeatureCount = image.countFeatureList();
+    List imageFeatureList = image.getFeatureList();
     if (imageFeatureCount != 0 || imageFeatureList.size() != 0) {
       System.out.println("Error: Incorrect number of Image Features" +
         " (imageFeatureCount=" + imageFeatureCount +

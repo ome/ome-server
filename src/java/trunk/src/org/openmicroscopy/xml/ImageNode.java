@@ -209,17 +209,32 @@ public class ImageNode extends OMEXMLNode implements Image {
   }
 
   /** Gets a list of Datasets referenced by the Image. */
-  public List getDatasets() {
+  public List getDatasetList() {
     return getReferencedNodes("Dataset", "DatasetRef");
   }
 
   /** Gets the number of Datasets referenced by the Image. */
-  public int countDatasets() { return getChildCount("DatasetRef"); }
+  public int countDatasetList() { return getChildCount("DatasetRef"); }
 
   /** Gets Feature child nodes. */
-  public List getFeatures() { return getChildNodes("Feature"); }
+  public List getFeatureList() { return getChildNodes("Feature"); }
 
   /** Gets the number of Feature child nodes. */
-  public int countFeatures() { return getChildCount("Feature"); }
+  public int countFeatureList() { return getChildCount("Feature"); }
+
+  // -- Deprecated methods --
+
+  /** @deprecated {@link Replaced by #getDatasetList()} */
+  public List getDatasets() { return getDatasetList(); }
+
+  /** @deprecated {@link Replaced by #countDatasetList()} */
+  public int countDatasets() { return countDatasetList(); }
+
+  /** @deprecated {@link Replaced by #getFeatureList()} */
+  public List getFeatures() { return getFeatureList(); }
+
+  /** @deprecated {@link Replaced by #countFeatureList()} */
+  public int countFeatures() { return countFeatureList(); }
+
 
 }

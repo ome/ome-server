@@ -127,24 +127,24 @@ public class OMENode extends OMEXMLNode {
   // -- OMENode API methods --
 
   /** Gets nodes corresponding to Project child elements. */
-  public List getProjects() {
+  public List getProjectList() {
     return getChildNodes("Project");
   }
 
   /** Gets the number of Project child elements. */
-  public int countProjects() { return getChildCount("Project"); }
+  public int countProjectList() { return getChildCount("Project"); }
 
   /** Gets nodes corresponding to Dataset child elements. */
-  public List getDatasets() { return getChildNodes("Dataset"); }
+  public List getDatasetList() { return getChildNodes("Dataset"); }
 
   /** Gets the number of Dataset child elements. */
-  public int countDatasets() { return getChildCount("Dataset"); }
+  public int countDatasetList() { return getChildCount("Dataset"); }
 
   /** Gets nodes corresponding to Image child elements. */
-  public List getImages() { return getChildNodes("Image"); }
+  public List getImageList() { return getChildNodes("Image"); }
 
   /** Gets the number of Image child elements. */
-  public int countImages() { return getChildCount("Image"); }
+  public int countImageList() { return getChildCount("Image"); }
 
   /** Gets node corresponding to CustomAttributes child element. */
   public CustomAttributesNode getCustomAttributes() {
@@ -407,5 +407,25 @@ public class OMENode extends OMEXMLNode {
       }
     }
   }
+
+  // -- Deprecated methods --
+
+  /** @deprecated Replaced by {@link #getProjectList()} */
+  public List getProjects() { return getProjectList(); }
+
+  /** @deprecated Replaced by {@link #countProjectList()} */
+  public int countProjects() { return countProjectList(); }
+
+  /** @deprecated Replaced by {@link #getDatasetList()} */
+  public List getDatasets() { return getDatasetList(); }
+
+  /** @deprecated Replaced by {@link #countDatasetList()} */
+  public int countDatasets() { return countDatasetList(); }
+
+  /** @deprecated Replaced by {@link #getImageList()} */
+  public List getImages() { return getImageList(); }
+
+  /** @deprecated Replaced by {@link #countImageList()} */
+  public int countImages() { return countImageList(); }
 
 }

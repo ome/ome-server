@@ -165,17 +165,31 @@ public class DatasetNode extends OMEXMLNode implements Dataset {
   }
 
   /** Gets a list of Projects referenced by the Dataset. */
-  public List getProjects() {
+  public List getProjectList() {
     return getReferencedNodes("Project", "ProjectRef");
   }
 
   /** Gets the number of Projects referenced by the Dataset. */
-  public int countProjects() { return getChildCount("ProjectRef"); }
+  public int countProjectList() { return getChildCount("ProjectRef"); }
 
   /** Gets a list of Images referencing this Dataset. */
-  public List getImages() { return getReferringNodes("Image"); }
+  public List getImageList() { return getReferringNodes("Image"); }
 
   /** Gets the number of Images referencing this Dataset. */
-  public int countImages() { return getReferringCount("Image"); }
+  public int countImageList() { return getReferringCount("Image"); }
+
+  // -- Deprecated methods --
+
+  /** @deprecated Replaced by {@link #getProjectList()} */
+  public List getProjects() { return getProjectList(); }
+
+  /** @deprecated Replaced by {@link #countProjectList()} */
+  public int countProjects() { return countProjectList(); }
+
+  /** @deprecated Replaced by {@link #getImageList()} */
+  public List getImages() { return getImageList(); }
+
+  /** @deprecated Replaced by {@link #countImageList()} */
+  public int countImages() { return countImageList(); }
 
 }
