@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class LogicalChannelNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a LogicalChannel node with an associated DOM element. */
 	public LogicalChannelNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a LogicalChannel node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public LogicalChannelNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a LogicalChannel node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public LogicalChannelNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "LogicalChannel", attach));
+	}
+
 	// -- LogicalChannel API methods --
-          
+              
 	// Attribute
 	public String getPhotometricInterpretation()
 	{
@@ -63,7 +87,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("PhotometricInterpretation", photometricInterpretation);
 	}
-                                                
+                                                    
 	// Element which occurs more than once
 	public int getChannelComponentCount()
 	{
@@ -74,7 +98,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		return getChildNodes("ChannelComponent");
 	}
-                                
+                                    
 	// Attribute
 	public Integer getPockelCellSetting()
 	{
@@ -85,14 +109,14 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("PockelCellSetting", pockelCellSetting);
 	}
-                                    
+                                        
 	// Attribute which is an OME XML "ID"
 	public FilterNode getSecondaryExcitationFilter()
 	{
 		return (FilterNode) 
 			getAttrReferencedNode("Filter", "SecondaryExcitationFilter");
 	}
-                                            
+                                                
 	// Attribute
 	public Integer getSamplesPerPixel()
 	{
@@ -103,7 +127,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("SamplesPerPixel", samplesPerPixel);
 	}
-                                        
+                                            
 	// Attribute
 	public String getContrastMethod()
 	{
@@ -114,23 +138,23 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("ContrastMethod", contrastMethod);
 	}
-                                                        
+                                                            
 	// Element which is complex and is an OME XML "Ref"
 	public FilterSetNode getFilterSet()
 	{
 		return (FilterSetNode) 
 			getReferencedNode("FilterSet", "FilterSetRef");
 	}
-                    
+                        
 	// Attribute which is an OME XML "ID"
 	public FilterNode getSecondaryEmissionFilter()
 	{
 		return (FilterNode) 
 			getAttrReferencedNode("Filter", "SecondaryEmissionFilter");
 	}
-                                                                    
+                                                                        
 	// *** WARNING *** Unhandled or skipped property ID
-                
+                    
 	// Attribute
 	public String getFluor()
 	{
@@ -141,7 +165,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("Fluor", fluor);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getPinholeSize()
 	{
@@ -152,7 +176,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("PinholeSize", pinholeSize);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getNdFilter()
 	{
@@ -163,7 +187,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("NdFilter", ndFilter);
 	}
-                                        
+                                            
 	// Attribute
 	public String getMode()
 	{
@@ -174,21 +198,21 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("Mode", mode);
 	}
-                                                        
+                                                            
 	// Element which is complex and is an OME XML "Ref"
 	public DetectorNode getDetector()
 	{
 		return (DetectorNode) 
 			getReferencedNode("Detector", "DetectorRef");
 	}
-                                        
+                                            
 	// Element which is complex and is an OME XML "Ref"
 	public OTFNode getOTF()
 	{
 		return (OTFNode) 
 			getReferencedNode("OTF", "OTFRef");
 	}
-                        
+                            
 	// Attribute
 	public Integer getEmWave()
 	{
@@ -199,7 +223,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("EmWave", emWave);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getExWave()
 	{
@@ -210,14 +234,14 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("ExWave", exWave);
 	}
-                                                        
+                                                            
 	// Element which is complex and is an OME XML "Ref"
 	public LightSourceNode getLightSource()
 	{
 		return (LightSourceNode) 
 			getReferencedNode("LightSource", "LightSourceRef");
 	}
-                        
+                            
 	// Attribute
 	public String getIlluminationType()
 	{
@@ -228,7 +252,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		setAttribute("IlluminationType", illuminationType);
 	}
-                                        
+                                            
 	// Attribute
 	public String getName()
 	{
@@ -247,3 +271,4 @@ public class LogicalChannelNode extends OMEXMLNode
 		return true;
 	}
 }
+

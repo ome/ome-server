@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class DetectorNode extends ManufactSpecNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Detector node with an associated DOM element. */
 	public DetectorNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Detector node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public DetectorNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Detector node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public DetectorNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Detector", attach));
+	}
+
 	// -- Detector API methods --
-          
+              
 	// Attribute
 	public Float getZoom()
 	{
@@ -63,7 +87,7 @@ public class DetectorNode extends ManufactSpecNode
 	{
 		setAttribute("Zoom", zoom);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getAmplificationGain()
 	{
@@ -74,7 +98,7 @@ public class DetectorNode extends ManufactSpecNode
 	{
 		setAttribute("AmplificationGain", amplificationGain);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getGain()
 	{
@@ -85,7 +109,7 @@ public class DetectorNode extends ManufactSpecNode
 	{
 		setAttribute("Gain", gain);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getOffset()
 	{
@@ -96,7 +120,18 @@ public class DetectorNode extends ManufactSpecNode
 	{
 		setAttribute("Offset", offset);
 	}
-                                        
+                                    
+	// Virtual, inferred back reference LogicalChannel_BackReference
+	public List getLogicalChannelList()
+	{
+		return getReferringNodes("LogicalChannel");
+	}
+	
+	public int countLogicalChannelList()
+	{
+		return getReferringCount("LogicalChannel");
+	}
+                                                    
 	// Attribute
 	public String getType()
 	{
@@ -107,9 +142,9 @@ public class DetectorNode extends ManufactSpecNode
 	{
 		setAttribute("Type", type);
 	}
-                                                                
+                                                                    
 	// *** WARNING *** Unhandled or skipped property ID
-                
+                    
 	// Attribute
 	public Float getVoltage()
 	{
@@ -128,3 +163,4 @@ public class DetectorNode extends ManufactSpecNode
 		return true;
 	}
 }
+

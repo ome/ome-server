@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class InstrumentNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Instrument node with an associated DOM element. */
 	public InstrumentNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Instrument node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public InstrumentNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Instrument node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public InstrumentNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Instrument", attach));
+	}
+
 	// -- Instrument API methods --
-                  
+                      
 	// Element which occurs more than once
 	public int getLightSourceCount()
 	{
@@ -63,7 +87,7 @@ public class InstrumentNode extends OMEXMLNode
 	{
 		return getChildNodes("LightSource");
 	}
-                                        
+                                            
 	// Element which occurs more than once
 	public int getDichroicCount()
 	{
@@ -74,7 +98,18 @@ public class InstrumentNode extends OMEXMLNode
 	{
 		return getChildNodes("Dichroic");
 	}
-                                        
+                            
+	// Virtual, inferred back reference Image_BackReference
+	public List getImageList()
+	{
+		return getReferringNodes("Image");
+	}
+	
+	public int countImageList()
+	{
+		return getReferringCount("Image");
+	}
+                                                            
 	// Element which occurs more than once
 	public int getOTFCount()
 	{
@@ -85,7 +120,7 @@ public class InstrumentNode extends OMEXMLNode
 	{
 		return getChildNodes("OTF");
 	}
-                                        
+                                            
 	// Element which occurs more than once
 	public int getFilterCount()
 	{
@@ -96,14 +131,14 @@ public class InstrumentNode extends OMEXMLNode
 	{
 		return getChildNodes("Filter");
 	}
-                                                    
+                                                        
 	// Element which is complex (has sub-elements)
 	public MicroscopeNode getMicroscope()
 	{
 		return (MicroscopeNode) 
-			getChildNode("Microscope","Microscope");
+			getChildNode("Microscope", "Microscope");
 	}
-                            
+                                
 	// Element which occurs more than once
 	public int getObjectiveCount()
 	{
@@ -114,7 +149,7 @@ public class InstrumentNode extends OMEXMLNode
 	{
 		return getChildNodes("Objective");
 	}
-                                        
+                                            
 	// Element which occurs more than once
 	public int getDetectorCount()
 	{
@@ -125,9 +160,9 @@ public class InstrumentNode extends OMEXMLNode
 	{
 		return getChildNodes("Detector");
 	}
-                                                        
+                                                            
 	// *** WARNING *** Unhandled or skipped property ID
-                        
+                            
 	// Element which occurs more than once
 	public int getFilterSetCount()
 	{
@@ -146,3 +181,4 @@ public class InstrumentNode extends OMEXMLNode
 		return true;
 	}
 }
+

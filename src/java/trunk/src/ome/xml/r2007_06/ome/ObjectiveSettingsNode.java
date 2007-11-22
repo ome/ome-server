@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ObjectiveSettingsNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a ObjectiveSettings node with an associated DOM element. */
 	public ObjectiveSettingsNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a ObjectiveSettings node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ObjectiveSettingsNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a ObjectiveSettings node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ObjectiveSettingsNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "ObjectiveSettings", attach));
+	}
+
 	// -- ObjectiveSettings API methods --
-          
+              
 	// Attribute
 	public Float getRefractiveIndex()
 	{
@@ -63,14 +87,25 @@ public class ObjectiveSettingsNode extends OMEXMLNode
 	{
 		setAttribute("RefractiveIndex", refractiveIndex);
 	}
-                                                        
+                                                            
 	// Element which is complex and is an OME XML "Ref"
 	public ObjectiveNode getObjective()
 	{
 		return (ObjectiveNode) 
 			getReferencedNode("Objective", "ObjectiveRef");
 	}
-                        
+                    
+	// Virtual, inferred back reference Image_BackReference
+	public List getImageList()
+	{
+		return getReferringNodes("Image");
+	}
+	
+	public int countImageList()
+	{
+		return getReferringCount("Image");
+	}
+                                                    
 	// Attribute
 	public Float getCorrectionCollar()
 	{
@@ -81,7 +116,7 @@ public class ObjectiveSettingsNode extends OMEXMLNode
 	{
 		setAttribute("CorrectionCollar", correctionCollar);
 	}
-                                        
+                                            
 	// Attribute
 	public String getMedium()
 	{
@@ -100,3 +135,4 @@ public class ObjectiveSettingsNode extends OMEXMLNode
 		return false;
 	}
 }
+

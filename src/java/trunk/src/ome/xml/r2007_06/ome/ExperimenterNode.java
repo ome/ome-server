@@ -31,52 +31,76 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ExperimenterNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Experimenter node with an associated DOM element. */
 	public ExperimenterNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Experimenter node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ExperimenterNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Experimenter node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ExperimenterNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Experimenter", attach));
+	}
+
 	// -- Experimenter API methods --
-                      
+                          
 	// Element which is not complex (has only a text node)
 	public String getEmail()
 	{
 		return getStringCData("Email");
 	}
-                                        
+                                            
 	// Element which is not complex (has only a text node)
 	public String getOMEName()
 	{
 		return getStringCData("OMEName");
 	}
-                                        
+                                            
 	// Element which is not complex (has only a text node)
 	public String getFirstName()
 	{
 		return getStringCData("FirstName");
 	}
-                                        
+                                            
 	// Element which is not complex (has only a text node)
 	public String getLastName()
 	{
 		return getStringCData("LastName");
 	}
-                                
+                                    
 	// Element which occurs more than once and is an OME XML "Ref"
 	public int getGroupCount()
 	{
@@ -87,9 +111,20 @@ public class ExperimenterNode extends OMEXMLNode
 	{
 		return getReferencedNodes("Group", "GroupRef");
 	}
-                                                            
+                                                                
 	// *** WARNING *** Unhandled or skipped property ID
-                            
+            
+	// Virtual, inferred back reference Dataset_BackReference
+	public List getDatasetList()
+	{
+		return getReferringNodes("Dataset");
+	}
+	
+	public int countDatasetList()
+	{
+		return getReferringCount("Dataset");
+	}
+                                                                
 	// Element which is not complex (has only a text node)
 	public String getInstitution()
 	{
@@ -103,3 +138,4 @@ public class ExperimenterNode extends OMEXMLNode
 		return true;
 	}
 }
+

@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ChannelComponentNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a ChannelComponent node with an associated DOM element. */
 	public ChannelComponentNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a ChannelComponent node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ChannelComponentNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a ChannelComponent node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ChannelComponentNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "ChannelComponent", attach));
+	}
+
 	// -- ChannelComponent API methods --
-          
+              
 	// Attribute
 	public Integer getIndex()
 	{
@@ -63,7 +87,7 @@ public class ChannelComponentNode extends OMEXMLNode
 	{
 		setAttribute("Index", index);
 	}
-                                        
+                                            
 	// Attribute
 	public String getColorDomain()
 	{
@@ -74,7 +98,7 @@ public class ChannelComponentNode extends OMEXMLNode
 	{
 		setAttribute("ColorDomain", colorDomain);
 	}
-                                    
+                                        
 	// Attribute which is an OME XML "ID"
 	public PixelsNode getPixels()
 	{
@@ -89,3 +113,4 @@ public class ChannelComponentNode extends OMEXMLNode
 		return false;
 	}
 }
+

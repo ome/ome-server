@@ -31,64 +31,99 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ObjectiveNode extends ManufactSpecNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Objective node with an associated DOM element. */
 	public ObjectiveNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Objective node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ObjectiveNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Objective node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ObjectiveNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Objective", attach));
+	}
+
 	// -- Objective API methods --
-                      
+                          
 	// Element which is not complex (has only a text node)
 	public Float getWorkingDistance()
 	{
 		return getFloatCData("WorkingDistance");
 	}
-                                        
+                        
+	// Virtual, inferred back reference ObjectiveSettings_BackReference
+	public List getObjectiveSettingsList()
+	{
+		return getReferringNodes("ObjectiveSettings");
+	}
+	
+	public int countObjectiveSettingsList()
+	{
+		return getReferringCount("ObjectiveSettings");
+	}
+                                                                
 	// Element which is not complex (has only a text node)
 	public String getImmersion()
 	{
 		return getStringCData("Immersion");
 	}
-                                        
+                                            
 	// Element which is not complex (has only a text node)
 	public String getCorrection()
 	{
 		return getStringCData("Correction");
 	}
-                                        
+                                            
 	// Element which is not complex (has only a text node)
 	public Float getLensNA()
 	{
 		return getFloatCData("LensNA");
 	}
-                                        
+                                            
 	// Element which is not complex (has only a text node)
 	public Integer getNominalMagnification()
 	{
 		return getIntegerCData("NominalMagnification");
 	}
-                                        
+                                            
 	// Element which is not complex (has only a text node)
 	public Float getCalibratedMagnification()
 	{
 		return getFloatCData("CalibratedMagnification");
 	}
-                                                    
+                                                        
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
@@ -98,3 +133,4 @@ public class ObjectiveNode extends ManufactSpecNode
 		return true;
 	}
 }
+

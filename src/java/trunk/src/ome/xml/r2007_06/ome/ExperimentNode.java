@@ -31,46 +31,78 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ExperimentNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Experiment node with an associated DOM element. */
 	public ExperimentNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Experiment node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ExperimentNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Experiment node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ExperimentNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Experiment", attach));
+	}
+
 	// -- Experiment API methods --
                           
+	// Element which is not complex (has only a text node)
+	public String getDescription()
+	{
+		return getStringCData("Description");
+	}
+                                                
 	// Element which is complex and is an OME XML "Ref"
 	public ExperimenterNode getExperimenter()
 	{
 		return (ExperimenterNode) 
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
-                            
-	// Element which occurs more than once and is an OME XML "Ref"
-	public int getMicrobeamManipulationCount()
+                    
+	// Virtual, inferred back reference Image_BackReference
+	public List getImageList()
 	{
-		return getChildCount("MicrobeamManipulationRef");
+		return getReferringNodes("Image");
 	}
-
-	public Vector getMicrobeamManipulationList()
+	
+	public int countImageList()
 	{
-		return getReferencedNodes("MicrobeamManipulation", "MicrobeamManipulationRef");
+		return getReferringCount("Image");
 	}
-                                    
+                                                                            
+	// *** WARNING *** Unhandled or skipped property ID
+                    
 	// Attribute
 	public String getType()
 	{
@@ -81,15 +113,18 @@ public class ExperimentNode extends OMEXMLNode
 	{
 		setAttribute("Type", type);
 	}
-                                                                
-	// *** WARNING *** Unhandled or skipped property ID
-                            
-	// Element which is not complex (has only a text node)
-	public String getDescription()
+                                                
+	// Element which occurs more than once and is an OME XML "Ref"
+	public int getMicrobeamManipulationCount()
 	{
-		return getStringCData("Description");
+		return getChildCount("MicrobeamManipulationRef");
 	}
-                  
+
+	public Vector getMicrobeamManipulationList()
+	{
+		return getReferencedNodes("MicrobeamManipulation", "MicrobeamManipulationRef");
+	}
+                          
 	// -- OMEXMLNode API methods --
 	
 	public boolean hasID()
@@ -97,3 +132,4 @@ public class ExperimentNode extends OMEXMLNode
 		return true;
 	}
 }
+

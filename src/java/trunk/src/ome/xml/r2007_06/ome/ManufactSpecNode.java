@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ManufactSpecNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a ManufactSpec node with an associated DOM element. */
 	public ManufactSpecNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a ManufactSpec node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ManufactSpecNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a ManufactSpec node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ManufactSpecNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "ManufactSpec", attach));
+	}
+
 	// -- ManufactSpec API methods --
-          
+              
 	// Attribute
 	public String getModel()
 	{
@@ -63,7 +87,7 @@ public class ManufactSpecNode extends OMEXMLNode
 	{
 		setAttribute("Model", model);
 	}
-                                        
+                                            
 	// Attribute
 	public String getSerialNumber()
 	{
@@ -74,7 +98,7 @@ public class ManufactSpecNode extends OMEXMLNode
 	{
 		setAttribute("SerialNumber", serialNumber);
 	}
-                                        
+                                            
 	// Attribute
 	public String getManufacturer()
 	{
@@ -93,3 +117,4 @@ public class ManufactSpecNode extends OMEXMLNode
 		return false;
 	}
 }
+

@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class FilamentNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Filament node with an associated DOM element. */
 	public FilamentNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Filament node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public FilamentNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Filament node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public FilamentNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Filament", attach));
+	}
+
 	// -- Filament API methods --
-          
+              
 	// Attribute
 	public String getType()
 	{
@@ -63,7 +87,7 @@ public class FilamentNode extends OMEXMLNode
 	{
 		setAttribute("Type", type);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getPower()
 	{
@@ -82,3 +106,4 @@ public class FilamentNode extends OMEXMLNode
 		return false;
 	}
 }
+

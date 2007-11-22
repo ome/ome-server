@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class MicrobeamManipulationNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a MicrobeamManipulation node with an associated DOM element. */
 	public MicrobeamManipulationNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a MicrobeamManipulation node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public MicrobeamManipulationNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a MicrobeamManipulation node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public MicrobeamManipulationNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "MicrobeamManipulation", attach));
+	}
+
 	// -- MicrobeamManipulation API methods --
-                          
+                              
 	// Element which is complex and is an OME XML "Ref"
 	public ExperimenterNode getExperimenter()
 	{
@@ -60,17 +84,17 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
                             
-	// Element which occurs more than once and is an OME XML "Ref"
-	public int getLightSourceCount()
+	// Attribute
+	public String getType()
 	{
-		return getChildCount("LightSourceRef");
+		return getStringAttribute("Type");
 	}
 
-	public Vector getLightSourceList()
+	public void setType(String type)
 	{
-		return getReferencedNodes("LightSource", "LightSourceRef");
+		setAttribute("Type", type);
 	}
-                                        
+                                                
 	// Element which occurs more than once and is an OME XML "Ref"
 	public int getROICount()
 	{
@@ -81,16 +105,27 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 	{
 		return getReferencedNodes("ROI", "ROIRef");
 	}
-                                    
-	// Attribute
-	public String getType()
+                                
+	// Virtual, inferred back reference Experiment_BackReference
+	public List getExperimentList()
 	{
-		return getStringAttribute("Type");
+		return getReferringNodes("Experiment");
+	}
+	
+	public int countExperimentList()
+	{
+		return getReferringCount("Experiment");
+	}
+                                                        
+	// Element which occurs more than once and is an OME XML "Ref"
+	public int getLightSourceCount()
+	{
+		return getChildCount("LightSourceRef");
 	}
 
-	public void setType(String type)
+	public Vector getLightSourceList()
 	{
-		setAttribute("Type", type);
+		return getReferencedNodes("LightSource", "LightSourceRef");
 	}
                                                                 
 	// *** WARNING *** Unhandled or skipped property ID
@@ -102,3 +137,4 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 		return true;
 	}
 }
+

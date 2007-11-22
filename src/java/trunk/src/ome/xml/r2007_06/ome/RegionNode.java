@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class RegionNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Region node with an associated DOM element. */
 	public RegionNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Region node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public RegionNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Region node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public RegionNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Region", attach));
+	}
+
 	// -- Region API methods --
-                  
+                      
 	// Element which occurs more than once
 	public int getRegionCount()
 	{
@@ -63,7 +87,7 @@ public class RegionNode extends OMEXMLNode
 	{
 		return getChildNodes("Region");
 	}
-                                
+                                    
 	// Attribute
 	public String getTag()
 	{
@@ -74,7 +98,7 @@ public class RegionNode extends OMEXMLNode
 	{
 		setAttribute("Tag", tag);
 	}
-                                        
+                                            
 	// Attribute
 	public String getName()
 	{
@@ -85,13 +109,13 @@ public class RegionNode extends OMEXMLNode
 	{
 		setAttribute("Name", name);
 	}
-                                                    
+                                                        
 	// Element which is not complex (has only a text node)
 	public String getCustomAttributes()
 	{
 		return getStringCData("CustomAttributes");
 	}
-                                                    
+                                                        
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
@@ -101,3 +125,4 @@ public class RegionNode extends OMEXMLNode
 		return true;
 	}
 }
+

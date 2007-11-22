@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class TransmittanceRangeNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a TransmittanceRange node with an associated DOM element. */
 	public TransmittanceRangeNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a TransmittanceRange node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public TransmittanceRangeNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a TransmittanceRange node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public TransmittanceRangeNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "TransmittanceRange", attach));
+	}
+
 	// -- TransmittanceRange API methods --
-          
+              
 	// Attribute
 	public Integer getCutIn()
 	{
@@ -63,7 +87,7 @@ public class TransmittanceRangeNode extends OMEXMLNode
 	{
 		setAttribute("CutIn", cutIn);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getTransmittance()
 	{
@@ -74,7 +98,7 @@ public class TransmittanceRangeNode extends OMEXMLNode
 	{
 		setAttribute("Transmittance", transmittance);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getCutOut()
 	{
@@ -85,7 +109,7 @@ public class TransmittanceRangeNode extends OMEXMLNode
 	{
 		setAttribute("CutOut", cutOut);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getCutInTolerance()
 	{
@@ -96,7 +120,7 @@ public class TransmittanceRangeNode extends OMEXMLNode
 	{
 		setAttribute("CutInTolerance", cutInTolerance);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getCutOutTolerance()
 	{
@@ -115,3 +139,4 @@ public class TransmittanceRangeNode extends OMEXMLNode
 		return false;
 	}
 }
+

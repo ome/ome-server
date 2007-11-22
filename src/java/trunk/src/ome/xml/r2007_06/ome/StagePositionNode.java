@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class StagePositionNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a StagePosition node with an associated DOM element. */
 	public StagePositionNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a StagePosition node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public StagePositionNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a StagePosition node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public StagePositionNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "StagePosition", attach));
+	}
+
 	// -- StagePosition API methods --
-          
+              
 	// Attribute
 	public Float getPositionZ()
 	{
@@ -63,7 +87,7 @@ public class StagePositionNode extends OMEXMLNode
 	{
 		setAttribute("PositionZ", positionZ);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getPositionX()
 	{
@@ -74,7 +98,7 @@ public class StagePositionNode extends OMEXMLNode
 	{
 		setAttribute("PositionX", positionX);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getPositionY()
 	{
@@ -93,3 +117,4 @@ public class StagePositionNode extends OMEXMLNode
 		return false;
 	}
 }
+

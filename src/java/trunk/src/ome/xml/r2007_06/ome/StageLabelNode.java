@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class StageLabelNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a StageLabel node with an associated DOM element. */
 	public StageLabelNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a StageLabel node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public StageLabelNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a StageLabel node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public StageLabelNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "StageLabel", attach));
+	}
+
 	// -- StageLabel API methods --
-          
+              
 	// Attribute
 	public Float getY()
 	{
@@ -63,7 +87,7 @@ public class StageLabelNode extends OMEXMLNode
 	{
 		setAttribute("Y", y);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getX()
 	{
@@ -74,7 +98,7 @@ public class StageLabelNode extends OMEXMLNode
 	{
 		setAttribute("X", x);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getZ()
 	{
@@ -85,7 +109,7 @@ public class StageLabelNode extends OMEXMLNode
 	{
 		setAttribute("Z", z);
 	}
-                                        
+                                            
 	// Attribute
 	public String getName()
 	{
@@ -104,3 +128,4 @@ public class StageLabelNode extends OMEXMLNode
 		return false;
 	}
 }
+

@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ChannelSpecTypeNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a ChannelSpecType node with an associated DOM element. */
 	public ChannelSpecTypeNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a ChannelSpecType node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ChannelSpecTypeNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a ChannelSpecType node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ChannelSpecTypeNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "ChannelSpecType", attach));
+	}
+
 	// -- ChannelSpecType API methods --
-          
+              
 	// Attribute
 	public Integer getChannelNumber()
 	{
@@ -63,7 +87,7 @@ public class ChannelSpecTypeNode extends OMEXMLNode
 	{
 		setAttribute("ChannelNumber", channelNumber);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getWhiteLevel()
 	{
@@ -74,7 +98,7 @@ public class ChannelSpecTypeNode extends OMEXMLNode
 	{
 		setAttribute("WhiteLevel", whiteLevel);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getBlackLevel()
 	{
@@ -85,7 +109,7 @@ public class ChannelSpecTypeNode extends OMEXMLNode
 	{
 		setAttribute("BlackLevel", blackLevel);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getGamma()
 	{
@@ -96,7 +120,7 @@ public class ChannelSpecTypeNode extends OMEXMLNode
 	{
 		setAttribute("Gamma", gamma);
 	}
-                                        
+                                            
 	// Attribute
 	public Boolean getisOn()
 	{
@@ -115,3 +139,4 @@ public class ChannelSpecTypeNode extends OMEXMLNode
 		return false;
 	}
 }
+

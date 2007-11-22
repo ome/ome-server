@@ -1,5 +1,5 @@
 /*
- * ome.xml.r2007_06.ome.FilterSetNode
+ * ome.xml.r2007_06.ome.LightSourceRefNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -46,71 +46,61 @@ import java.util.List;
 
 import org.w3c.dom.Element;
 
-public class FilterSetNode extends FilterSpecNode
+public class LightSourceRefNode extends ReferenceNode
 {
 	// -- Constructors --
 	
-	/** Constructs a FilterSet node with an associated DOM element. */
-	public FilterSetNode(Element element)
+	/** Constructs a LightSourceRef node with an associated DOM element. */
+	public LightSourceRefNode(Element element)
 	{
 		super(element);
 	}
 
 	/**
-	 * Constructs a FilterSet node with an associated DOM element beneath
+	 * Constructs a LightSourceRef node with an associated DOM element beneath
 	 * a given parent.
 	 */
-	public FilterSetNode(OMEXMLNode parent)
+	public LightSourceRefNode(OMEXMLNode parent)
 	{
 		this(parent, true);
 	}
 
 	/**
-	 * Constructs a FilterSet node with an associated DOM element beneath
+	 * Constructs a LightSourceRef node with an associated DOM element beneath
 	 * a given parent.
 	 */
-	public FilterSetNode(OMEXMLNode parent, boolean attach)
+	public LightSourceRefNode(OMEXMLNode parent, boolean attach)
 	{
 		super(DOMUtil.createChild(parent.getDOMElement(),
-		                          "FilterSet", attach));
+		                          "LightSourceRef", attach));
 	}
 
-	// -- FilterSet API methods --
-      
-	// Virtual, inferred back reference LogicalChannel_BackReference
-	public List getLogicalChannelList()
+	// -- LightSourceRef API methods --
+              
+	// Attribute
+	public Integer getWavelength()
 	{
-		return getReferringNodes("LogicalChannel");
+		return getIntegerAttribute("Wavelength");
 	}
-	
-	public int countLogicalChannelList()
+
+	public void setWavelength(Integer wavelength)
 	{
-		return getReferringCount("LogicalChannel");
-	}
-                                                
-	// Attribute which is an OME XML "ID"
-	public FilterNode getExFilterRef()
-	{
-		return (FilterNode) 
-			getAttrReferencedNode("Filter", "ExFilterRef");
+		setAttribute("Wavelength", wavelength);
 	}
                                             
-	// Attribute which is an OME XML "ID"
-	public FilterNode getEmFilterRef()
+	// Attribute
+	public Float getAttenuation()
 	{
-		return (FilterNode) 
-			getAttrReferencedNode("Filter", "EmFilterRef");
+		return getFloatAttribute("Attenuation");
 	}
-                                                                        
+
+	public void setAttenuation(Float attenuation)
+	{
+		setAttribute("Attenuation", attenuation);
+	}
+                                                                    
 	// *** WARNING *** Unhandled or skipped property ID
-                
-	// Attribute which is an OME XML "ID"
-	public DichroicNode getDichroicRef()
-	{
-		return (DichroicNode) 
-			getAttrReferencedNode("Dichroic", "DichroicRef");
-	}
-                                  
+      
 	// -- OMEXMLNode API methods --
 	
 	public boolean hasID()

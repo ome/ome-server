@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class LaserNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Laser node with an associated DOM element. */
 	public LaserNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Laser node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public LaserNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Laser node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public LaserNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Laser", attach));
+	}
+
 	// -- Laser API methods --
-          
+              
 	// Attribute
 	public Boolean getPockelCell()
 	{
@@ -63,7 +87,7 @@ public class LaserNode extends OMEXMLNode
 	{
 		setAttribute("PockelCell", pockelCell);
 	}
-                                        
+                                            
 	// Attribute
 	public Boolean getTuneable()
 	{
@@ -74,7 +98,7 @@ public class LaserNode extends OMEXMLNode
 	{
 		setAttribute("Tuneable", tuneable);
 	}
-                                        
+                                            
 	// Attribute
 	public String getLaserMedium()
 	{
@@ -85,14 +109,14 @@ public class LaserNode extends OMEXMLNode
 	{
 		setAttribute("LaserMedium", laserMedium);
 	}
-                                                            
+                                                                
 	// Element which is complex (has sub-elements)
 	public PumpNode getPump()
 	{
 		return (PumpNode) 
-			getChildNode("Pump","Pump");
+			getChildNode("Pump", "Pump");
 	}
-                    
+                        
 	// Attribute
 	public String getPulse()
 	{
@@ -103,7 +127,7 @@ public class LaserNode extends OMEXMLNode
 	{
 		setAttribute("Pulse", pulse);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getWavelength()
 	{
@@ -114,7 +138,7 @@ public class LaserNode extends OMEXMLNode
 	{
 		setAttribute("Wavelength", wavelength);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getFrequencyMultiplication()
 	{
@@ -125,7 +149,7 @@ public class LaserNode extends OMEXMLNode
 	{
 		setAttribute("FrequencyMultiplication", frequencyMultiplication);
 	}
-                                        
+                                            
 	// Attribute
 	public String getType()
 	{
@@ -136,7 +160,7 @@ public class LaserNode extends OMEXMLNode
 	{
 		setAttribute("Type", type);
 	}
-                                        
+                                            
 	// Attribute
 	public Boolean getRepetitionRate()
 	{
@@ -155,3 +179,4 @@ public class LaserNode extends OMEXMLNode
 		return false;
 	}
 }
+

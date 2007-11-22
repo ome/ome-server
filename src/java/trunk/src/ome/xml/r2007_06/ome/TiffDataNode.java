@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class TiffDataNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a TiffData node with an associated DOM element. */
 	public TiffDataNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a TiffData node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public TiffDataNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a TiffData node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public TiffDataNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "TiffData", attach));
+	}
+
 	// -- TiffData API methods --
-          
+              
 	// Attribute
 	public Integer getIFD()
 	{
@@ -63,7 +87,7 @@ public class TiffDataNode extends OMEXMLNode
 	{
 		setAttribute("IFD", ifd);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getNumPlanes()
 	{
@@ -74,7 +98,7 @@ public class TiffDataNode extends OMEXMLNode
 	{
 		setAttribute("NumPlanes", numPlanes);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getFirstZ()
 	{
@@ -85,7 +109,7 @@ public class TiffDataNode extends OMEXMLNode
 	{
 		setAttribute("FirstZ", firstZ);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getFirstC()
 	{
@@ -96,7 +120,7 @@ public class TiffDataNode extends OMEXMLNode
 	{
 		setAttribute("FirstC", firstC);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getFirstT()
 	{
@@ -115,3 +139,4 @@ public class TiffDataNode extends OMEXMLNode
 		return false;
 	}
 }
+

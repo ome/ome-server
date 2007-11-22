@@ -31,51 +31,59 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class LightSourceNode extends ManufactSpecNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a LightSource node with an associated DOM element. */
 	public LightSourceNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a LightSource node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public LightSourceNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a LightSource node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public LightSourceNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "LightSource", attach));
+	}
+
 	// -- LightSource API methods --
-                              
-	// Element which is complex (has sub-elements)
-	public FilamentNode getFilament()
-	{
-		return (FilamentNode) 
-			getChildNode("Filament","Filament");
-	}
-                                        
-	// Element which is complex (has sub-elements)
-	public ArcNode getArc()
-	{
-		return (ArcNode) 
-			getChildNode("Arc","Arc");
-	}
-                                        
+                                  
 	// Element which is complex (has sub-elements)
 	public LaserNode getLaser()
 	{
 		return (LaserNode) 
-			getChildNode("Laser","Laser");
+			getChildNode("Laser", "Laser");
 	}
-                                            
-	// *** WARNING *** Unhandled or skipped property ID
-                
+                        
 	// Attribute
 	public Float getPower()
 	{
@@ -86,7 +94,34 @@ public class LightSourceNode extends ManufactSpecNode
 	{
 		setAttribute("Power", power);
 	}
-                              
+                                                                
+	// Element which is complex (has sub-elements)
+	public ArcNode getArc()
+	{
+		return (ArcNode) 
+			getChildNode("Arc", "Arc");
+	}
+                                                
+	// *** WARNING *** Unhandled or skipped property ID
+                                        
+	// Element which is complex (has sub-elements)
+	public FilamentNode getFilament()
+	{
+		return (FilamentNode) 
+			getChildNode("Filament", "Filament");
+	}
+                
+	// Virtual, inferred back reference MicrobeamManipulation_BackReference
+	public List getMicrobeamManipulationList()
+	{
+		return getReferringNodes("MicrobeamManipulation");
+	}
+	
+	public int countMicrobeamManipulationList()
+	{
+		return getReferringCount("MicrobeamManipulation");
+	}
+                                      
 	// -- OMEXMLNode API methods --
 	
 	public boolean hasID()
@@ -94,3 +129,4 @@ public class LightSourceNode extends ManufactSpecNode
 		return true;
 	}
 }
+

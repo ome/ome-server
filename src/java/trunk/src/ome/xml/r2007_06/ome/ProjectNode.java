@@ -31,39 +31,63 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ProjectNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Project node with an associated DOM element. */
 	public ProjectNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Project node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ProjectNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Project node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ProjectNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Project", attach));
+	}
+
 	// -- Project API methods --
                           
+	// Element which is not complex (has only a text node)
+	public String getDescription()
+	{
+		return getStringCData("Description");
+	}
+                                                
 	// Element which is complex and is an OME XML "Ref"
 	public ExperimenterNode getExperimenter()
 	{
 		return (ExperimenterNode) 
 			getReferencedNode("Experimenter", "ExperimenterRef");
-	}
-                                    
-	// Element which is not complex (has only a text node)
-	public String getDescription()
-	{
-		return getStringCData("Description");
 	}
                                             
 	// Element which is complex and is an OME XML "Ref"
@@ -72,7 +96,20 @@ public class ProjectNode extends OMEXMLNode
 		return (GroupNode) 
 			getReferencedNode("Group", "GroupRef");
 	}
-                        
+                    
+	// Virtual, inferred back reference Dataset_BackReference
+	public List getDatasetList()
+	{
+		return getReferringNodes("Dataset");
+	}
+	
+	public int countDatasetList()
+	{
+		return getReferringCount("Dataset");
+	}
+                                                                            
+	// *** WARNING *** Unhandled or skipped property ID
+                    
 	// Attribute
 	public String getName()
 	{
@@ -83,9 +120,7 @@ public class ProjectNode extends OMEXMLNode
 	{
 		setAttribute("Name", name);
 	}
-                                                                
-	// *** WARNING *** Unhandled or skipped property ID
-      
+                              
 	// -- OMEXMLNode API methods --
 	
 	public boolean hasID()
@@ -93,3 +128,4 @@ public class ProjectNode extends OMEXMLNode
 		return true;
 	}
 }
+

@@ -1,5 +1,5 @@
 /*
- * ome.xml.r2007_06.ome.FilterSetNode
+ * ome.xml.r2007_06.ome.DetectorRefNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -46,71 +46,94 @@ import java.util.List;
 
 import org.w3c.dom.Element;
 
-public class FilterSetNode extends FilterSpecNode
+public class DetectorRefNode extends ReferenceNode
 {
 	// -- Constructors --
 	
-	/** Constructs a FilterSet node with an associated DOM element. */
-	public FilterSetNode(Element element)
+	/** Constructs a DetectorRef node with an associated DOM element. */
+	public DetectorRefNode(Element element)
 	{
 		super(element);
 	}
 
 	/**
-	 * Constructs a FilterSet node with an associated DOM element beneath
+	 * Constructs a DetectorRef node with an associated DOM element beneath
 	 * a given parent.
 	 */
-	public FilterSetNode(OMEXMLNode parent)
+	public DetectorRefNode(OMEXMLNode parent)
 	{
 		this(parent, true);
 	}
 
 	/**
-	 * Constructs a FilterSet node with an associated DOM element beneath
+	 * Constructs a DetectorRef node with an associated DOM element beneath
 	 * a given parent.
 	 */
-	public FilterSetNode(OMEXMLNode parent, boolean attach)
+	public DetectorRefNode(OMEXMLNode parent, boolean attach)
 	{
 		super(DOMUtil.createChild(parent.getDOMElement(),
-		                          "FilterSet", attach));
+		                          "DetectorRef", attach));
 	}
 
-	// -- FilterSet API methods --
-      
-	// Virtual, inferred back reference LogicalChannel_BackReference
-	public List getLogicalChannelList()
+	// -- DetectorRef API methods --
+              
+	// Attribute
+	public Float getGain()
 	{
-		return getReferringNodes("LogicalChannel");
+		return getFloatAttribute("Gain");
 	}
-	
-	public int countLogicalChannelList()
+
+	public void setGain(Float gain)
 	{
-		return getReferringCount("LogicalChannel");
-	}
-                                                
-	// Attribute which is an OME XML "ID"
-	public FilterNode getExFilterRef()
-	{
-		return (FilterNode) 
-			getAttrReferencedNode("Filter", "ExFilterRef");
+		setAttribute("Gain", gain);
 	}
                                             
-	// Attribute which is an OME XML "ID"
-	public FilterNode getEmFilterRef()
+	// Attribute
+	public String getBinning()
 	{
-		return (FilterNode) 
-			getAttrReferencedNode("Filter", "EmFilterRef");
+		return getStringAttribute("Binning");
 	}
-                                                                        
+
+	public void setBinning(String binning)
+	{
+		setAttribute("Binning", binning);
+	}
+                                            
+	// Attribute
+	public Float getVoltage()
+	{
+		return getFloatAttribute("Voltage");
+	}
+
+	public void setVoltage(Float voltage)
+	{
+		setAttribute("Voltage", voltage);
+	}
+                                            
+	// Attribute
+	public Float getOffset()
+	{
+		return getFloatAttribute("Offset");
+	}
+
+	public void setOffset(Float offset)
+	{
+		setAttribute("Offset", offset);
+	}
+                                                                    
 	// *** WARNING *** Unhandled or skipped property ID
-                
-	// Attribute which is an OME XML "ID"
-	public DichroicNode getDichroicRef()
+                    
+	// Attribute
+	public Float getReadOutRate()
 	{
-		return (DichroicNode) 
-			getAttrReferencedNode("Dichroic", "DichroicRef");
+		return getFloatAttribute("ReadOutRate");
 	}
-                                  
+
+	public void setReadOutRate(Float readOutRate)
+	{
+		setAttribute("ReadOutRate", readOutRate);
+	}
+                              
 	// -- OMEXMLNode API methods --
 	
 	public boolean hasID()

@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ROINode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a ROI node with an associated DOM element. */
 	public ROINode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a ROI node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ROINode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a ROI node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ROINode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "ROI", attach));
+	}
+
 	// -- ROI API methods --
-          
+              
 	// Attribute
 	public Integer getT0()
 	{
@@ -63,7 +87,7 @@ public class ROINode extends OMEXMLNode
 	{
 		setAttribute("T0", t0);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getT1()
 	{
@@ -74,7 +98,7 @@ public class ROINode extends OMEXMLNode
 	{
 		setAttribute("T1", t1);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getY1()
 	{
@@ -85,7 +109,7 @@ public class ROINode extends OMEXMLNode
 	{
 		setAttribute("Y1", y1);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getY0()
 	{
@@ -96,7 +120,7 @@ public class ROINode extends OMEXMLNode
 	{
 		setAttribute("Y0", y0);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getX0()
 	{
@@ -107,7 +131,7 @@ public class ROINode extends OMEXMLNode
 	{
 		setAttribute("X0", x0);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getX1()
 	{
@@ -118,7 +142,7 @@ public class ROINode extends OMEXMLNode
 	{
 		setAttribute("X1", x1);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getZ0()
 	{
@@ -129,7 +153,7 @@ public class ROINode extends OMEXMLNode
 	{
 		setAttribute("Z0", z0);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getZ1()
 	{
@@ -140,9 +164,20 @@ public class ROINode extends OMEXMLNode
 	{
 		setAttribute("Z1", z1);
 	}
-                                                                
+                                                                    
 	// *** WARNING *** Unhandled or skipped property ID
-      
+            
+	// Virtual, inferred back reference MicrobeamManipulation_BackReference
+	public List getMicrobeamManipulationList()
+	{
+		return getReferringNodes("MicrobeamManipulation");
+	}
+	
+	public int countMicrobeamManipulationList()
+	{
+		return getReferringCount("MicrobeamManipulation");
+	}
+                                      
 	// -- OMEXMLNode API methods --
 	
 	public boolean hasID()
@@ -150,3 +185,4 @@ public class ROINode extends OMEXMLNode
 		return true;
 	}
 }
+

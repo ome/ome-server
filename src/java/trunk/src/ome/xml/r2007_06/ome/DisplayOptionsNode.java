@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class DisplayOptionsNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a DisplayOptions node with an associated DOM element. */
 	public DisplayOptionsNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a DisplayOptions node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public DisplayOptionsNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a DisplayOptions node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public DisplayOptionsNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "DisplayOptions", attach));
+	}
+
 	// -- DisplayOptions API methods --
-                  
+                      
 	// Element which occurs more than once
 	public int getROICount()
 	{
@@ -63,21 +87,21 @@ public class DisplayOptionsNode extends OMEXMLNode
 	{
 		return getChildNodes("ROI");
 	}
-                                                    
+                                                        
 	// Element which is complex (has sub-elements)
 	public ChannelSpecTypeNode getGreenChannel()
 	{
 		return (ChannelSpecTypeNode) 
-			getChildNode("ChannelSpecType","GreenChannel");
+			getChildNode("ChannelSpecType", "GreenChannel");
 	}
-                                        
+                                            
 	// Element which is complex (has sub-elements)
 	public ProjectionNode getProjection()
 	{
 		return (ProjectionNode) 
-			getChildNode("Projection","Projection");
+			getChildNode("Projection", "Projection");
 	}
-                    
+                        
 	// Attribute
 	public Float getZoom()
 	{
@@ -88,14 +112,14 @@ public class DisplayOptionsNode extends OMEXMLNode
 	{
 		setAttribute("Zoom", zoom);
 	}
-                                                            
+                                                                
 	// Element which is complex (has sub-elements)
 	public ChannelSpecTypeNode getBlueChannel()
 	{
 		return (ChannelSpecTypeNode) 
-			getChildNode("ChannelSpecType","BlueChannel");
+			getChildNode("ChannelSpecType", "BlueChannel");
 	}
-                    
+                        
 	// Attribute
 	public String getDisplay()
 	{
@@ -106,28 +130,28 @@ public class DisplayOptionsNode extends OMEXMLNode
 	{
 		setAttribute("Display", display);
 	}
-                                                            
+                                                                
 	// Element which is complex (has sub-elements)
 	public TimeNode getTime()
 	{
 		return (TimeNode) 
-			getChildNode("Time","Time");
+			getChildNode("Time", "Time");
 	}
-                                        
+                                            
 	// Element which is complex (has sub-elements)
 	public ChannelSpecTypeNode getRedChannel()
 	{
 		return (ChannelSpecTypeNode) 
-			getChildNode("ChannelSpecType","RedChannel");
+			getChildNode("ChannelSpecType", "RedChannel");
 	}
-                                        
+                                            
 	// Element which is complex (has sub-elements)
 	public GreyChannelNode getGreyChannel()
 	{
 		return (GreyChannelNode) 
-			getChildNode("GreyChannel","GreyChannel");
+			getChildNode("GreyChannel", "GreyChannel");
 	}
-                                            
+                                                
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
@@ -137,3 +161,4 @@ public class DisplayOptionsNode extends OMEXMLNode
 		return true;
 	}
 }
+

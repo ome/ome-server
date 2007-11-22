@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class OTFNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a OTF node with an associated DOM element. */
 	public OTFNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a OTF node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public OTFNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a OTF node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public OTFNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "OTF", attach));
+	}
+
 	// -- OTF API methods --
-          
+              
 	// Attribute
 	public String getPixelType()
 	{
@@ -63,7 +87,7 @@ public class OTFNode extends OMEXMLNode
 	{
 		setAttribute("PixelType", pixelType);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getSizeX()
 	{
@@ -74,7 +98,7 @@ public class OTFNode extends OMEXMLNode
 	{
 		setAttribute("SizeX", sizeX);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getSizeY()
 	{
@@ -85,14 +109,25 @@ public class OTFNode extends OMEXMLNode
 	{
 		setAttribute("SizeY", sizeY);
 	}
-                                                        
+                                    
+	// Virtual, inferred back reference LogicalChannel_BackReference
+	public List getLogicalChannelList()
+	{
+		return getReferringNodes("LogicalChannel");
+	}
+	
+	public int countLogicalChannelList()
+	{
+		return getReferringCount("LogicalChannel");
+	}
+                                                                    
 	// Element which is complex and is an OME XML "Ref"
 	public FilterSetNode getFilterSet()
 	{
 		return (FilterSetNode) 
 			getReferencedNode("FilterSet", "FilterSetRef");
 	}
-                        
+                            
 	// Attribute
 	public Boolean getOpticalAxisAveraged()
 	{
@@ -103,20 +138,20 @@ public class OTFNode extends OMEXMLNode
 	{
 		setAttribute("OpticalAxisAveraged", opticalAxisAveraged);
 	}
-                                                        
+                                                            
 	// Element which is complex and is an OME XML "Ref"
 	public ObjectiveNode getObjective()
 	{
 		return (ObjectiveNode) 
 			getReferencedNode("Objective", "ObjectiveRef");
 	}
-                                    
+                                        
 	// Element which is not complex (has only a text node)
 	public String getBinaryFile()
 	{
 		return getStringCData("BinaryFile");
 	}
-                                                    
+                                                        
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
@@ -126,3 +161,4 @@ public class OTFNode extends OMEXMLNode
 		return true;
 	}
 }
+

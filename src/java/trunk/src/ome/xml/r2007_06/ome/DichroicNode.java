@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class DichroicNode extends FilterSpecNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Dichroic node with an associated DOM element. */
 	public DichroicNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Dichroic node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public DichroicNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Dichroic node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public DichroicNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Dichroic", attach));
+	}
+
 	// -- Dichroic API methods --
-                                  
+                                      
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
@@ -62,3 +86,4 @@ public class DichroicNode extends FilterSpecNode
 		return true;
 	}
 }
+

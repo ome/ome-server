@@ -1,5 +1,5 @@
 /*
- * ome.xml.r2007_06.ome.FilterSetNode
+ * ome.xml.r2007_06.ome.FilterSetRefNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -46,71 +46,39 @@ import java.util.List;
 
 import org.w3c.dom.Element;
 
-public class FilterSetNode extends FilterSpecNode
+public class FilterSetRefNode extends ReferenceNode
 {
 	// -- Constructors --
 	
-	/** Constructs a FilterSet node with an associated DOM element. */
-	public FilterSetNode(Element element)
+	/** Constructs a FilterSetRef node with an associated DOM element. */
+	public FilterSetRefNode(Element element)
 	{
 		super(element);
 	}
 
 	/**
-	 * Constructs a FilterSet node with an associated DOM element beneath
+	 * Constructs a FilterSetRef node with an associated DOM element beneath
 	 * a given parent.
 	 */
-	public FilterSetNode(OMEXMLNode parent)
+	public FilterSetRefNode(OMEXMLNode parent)
 	{
 		this(parent, true);
 	}
 
 	/**
-	 * Constructs a FilterSet node with an associated DOM element beneath
+	 * Constructs a FilterSetRef node with an associated DOM element beneath
 	 * a given parent.
 	 */
-	public FilterSetNode(OMEXMLNode parent, boolean attach)
+	public FilterSetRefNode(OMEXMLNode parent, boolean attach)
 	{
 		super(DOMUtil.createChild(parent.getDOMElement(),
-		                          "FilterSet", attach));
+		                          "FilterSetRef", attach));
 	}
 
-	// -- FilterSet API methods --
-      
-	// Virtual, inferred back reference LogicalChannel_BackReference
-	public List getLogicalChannelList()
-	{
-		return getReferringNodes("LogicalChannel");
-	}
-	
-	public int countLogicalChannelList()
-	{
-		return getReferringCount("LogicalChannel");
-	}
-                                                
-	// Attribute which is an OME XML "ID"
-	public FilterNode getExFilterRef()
-	{
-		return (FilterNode) 
-			getAttrReferencedNode("Filter", "ExFilterRef");
-	}
-                                            
-	// Attribute which is an OME XML "ID"
-	public FilterNode getEmFilterRef()
-	{
-		return (FilterNode) 
-			getAttrReferencedNode("Filter", "EmFilterRef");
-	}
-                                                                        
+	// -- FilterSetRef API methods --
+                                      
 	// *** WARNING *** Unhandled or skipped property ID
-                
-	// Attribute which is an OME XML "ID"
-	public DichroicNode getDichroicRef()
-	{
-		return (DichroicNode) 
-			getAttrReferencedNode("Dichroic", "DichroicRef");
-	}
-                                  
+      
 	// -- OMEXMLNode API methods --
 	
 	public boolean hasID()

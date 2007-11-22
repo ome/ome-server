@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class PlaneNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Plane node with an associated DOM element. */
 	public PlaneNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Plane node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public PlaneNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Plane node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public PlaneNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Plane", attach));
+	}
+
 	// -- Plane API methods --
-          
+              
 	// Attribute
 	public Integer getTheT()
 	{
@@ -63,7 +87,7 @@ public class PlaneNode extends OMEXMLNode
 	{
 		setAttribute("TheT", theT);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getTheC()
 	{
@@ -74,7 +98,7 @@ public class PlaneNode extends OMEXMLNode
 	{
 		setAttribute("TheC", theC);
 	}
-                                        
+                                            
 	// Attribute
 	public Integer getTheZ()
 	{
@@ -85,19 +109,19 @@ public class PlaneNode extends OMEXMLNode
 	{
 		setAttribute("TheZ", theZ);
 	}
-                                                            
+                                                                
 	// Element which is complex (has sub-elements)
 	public StagePositionNode getStagePosition()
 	{
 		return (StagePositionNode) 
-			getChildNode("StagePosition","StagePosition");
+			getChildNode("StagePosition", "StagePosition");
 	}
-                                        
+                                            
 	// Element which is complex (has sub-elements)
 	public PlaneTimingNode getPlaneTiming()
 	{
 		return (PlaneTimingNode) 
-			getChildNode("PlaneTiming","PlaneTiming");
+			getChildNode("PlaneTiming", "PlaneTiming");
 	}
           
 	// -- OMEXMLNode API methods --
@@ -107,3 +131,4 @@ public class PlaneNode extends OMEXMLNode
 		return false;
 	}
 }
+

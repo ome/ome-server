@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class MicroscopeNode extends ManufactSpecNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Microscope node with an associated DOM element. */
 	public MicroscopeNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Microscope node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public MicroscopeNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Microscope node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public MicroscopeNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Microscope", attach));
+	}
+
 	// -- Microscope API methods --
-          
+              
 	// Attribute
 	public String getType()
 	{
@@ -71,3 +95,4 @@ public class MicroscopeNode extends ManufactSpecNode
 		return false;
 	}
 }
+

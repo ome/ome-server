@@ -31,42 +31,77 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class GroupNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Group node with an associated DOM element. */
 	public GroupNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Group node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public GroupNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Group node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public GroupNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Group", attach));
+	}
+
 	// -- Group API methods --
-                              
+      
+	// Virtual, inferred back reference Dataset_BackReference
+	public List getDatasetList()
+	{
+		return getReferringNodes("Dataset");
+	}
+	
+	public int countDatasetList()
+	{
+		return getReferringCount("Dataset");
+	}
+                                                                        
 	// Element which is complex (has sub-elements)
 	public ContactNode getContact()
 	{
 		return (ContactNode) 
-			getChildNode("Contact","Contact");
+			getChildNode("Contact", "Contact");
 	}
-                                        
+                                            
 	// Element which is complex (has sub-elements)
 	public LeaderNode getLeader()
 	{
 		return (LeaderNode) 
-			getChildNode("Leader","Leader");
+			getChildNode("Leader", "Leader");
 	}
-                    
+                        
 	// Attribute
 	public String getName()
 	{
@@ -77,7 +112,7 @@ public class GroupNode extends OMEXMLNode
 	{
 		setAttribute("Name", name);
 	}
-                                                                
+                                                                    
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
@@ -87,3 +122,4 @@ public class GroupNode extends OMEXMLNode
 		return true;
 	}
 }
+

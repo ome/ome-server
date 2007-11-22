@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class ImagingEnvironmentNode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a ImagingEnvironment node with an associated DOM element. */
 	public ImagingEnvironmentNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a ImagingEnvironment node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ImagingEnvironmentNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a ImagingEnvironment node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public ImagingEnvironmentNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "ImagingEnvironment", attach));
+	}
+
 	// -- ImagingEnvironment API methods --
-          
+              
 	// Attribute
 	public Float getCO2Percent()
 	{
@@ -63,7 +87,7 @@ public class ImagingEnvironmentNode extends OMEXMLNode
 	{
 		setAttribute("CO2Percent", co2percent);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getTemperature()
 	{
@@ -74,7 +98,7 @@ public class ImagingEnvironmentNode extends OMEXMLNode
 	{
 		setAttribute("Temperature", temperature);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getAirPressure()
 	{
@@ -85,7 +109,7 @@ public class ImagingEnvironmentNode extends OMEXMLNode
 	{
 		setAttribute("AirPressure", airPressure);
 	}
-                                        
+                                            
 	// Attribute
 	public Float getHumidity()
 	{
@@ -104,3 +128,4 @@ public class ImagingEnvironmentNode extends OMEXMLNode
 		return false;
 	}
 }
+

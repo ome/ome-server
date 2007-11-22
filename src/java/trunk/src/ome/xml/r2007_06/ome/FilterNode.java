@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class FilterNode extends FilterSpecNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a Filter node with an associated DOM element. */
 	public FilterNode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a Filter node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public FilterNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a Filter node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public FilterNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Filter", attach));
+	}
+
 	// -- Filter API methods --
-          
+              
 	// Attribute
 	public String getFilterWheel()
 	{
@@ -63,7 +87,7 @@ public class FilterNode extends FilterSpecNode
 	{
 		setAttribute("FilterWheel", filterWheel);
 	}
-                                        
+                                            
 	// Attribute
 	public String getType()
 	{
@@ -74,14 +98,14 @@ public class FilterNode extends FilterSpecNode
 	{
 		setAttribute("Type", type);
 	}
-                                                                
+                                                                    
 	// *** WARNING *** Unhandled or skipped property ID
-                                    
+                                        
 	// Element which is complex (has sub-elements)
 	public TransmittanceRangeNode getTransmittanceRange()
 	{
 		return (TransmittanceRangeNode) 
-			getChildNode("TransmittanceRange","TransmittanceRange");
+			getChildNode("TransmittanceRange", "TransmittanceRange");
 	}
           
 	// -- OMEXMLNode API methods --
@@ -91,3 +115,4 @@ public class FilterNode extends FilterSpecNode
 		return true;
 	}
 }
+

@@ -31,28 +31,52 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via xsd-fu on 2007-10-08 14:37:54+0100
+ * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
  *
  *-----------------------------------------------------------------------------
  */
 
 package ome.xml.r2007_06.ome;
 
-import java.util.Vector;
+import ome.xml.DOMUtil;
 import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
+
 import org.w3c.dom.Element;
 
 public class OMENode extends OMEXMLNode
 {
-	// -- Constructor --
+	// -- Constructors --
 	
+	/** Constructs a OME node with an associated DOM element. */
 	public OMENode(Element element)
 	{
 		super(element);
 	}
-	
+
+	/**
+	 * Constructs a OME node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public OMENode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
+
+	/**
+	 * Constructs a OME node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public OMENode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "OME", attach));
+	}
+
 	// -- OME API methods --
-                  
+                      
 	// Element which occurs more than once
 	public int getPlateCount()
 	{
@@ -63,7 +87,7 @@ public class OMENode extends OMEXMLNode
 	{
 		return getChildNodes("Plate");
 	}
-                                        
+                                            
 	// Element which occurs more than once
 	public int getGroupCount()
 	{
@@ -74,13 +98,13 @@ public class OMENode extends OMEXMLNode
 	{
 		return getChildNodes("Group");
 	}
-                                            
+                                                
 	// Element which is not complex (has only a text node)
 	public String getSemanticTypeDefinitions()
 	{
 		return getStringCData("SemanticTypeDefinitions");
 	}
-                                    
+                                        
 	// Element which occurs more than once
 	public int getScreenCount()
 	{
@@ -91,13 +115,13 @@ public class OMENode extends OMEXMLNode
 	{
 		return getChildNodes("Screen");
 	}
-                                            
+                                                
 	// Element which is not complex (has only a text node)
 	public String getAnalysisModuleLibrary()
 	{
 		return getStringCData("AnalysisModuleLibrary");
 	}
-                                    
+                                        
 	// Element which occurs more than once
 	public int getDatasetCount()
 	{
@@ -108,7 +132,7 @@ public class OMENode extends OMEXMLNode
 	{
 		return getChildNodes("Dataset");
 	}
-                                        
+                                            
 	// Element which occurs more than once
 	public int getProjectCount()
 	{
@@ -119,7 +143,7 @@ public class OMENode extends OMEXMLNode
 	{
 		return getChildNodes("Project");
 	}
-                                        
+                                            
 	// Element which occurs more than once
 	public int getInstrumentCount()
 	{
@@ -130,13 +154,13 @@ public class OMENode extends OMEXMLNode
 	{
 		return getChildNodes("Instrument");
 	}
-                                            
+                                                
 	// Element which is not complex (has only a text node)
 	public String getCustomAttributes()
 	{
 		return getStringCData("CustomAttributes");
 	}
-                                    
+                                        
 	// Element which occurs more than once
 	public int getExperimentCount()
 	{
@@ -147,7 +171,7 @@ public class OMENode extends OMEXMLNode
 	{
 		return getChildNodes("Experiment");
 	}
-                                        
+                                            
 	// Element which occurs more than once
 	public int getExperimenterCount()
 	{
@@ -158,7 +182,7 @@ public class OMENode extends OMEXMLNode
 	{
 		return getChildNodes("Experimenter");
 	}
-                                        
+                                            
 	// Element which occurs more than once
 	public int getImageCount()
 	{
@@ -177,3 +201,4 @@ public class OMENode extends OMEXMLNode
 		return false;
 	}
 }
+
