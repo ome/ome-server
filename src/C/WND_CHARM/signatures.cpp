@@ -116,7 +116,9 @@ int signatures::IsNeeded(long start_index, long group_length)
 /* compute
    compute signature set of a given image and add the
    resulting values to the "data" attribute of this class
-   input - an image matrix structure.
+   input - 
+   matrix -ImageMatrix*- an image matrix structure.
+   compute_colors -int- 1 to compute color signatures, 0 to ignore color sugnatures   
 */
 
 void signatures::compute(ImageMatrix *matrix, int compute_colors)

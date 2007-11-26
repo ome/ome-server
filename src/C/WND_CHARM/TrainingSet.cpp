@@ -45,6 +45,10 @@
 #include <stdlib.h>
 #endif
 
+
+/* global variable */
+int print_to_screen=1;
+
 /* compare_two_doubles
    function used for qsort
 */
@@ -231,6 +235,47 @@ void TrainingSet::RemoveClass(long class_index)
    count=count-deleted_count;
 }
 
+/* SaveWeightVector
+   save the weights of the features into a file 
+   filename -char *- the name of the file into which the weight values should be written
+*/
+int TrainingSet::SaveWeightVector(char *filename)
+{  FILE *sig_file;
+   int sig_index;
+   if (!(sig_file=fopen(filename,"w"))) return(0);
+   if (print_to_screen) printf("Saving weight vector to file '%s'...\n",filename);   
+   for (sig_index=0;sig_index<signature_count;sig_index++)
+     fprintf(sig_file,"%f %s\n",SignatureWeights[sig_index],SignatureNames[sig_index]);
+   fclose(sig_file);
+   return(1);
+}
+
+/* LoadWeightVector
+   load the weights of the features from a file and assign them to the features of the training set
+   filename -char *- the name of the file into which the weight values should be read from
+   factor -double- multiple the loaded feature vector and add to the existing vecotr (-1 is subtracting). 0 replaces the existing vector with the loaded vector.
+*/
+int TrainingSet::LoadWeightVector(char *filename, double factor)
+{  FILE *sig_file;
+   int sig_index=0;
+   char line[128],*p_line;
+   if (!(sig_file=fopen(filename,"r"))) return(0);
+   if (print_to_screen) printf("Loading weight vector from file '%s'...\n",filename);
+   p_line=fgets(line,sizeof(line),sig_file);
+   while (p_line)
+   {  if (strlen(p_line)>0)
+      {  if (strchr(p_line,' ')) (*strchr(p_line,' '))='\0';
+         if (factor==0) SignatureWeights[sig_index++]=atof(p_line);
+	     else SignatureWeights[sig_index++]+=factor*atof(p_line);
+         if (SignatureWeights[sig_index-1]<0) SignatureWeights[sig_index-1]=0;		  
+	  }
+      p_line=fgets(line,sizeof(line),sig_file);   
+   }
+   fclose(sig_file);
+   if (sig_index!=signature_count) return(-1);
+   return(1);
+}
+
 /*  split
     split randomly into a training set and a test set
     ratio -double- the ratio of the number of test set (e.g., 0.1 means 10% of the data are test data).
@@ -277,6 +322,19 @@ void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet,
       for (sample_index=0;sample_index<number_of_test_samples;sample_index++)
       {  int rand_index;
          rand_index=rand() % class_samples_count;            /* find a random sample  */
+
+//while (strstr(samples[class_samples[rand_index*tiles]]->full_path,"_p") && class_counts[class_index]<=5) rand_index=rand() % class_samples_count;   /* no profiles for classes smaller than 5 */
+
+//int b=0;
+//for (int a=0;a<class_samples_count;a++)
+//if (strstr(samples[class_samples[a*tiles]]->full_path,"_fb"))
+//{ rand_index=a;
+//  b=1;
+//  break;
+//}
+//if (b==0) break;
+//printf("%s\n",samples[class_samples[rand_index*tiles]]->full_path);  
+
          for (tile_index=0;tile_index<tiles;tile_index++)    /* add all the tiles of that image */
            TestSet->AddSample(samples[class_samples[rand_index*tiles+tile_index]]->duplicate());   /* add the random sample */		   
          /* remove the index */
@@ -406,18 +464,16 @@ int TrainingSet::AddAllSignatures(char *filename)
    load a set of image into the training set
    filename -char *- a root directory - each class is a sub-directory.
    returned value -int- 1 is scucceeded 0 if failed
-   log -int- whether to write a log file
-   print_to_screen -int- print the currently processed image to the screen
    tiles -int- the number of tiles to break the image to (e.g., 4 means 4x4 = 16 tiles)
    multi_processor -int- 1 if more than one signatures process should be running
    large_set -int- whether to use the large set of image features or not
 */
 
 
-int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int tiles, int multi_processor, int large_set, int compute_colors, int downsample)
+int TrainingSet::LoadFromDir(char *filename, int tiles, int multi_processor, int large_set, int compute_colors, int downsample)
 {  DIR *root_dir,*class_dir;
    struct dirent *ent;
-   FILE *log_file, *sig_file;
+   FILE *sig_file;
    char buffer[256],image_file_name[256];
    char files_in_class[4096][64];
    char dirs_in_root[MAX_CLASS_NUM][64];
@@ -462,12 +518,6 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
          strcat(image_file_name,"/");
          strcat(image_file_name,files_in_class[file_index]);
          if (print_to_screen) printf("Loading image %s\n",image_file_name);
-         if (log)  /* write to a log file */
-         {  if (log_file=fopen("sigs.log","w"))
-            {  fprintf(log_file,"Loading image %s",image_file_name);
-               fclose(log_file);
-            }
-         }
          res=0;
 #ifdef WIN32
          if (strstr(image_file_name,".bmp") || strstr(image_file_name,".BMP"))
@@ -485,6 +535,8 @@ int TrainingSet::LoadFromDir(char *filename, int log, int print_to_screen, int t
          {  int tile_index_x,tile_index_y;
             if (downsample>0 && downsample<100)
               matrix->Downsample(((double)downsample)/100.0,((double)downsample)/100.0);   /* downsample the image */
+//matrix->flip();
+//printf("flipping image '%s'\n",image_file_name);			  
             for (tile_index_y=0;tile_index_y<tiles;tile_index_y++)
               for (tile_index_x=0;tile_index_x<tiles;tile_index_x++)
               {  ImageMatrix *tile_matrix;
@@ -563,6 +615,7 @@ double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confu
    for (test_sample_index=0;test_sample_index<TestSet->count;test_sample_index++)
    {  char last_path[IMAGE_PATH_LENGTH];
       signatures *closest_sample;
+	  if (print_to_screen) printf("Testing image %s (%d/%d)...\n",TestSet->samples[test_sample_index]->full_path,test_sample_index/tiles,TestSet->count/tiles);	  
       test_signature=TestSet->samples[test_sample_index]->duplicate();  //new signatures(&(TestSet->samples[test_sample_index]),TestSet->signature_count);
       if (method==WNN) predicted_class=WNNclassify(test_signature, probabilities,&normalization_factor,&closest_sample);
       if (method==WND) predicted_class=classify2(test_signature, probabilities,&normalization_factor);
@@ -573,7 +626,7 @@ double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confu
       else strcpy(last_path,test_signature->full_path);
       /* if the tiles are done for the image - classify the image based on the tile marginal probabilities */
       tile_index++;
-      for (class_index=1;class_index<=class_num;class_index++) probabilities_sum[class_index]+=probabilities[class_index];
+      for (class_index=1;class_index<=class_num;class_index++) probabilities_sum[class_index]+=(probabilities[class_index]/(double)tiles);
       if (tile_index==tiles)
       {  int cand;
          for (class_index=1;class_index<=class_num;class_index++) probabilities[class_index]=0.0;  /* initialize the array */
@@ -585,15 +638,14 @@ double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confu
               {  max=probabilities_sum[class_index];
                  predicted_class=class_index;
               }
-
             probabilities[predicted_class]=1.0;
             if (predicted_class==test_signature->sample_class) break;  /* class was found among the n closest */
          }
-
          /* update confusion and similarity matrices */
          if (predicted_class==test_signature->sample_class) accurate_prediction++;
-           if (confusion_matrix)  /* update the confusion matrix */
-             confusion_matrix[class_num*test_signature->sample_class+predicted_class]++;
+         if (print_to_screen) printf("Actual class ID: %d     Predicted class ID: %d      Ac: %f\n",test_signature->sample_class,predicted_class,(double)(accurate_prediction*tiles)/(double)(test_sample_index+1));
+         if (confusion_matrix)  /* update the confusion matrix */
+           confusion_matrix[class_num*test_signature->sample_class+predicted_class]++;
          if (similarity_matrix) /* update the similarity matrix */
          for (class_index=1;class_index<=class_num;class_index++) similarity_matrix[class_num*test_signature->sample_class+class_index]+=probabilities_sum[class_index];
 
@@ -780,7 +832,6 @@ long TrainingSet::WNNclassify(signatures *test_sample, double *probabilities, do
 
    /* normalize the test sample */
    test_sample->normalize(this);
-
    for (sample_index=0;sample_index<count;sample_index++)
    {  double dist=0;
       for (sig_index=0;sig_index<signature_count;sig_index++)
@@ -1044,7 +1095,8 @@ long TrainingSet::PrintConfusion(FILE *output_file,unsigned short *confusion_mat
          {  double dist=0;
             if (method==0) dist=max(1-similarity_matrix[class_index1*class_num+class_index2],1-similarity_matrix[class_index2*class_num+class_index1]);
             if (method==1) dist=((1-similarity_matrix[class_index1*class_num+class_index2])+(1-similarity_matrix[class_index2*class_num+class_index1]))/2;
-            if (dend_file) fprintf(output_file,"%1.4f       ",dist*(dist>0));
+			if (dist==NAN) dist=0;
+            if (dend_file) fprintf(output_file,"%1.4f       ",dist*(dist>=0));
             else fprintf(output_file,"   %1.5f",similarity_matrix[class_index1*class_num+class_index2]);
          }
       }
@@ -1055,7 +1107,7 @@ long TrainingSet::PrintConfusion(FILE *output_file,unsigned short *confusion_mat
 }
 
 
-long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *splits, unsigned short split_num, int tiles, int max_train_images, char *phylib_path, int phylip_algorithm, int export_tsv)
+long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *splits, unsigned short split_num, int tiles, int max_train_images, char *phylib_path, int phylip_algorithm, int export_tsv, char *path_to_test_set)
 {  int class_index,class_index2,sample_index,split_index,a,test_set_size,train_set_size;
    int test_images[MAX_CLASS_NUM];
    double *avg_similarity_matrix;
@@ -1071,8 +1123,10 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
 #endif
 
    /* print the header */
-   fprintf(output_file,"<HTML>\n<HEAD>\n<TITLE> %s </TITLE>\n </HEAD> \n <BODY> \n <br> <h1>%s</h1><hr/><CENTER>\n ",data_set_name,data_set_name);
-
+   fprintf(output_file,"<HTML>\n<HEAD>\n<TITLE> %s </TITLE>\n </HEAD> \n <BODY> \n <br> <h1>%s</h1><br>\n ",data_set_name,data_set_name);
+   if (path_to_test_set)  fprintf(output_file,"Testing with data file: %s<br>",path_to_test_set);
+   fprintf(output_file,"<hr/><CENTER>\n");
+   
    /* print the number of samples table */
    fprintf(output_file,"<table border=\"1\" cellspacing=\"0\" cellpadding=\"3\" align=\"center\">\" \n <caption>Number of Images from Training and Testing (tiles per image=%d)</caption> \n <tr>",tiles*tiles);
    for (class_index=0;class_index<=class_num;class_index++)
@@ -1095,7 +1149,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
    {  int inst_num=0;
       for (sample_index=0;sample_index<count;sample_index++)
         if (samples[sample_index]->sample_class==class_index) inst_num++;
-      inst_num=(int)(inst_num/(tiles*tiles))-test_images[class_index];
+      inst_num=(int)(inst_num/(tiles*tiles))-test_images[class_index]*(path_to_test_set==NULL);
       if (max_train_images>0 && inst_num>max_train_images) inst_num=max_train_images;
       fprintf(output_file,"<td>%d</td>\n",inst_num);
       train_set_size+=inst_num;
@@ -1148,9 +1202,9 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
    fprintf(output_file,"<br><br><br><br><br><br> \n\n\n\n\n\n\n\n");
 
    /* average confusion and similarity matrix */
-   sprintf(tsv_filename,"tsv/avg_confusion.tsv");   /* determine the tsv file name           */
+   sprintf(tsv_filename,"tsv/avg_confusion.tsv");                /* determine the tsv file name           */
    tsvfile=NULL;                                                 /* keep it null if the file doesn't open */
-   if (export_tsv) tsvfile=fopen(tsv_filename,"w");                    /* open the file for tsv                 */
+   if (export_tsv) tsvfile=fopen(tsv_filename,"w");              /* open the file for tsv                 */
    fprintf(output_file,"<table border=\"1\" align=\"center\"><caption>Average Confusion Matrix</caption> \n");
    fprintf(output_file,"<tr><td></td> ");      /* space */
    if (tsvfile) fprintf(tsvfile,"\t");         /* space (in the tsv file) */
@@ -1240,7 +1294,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
 			alg[0]='\0';
 			for (algorithm_index=0;algorithm_index<phylip_algorithm;algorithm_index++)
 			  strcat(alg,"I\n");
-            fprintf(dend_file,"outtree\n%s/src/font1\n%sV\nD\nN\nY\n",phylib_path,alg);
+            fprintf(dend_file,"outtree\n%s/src/font1\n%sV\nN\nY\n",phylib_path,alg);     //D\n
             fclose(dend_file);
 			/* create the dendrogram */
 			system("rm plotfile");
