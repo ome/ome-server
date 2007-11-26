@@ -133,6 +133,7 @@ __C__
 #include <time.h>
 #include "cmatrix.h"
 #include "signatures.h"
+#include "TrainingSet.h"
 
 
 /* build the ImageMatrix structure */
@@ -173,22 +174,27 @@ ImageMatrix *buff2matrix(unsigned char *buffer, int width, int height, int bytes
 void CompFeatures(unsigned char *buffer, int width, int height, int bytes_per_pixel)
 {  ImageMatrix *matrix;
     signatures *ImageSignatures;
+    TrainingSet *name_sig_ts;
+    
     long num_of_parameters;
-     Inline_Stack_Vars;    
+    Inline_Stack_Vars;    
     matrix=buff2matrix(buffer, width, height,bytes_per_pixel);
 
      /* compute the image features */    
+     name_sig_ts=new TrainingSet(1,2);    /* this is used for getting the feature names */
      ImageSignatures=new signatures;
-     ImageSignatures->compute(matrix);
+     ImageSignatures->NamesTrainingSet=name_sig_ts;
+     ImageSignatures->compute(matrix,0);
 
      Inline_Stack_Reset;
     
      /* add the signature values */
-     for (int a=0;a<ImageSignatures->count;a++)
+     for (int sig_index=0;sig_index<ImageSignatures->count;sig_index++)
      {  
-//printf("%s: %f\n",ImageSignatures->data[a].name,ImageSignatures->data[a].value);
-        Inline_Stack_Push(sv_2mortal(newSVpv(ImageSignatures->data[a].name,0)));                                   
-        Inline_Stack_Push(sv_2mortal(newSVnv(ImageSignatures->data[a].value)));          
+//printf("%s: %f\n",ImageSignatures->data[a].name,ImageSignatures->data[sig_index].value);
+//        Inline_Stack_Push(sv_2mortal(newSVpv(ImageSignatures->data[sig_index].name,0)));                                   
+        Inline_Stack_Push(sv_2mortal(newSVpv(name_sig_ts->SignatureNames[sig_index],0)));
+        Inline_Stack_Push(sv_2mortal(newSVnv(ImageSignatures->data[sig_index].value)));          
      }
      num_of_parameters=ImageSignatures->count*2;
     Inline_Stack_Done;
@@ -196,7 +202,8 @@ void CompFeatures(unsigned char *buffer, int width, int height, int bytes_per_pi
      /* free allocated class objects */
      delete matrix;   
      delete ImageSignatures;
-
+     delete name_sig_ts;
+    
      Inline_Stack_Return(num_of_parameters);
 }
 
