@@ -45,6 +45,7 @@ use Getopt::Long;
 use OME::Image::Server::Pixels;
 use OME::Session;
 use OME::SessionManager;
+use OME::Tasks::ImageManager;
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -57,7 +58,8 @@ use Time::HiRes qw(gettimeofday tv_interval);
 use Inline (
 	C  => 'DATA',
 	CC => 'g++',
-        INC  => '-I/home/shamirl/sigs',
+#        INC  => '-I/home/shamirl/sigs',
+        INC  => '-I/Volumes/Windows/projects/sigs',
         LIBS => '-ltiff -L/home/shamirl/sigs -limfit -lfftw3',
 	NAME => 'OME::Util::Dev::wnd',
 );
@@ -140,27 +142,41 @@ sub read_from_database
            print "$image_counter / $total_number_of_images \n";
            # read the image category                
            my $image_classification = $factory -> findAttribute ('Classification', image=>$img);
-           my $image_category_name=$image_classification->Category()->Name();
-
+           my $image_category_name=$image_classification->Category()->Name();         
+           my $image_path= OME::Tasks::ImageManager->getImageOriginalFiles($img)->Path();
+print "$image_path \n";
+#		print "hello ".$img->name()."\n";
+                
            # get the features of the image
 
            my @features = $img->all_features();
+           my $do_once=0;
            foreach my $feature (@features)
            {
+             # check if that feature has signature values
+             my $this_st = $factory -> findAttribute ('GaborTextures',$feature);
+ if (($this_st=="") || ($do_once==1))  { next;}
+             
              # read the feature values
+# print "before initsigs \n";                
              InitSigs();
+# print "after initsigs \n";                             
              while (my ($semantic_type_name, $semantic_type_elements) = each(%semantic_types) )
              {  my $this_st = $factory -> findAttribute ($semantic_type_name, $feature);
                 while (my $semantic_type_element = each (%$semantic_type_elements))
                 {
                    my $value=$this_st->$semantic_type_element();
                    my $sig_name=$semantic_type_name . " " . $semantic_type_element;
-#print " $sig_name: $value \n";
+# print " $sig_name: $value \n";
                    AddSig($sig_name, $value);
+# print "after add value \n";                   
                 }
               }
-              #add the image       
-              AddImage($image_category_name);
+              #add the image    
+print "before add image \n";              
+              AddImage($image_category_name,$image_path);
+              $do_once=1;
+print "after add image \n";                            
            }
         }
 }
@@ -380,6 +396,7 @@ char category_names[CAT_NAME_LENGTH][MAX_CLASS_NUM];
 long category_count=0;
 
 TrainingSet *ts=NULL;
+TrainingSet *name_sig_ts=NULL;
 signatures *ImageSignatures=NULL;
 
 
@@ -420,15 +437,17 @@ void CompFeatures(unsigned char *buffer, int width, int height, int bytes_per_pi
 
      /* compute the image features */    
      ImageSignatures=new signatures;
-     ImageSignatures->compute(matrix);
+     ImageSignatures->NamesTrainingSet=name_sig_ts;    /* this is used for getting the feature names */
+     ImageSignatures->compute(matrix,0);
 
      Inline_Stack_Reset;
     
      /* add the signature values */
-     for (int a=0;a<ImageSignatures->count;a++)
+     for (int sig_index=0;sig_index<ImageSignatures->count;sig_index++)
      {  
-        Inline_Stack_Push(sv_2mortal(newSVpv(ImageSignatures->data[a].name,0)));                                   
-        Inline_Stack_Push(sv_2mortal(newSVnv(ImageSignatures->data[a].value)));          
+//        Inline_Stack_Push(sv_2mortal(newSVpv(ImageSignatures->data[sig_index].name,0)));                                   
+        Inline_Stack_Push(sv_2mortal(newSVpv(name_sig_ts->SignatureNames[sig_index],0)));
+        Inline_Stack_Push(sv_2mortal(newSVnv(ImageSignatures->data[sig_index].value)));          
      }
      num_of_parameters=ImageSignatures->count*2;
     Inline_Stack_Done;
@@ -445,6 +464,7 @@ int init(int load, char *file_name, int image_num)
    category_count=0;
    if (image_num==0) image_num=MAX_IMAGE_NUM;
    ts=new TrainingSet(image_num,MAX_CLASS_NUM);
+   name_sig_ts=new TrainingSet(1,2);
    if (!ts) return(0);   
    if (load)
    {  if (ts->ReadFromFile(file_name))
@@ -464,6 +484,7 @@ int cleanup(int save, char *save_to_file)
    if (ts && save)
      ts->SaveToFile(save_to_file);
    if (ts) delete ts;
+   if (name_sig_ts) delete name_sig_ts;
 }
 
 
@@ -472,12 +493,18 @@ void InitSigs()
    ImageSignatures=new signatures;
 }
 
+void FreeSigs()
+{
+   if (ImageSignatures) delete ImageSignatures;
+   ImageSignatures=NULL;
+}
+
 void AddSig(char *name, double value)
 {
    ImageSignatures->Add(name,value);
 }
 
-int AddImage(char *category_name)
+int AddImage(char *category_name, char *image_path)
 {   long category_index;
     long this_category=0;
     /* find the class category */
@@ -494,7 +521,7 @@ int AddImage(char *category_name)
      strcpy(ts->class_labels[this_category],category_name);
 
      ImageSignatures->sample_class=this_category;
-     strcpy(ImageSignatures->full_path,"");   
+     strcpy(ImageSignatures->full_path,image_path);   
      ts->AddSample(ImageSignatures);
      
 }
@@ -512,11 +539,11 @@ double TestDataset(double split_ratio, double threshold, int wnd5, int tiles)
      srand((unsigned) time(&t));
      train=new TrainingSet(MAX_IMAGE_NUM,MAX_CLASS_NUM);
      test=new TrainingSet(MAX_IMAGE_NUM,MAX_CLASS_NUM);
-     ts->split(split_ratio,train,test,tiles);              
+     ts->split(split_ratio,train,test,tiles,0,0,0);              
      train->normalize();                 
      train->SetFisherScores(threshold,NULL);     
-     res=train->Test(test,0,confusion_matrix,NULL,wnd5);
-     ts->PrintConfusion(confusion_matrix,NULL,0);
+     res=train->Test(test,wnd5,confusion_matrix,NULL,1,0,NULL);
+     ts->PrintConfusion(stdout,confusion_matrix,NULL,0,0);
      delete train;
      delete test;
      return(res);
@@ -531,10 +558,10 @@ long classify_image(unsigned char *buffer, int width, int height, int bytes_per_
    /* compute the signatures */
    matrix=buff2matrix(buffer, width, height,bytes_per_pixel);
    test_sample=new signatures;
-   test_sample->compute(matrix); 
+   test_sample->compute(matrix,0); 
     /* classifiy */
-    if (wnd5)  res=ts->classify2(test_sample,probabilities);
-    else res=ts->WNNclassify(test_sample,probabilities);
+    if (wnd5)  res=ts->classify2(test_sample,probabilities,NULL);
+    else res=ts->WNNclassify(test_sample,probabilities,NULL,NULL);
     
     printf("The class is %d - %s \n",res,category_names[res]);
     for (class_index=1;class_index<=category_count;class_index++)
