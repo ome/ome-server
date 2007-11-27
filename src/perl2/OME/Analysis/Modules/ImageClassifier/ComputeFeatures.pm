@@ -39,19 +39,47 @@ our $VERSION = $OME::VERSION;
 
 use IO::File;
 use Log::Agent;
+use Carp;
 use OME::Image::Server::Pixels;
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use Time::HiRes qw(gettimeofday tv_interval);
 
 
-# use Inline (Config => DIRECTORY => $CACHE_DIRECTORY);
+our $CACHE_DIR;
+our $LIB_DIR;
+our $INC_DIR;
+BEGIN {
+	my $environment = initialize OME::Install::Environment;
+	if ($environment and $environment->base_dir()) {
+		$CACHE_DIR = $environment->base_dir().'/Inline';
+		$LIB_DIR = $environment->base_dir().'/lib';
+		$INC_DIR = $environment->base_dir().'/include';
+	} else {
+# Uncomment the following lines and comment out the line after that if the intent really is to
+# be able to run this without an OME install environment bootstrap.
+#		$CACHE_DIR = '/var/tmp/Inline';
+#		$LIB_DIR = '/usr/local/lib';
+#		$INC_DIR = '/usr/local/include';
+		croak "OME::Analysis::Modules::ImageClassifier::ComputeFeatures was loaded without an OME installation environment!";
+	}
+	if (not -d $CACHE_DIR) {
+		mkpath $CACHE_DIR
+			or croak "Could not create cache directory for OME::Util::cURL";
+	}
+	if (not -d $LIB_DIR or not -d $INC_DIR) {
+		croak "Both  $LIB_DIR and $INC_DIR must exist in order for OME::Analysis::Modules::ImageClassifier::ComputeFeatures to compile.";
+	}
+}
+
+use Inline (Config => DIRECTORY => $CACHE_DIR);
+
 use Inline (
 	C       => 'DATA',
 	CC => 'g++',
-#	LIBS    => ['-lcurl'],
-    INC  => '-I/Volumes/Windows/projects/sigs',
-    LIBS => '-ltiff -L/Volumes/Windows/projects/sigs -limfit -lfftw3',
+	LD => 'g++',
+    INC  => "-I$INC_DIR",
+    LIBS => "-ltiff -L$LIB_DIR -limfit -lfftw3",
 	NAME    => 'OME::Analysis::Modules::ImageClassifier::ComputeFeatures',
 #	CLEAN_AFTER_BUILD => 0,
 );
