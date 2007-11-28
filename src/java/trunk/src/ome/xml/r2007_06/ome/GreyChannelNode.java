@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class GreyChannelNode extends ChannelSpecTypeNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a GreyChannel node with an associated DOM element. */
 	public GreyChannelNode(Element element)
 	{
@@ -89,7 +89,7 @@ public class GreyChannelNode extends ChannelSpecTypeNode
 	}
                               
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return false;

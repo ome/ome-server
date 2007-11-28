@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class DichroicNode extends FilterSpecNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Dichroic node with an associated DOM element. */
 	public DichroicNode(Element element)
 	{
@@ -80,7 +80,7 @@ public class DichroicNode extends FilterSpecNode
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

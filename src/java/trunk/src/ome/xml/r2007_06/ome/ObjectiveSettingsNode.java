@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class ObjectiveSettingsNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a ObjectiveSettings node with an associated DOM element. */
 	public ObjectiveSettingsNode(Element element)
 	{
@@ -91,7 +91,7 @@ public class ObjectiveSettingsNode extends OMEXMLNode
 	// Element which is complex and is an OME XML "Ref"
 	public ObjectiveNode getObjective()
 	{
-		return (ObjectiveNode) 
+		return (ObjectiveNode)
 			getReferencedNode("Objective", "ObjectiveRef");
 	}
                     
@@ -100,7 +100,7 @@ public class ObjectiveSettingsNode extends OMEXMLNode
 	{
 		return getReferringNodes("Image");
 	}
-	
+
 	public int countImageList()
 	{
 		return getReferringCount("Image");
@@ -129,7 +129,7 @@ public class ObjectiveSettingsNode extends OMEXMLNode
 	}
                               
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return false;

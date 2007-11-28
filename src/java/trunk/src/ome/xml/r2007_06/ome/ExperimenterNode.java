@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class ExperimenterNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Experimenter node with an associated DOM element. */
 	public ExperimenterNode(Element element)
 	{
@@ -82,11 +82,21 @@ public class ExperimenterNode extends OMEXMLNode
 	{
 		return getStringCData("Email");
 	}
+
+	public void setEmail(String email)
+	{
+		setCData("Email", email);
+	}
                                             
 	// Element which is not complex (has only a text node)
 	public String getOMEName()
 	{
 		return getStringCData("OMEName");
+	}
+
+	public void setOMEName(String omename)
+	{
+		setCData("OMEName", omename);
 	}
                                             
 	// Element which is not complex (has only a text node)
@@ -94,11 +104,21 @@ public class ExperimenterNode extends OMEXMLNode
 	{
 		return getStringCData("FirstName");
 	}
+
+	public void setFirstName(String firstName)
+	{
+		setCData("FirstName", firstName);
+	}
                                             
 	// Element which is not complex (has only a text node)
 	public String getLastName()
 	{
 		return getStringCData("LastName");
+	}
+
+	public void setLastName(String lastName)
+	{
+		setCData("LastName", lastName);
 	}
                                     
 	// Element which occurs more than once and is an OME XML "Ref"
@@ -119,7 +139,7 @@ public class ExperimenterNode extends OMEXMLNode
 	{
 		return getReferringNodes("Dataset");
 	}
-	
+
 	public int countDatasetList()
 	{
 		return getReferringCount("Dataset");
@@ -130,9 +150,14 @@ public class ExperimenterNode extends OMEXMLNode
 	{
 		return getStringCData("Institution");
 	}
+
+	public void setInstitution(String institution)
+	{
+		setCData("Institution", institution);
+	}
                   
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class LightSourceNode extends ManufactSpecNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a LightSource node with an associated DOM element. */
 	public LightSourceNode(Element element)
 	{
@@ -80,7 +80,7 @@ public class LightSourceNode extends ManufactSpecNode
 	// Element which is complex (has sub-elements)
 	public LaserNode getLaser()
 	{
-		return (LaserNode) 
+		return (LaserNode)
 			getChildNode("Laser", "Laser");
 	}
                         
@@ -98,7 +98,7 @@ public class LightSourceNode extends ManufactSpecNode
 	// Element which is complex (has sub-elements)
 	public ArcNode getArc()
 	{
-		return (ArcNode) 
+		return (ArcNode)
 			getChildNode("Arc", "Arc");
 	}
                                                 
@@ -107,7 +107,7 @@ public class LightSourceNode extends ManufactSpecNode
 	// Element which is complex (has sub-elements)
 	public FilamentNode getFilament()
 	{
-		return (FilamentNode) 
+		return (FilamentNode)
 			getChildNode("Filament", "Filament");
 	}
                 
@@ -116,14 +116,14 @@ public class LightSourceNode extends ManufactSpecNode
 	{
 		return getReferringNodes("MicrobeamManipulation");
 	}
-	
+
 	public int countMicrobeamManipulationList()
 	{
 		return getReferringCount("MicrobeamManipulation");
 	}
                                       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

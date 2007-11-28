@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class FilterNode extends FilterSpecNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Filter node with an associated DOM element. */
 	public FilterNode(Element element)
 	{
@@ -104,12 +104,12 @@ public class FilterNode extends FilterSpecNode
 	// Element which is complex (has sub-elements)
 	public TransmittanceRangeNode getTransmittanceRange()
 	{
-		return (TransmittanceRangeNode) 
+		return (TransmittanceRangeNode)
 			getChildNode("TransmittanceRange", "TransmittanceRange");
 	}
           
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

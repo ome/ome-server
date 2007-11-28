@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class GroupNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Group node with an associated DOM element. */
 	public GroupNode(Element element)
 	{
@@ -82,7 +82,7 @@ public class GroupNode extends OMEXMLNode
 	{
 		return getReferringNodes("Dataset");
 	}
-	
+
 	public int countDatasetList()
 	{
 		return getReferringCount("Dataset");
@@ -91,14 +91,14 @@ public class GroupNode extends OMEXMLNode
 	// Element which is complex (has sub-elements)
 	public ContactNode getContact()
 	{
-		return (ContactNode) 
+		return (ContactNode)
 			getChildNode("Contact", "Contact");
 	}
                                             
 	// Element which is complex (has sub-elements)
 	public LeaderNode getLeader()
 	{
-		return (LeaderNode) 
+		return (LeaderNode)
 			getChildNode("Leader", "Leader");
 	}
                         
@@ -116,7 +116,7 @@ public class GroupNode extends OMEXMLNode
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

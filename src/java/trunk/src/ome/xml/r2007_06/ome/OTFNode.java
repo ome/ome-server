@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class OTFNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a OTF node with an associated DOM element. */
 	public OTFNode(Element element)
 	{
@@ -115,7 +115,7 @@ public class OTFNode extends OMEXMLNode
 	{
 		return getReferringNodes("LogicalChannel");
 	}
-	
+
 	public int countLogicalChannelList()
 	{
 		return getReferringCount("LogicalChannel");
@@ -124,7 +124,7 @@ public class OTFNode extends OMEXMLNode
 	// Element which is complex and is an OME XML "Ref"
 	public FilterSetNode getFilterSet()
 	{
-		return (FilterSetNode) 
+		return (FilterSetNode)
 			getReferencedNode("FilterSet", "FilterSetRef");
 	}
                             
@@ -142,7 +142,7 @@ public class OTFNode extends OMEXMLNode
 	// Element which is complex and is an OME XML "Ref"
 	public ObjectiveNode getObjective()
 	{
-		return (ObjectiveNode) 
+		return (ObjectiveNode)
 			getReferencedNode("Objective", "ObjectiveRef");
 	}
                                         
@@ -151,11 +151,16 @@ public class OTFNode extends OMEXMLNode
 	{
 		return getStringCData("BinaryFile");
 	}
+
+	public void setBinaryFile(String binaryFile)
+	{
+		setCData("BinaryFile", binaryFile);
+	}
                                                         
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

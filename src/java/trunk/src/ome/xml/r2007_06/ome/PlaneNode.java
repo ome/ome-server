@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class PlaneNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Plane node with an associated DOM element. */
 	public PlaneNode(Element element)
 	{
@@ -113,19 +113,19 @@ public class PlaneNode extends OMEXMLNode
 	// Element which is complex (has sub-elements)
 	public StagePositionNode getStagePosition()
 	{
-		return (StagePositionNode) 
+		return (StagePositionNode)
 			getChildNode("StagePosition", "StagePosition");
 	}
                                             
 	// Element which is complex (has sub-elements)
 	public PlaneTimingNode getPlaneTiming()
 	{
-		return (PlaneTimingNode) 
+		return (PlaneTimingNode)
 			getChildNode("PlaneTiming", "PlaneTiming");
 	}
           
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return false;

@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class ProjectNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Project node with an associated DOM element. */
 	public ProjectNode(Element element)
 	{
@@ -82,18 +82,23 @@ public class ProjectNode extends OMEXMLNode
 	{
 		return getStringCData("Description");
 	}
+
+	public void setDescription(String description)
+	{
+		setCData("Description", description);
+	}
                                                 
 	// Element which is complex and is an OME XML "Ref"
 	public ExperimenterNode getExperimenter()
 	{
-		return (ExperimenterNode) 
+		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
                                             
 	// Element which is complex and is an OME XML "Ref"
 	public GroupNode getGroup()
 	{
-		return (GroupNode) 
+		return (GroupNode)
 			getReferencedNode("Group", "GroupRef");
 	}
                     
@@ -102,7 +107,7 @@ public class ProjectNode extends OMEXMLNode
 	{
 		return getReferringNodes("Dataset");
 	}
-	
+
 	public int countDatasetList()
 	{
 		return getReferringCount("Dataset");
@@ -122,7 +127,7 @@ public class ProjectNode extends OMEXMLNode
 	}
                               
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class ChannelComponentNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a ChannelComponent node with an associated DOM element. */
 	public ChannelComponentNode(Element element)
 	{
@@ -102,12 +102,12 @@ public class ChannelComponentNode extends OMEXMLNode
 	// Attribute which is an OME XML "ID"
 	public PixelsNode getPixels()
 	{
-		return (PixelsNode) 
+		return (PixelsNode)
 			getAttrReferencedNode("Pixels", "Pixels");
 	}
                                   
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return false;

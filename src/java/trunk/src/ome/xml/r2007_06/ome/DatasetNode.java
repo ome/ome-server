@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class DatasetNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Dataset node with an associated DOM element. */
 	public DatasetNode(Element element)
 	{
@@ -93,11 +93,16 @@ public class DatasetNode extends OMEXMLNode
 	{
 		return getStringCData("Description");
 	}
+
+	public void setDescription(String description)
+	{
+		setCData("Description", description);
+	}
                                                 
 	// Element which is complex and is an OME XML "Ref"
 	public ExperimenterNode getExperimenter()
 	{
-		return (ExperimenterNode) 
+		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
                                 
@@ -117,7 +122,7 @@ public class DatasetNode extends OMEXMLNode
 	{
 		return getReferringNodes("Image");
 	}
-	
+
 	public int countImageList()
 	{
 		return getReferringCount("Image");
@@ -126,7 +131,7 @@ public class DatasetNode extends OMEXMLNode
 	// Element which is complex and is an OME XML "Ref"
 	public GroupNode getGroup()
 	{
-		return (GroupNode) 
+		return (GroupNode)
 			getReferencedNode("Group", "GroupRef");
 	}
                                         
@@ -134,6 +139,11 @@ public class DatasetNode extends OMEXMLNode
 	public String getCustomAttributes()
 	{
 		return getStringCData("CustomAttributes");
+	}
+
+	public void setCustomAttributes(String customAttributes)
+	{
+		setCData("CustomAttributes", customAttributes);
 	}
                                                         
 	// *** WARNING *** Unhandled or skipped property ID
@@ -150,7 +160,7 @@ public class DatasetNode extends OMEXMLNode
 	}
                               
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

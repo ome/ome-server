@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class ExperimentNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Experiment node with an associated DOM element. */
 	public ExperimentNode(Element element)
 	{
@@ -82,11 +82,16 @@ public class ExperimentNode extends OMEXMLNode
 	{
 		return getStringCData("Description");
 	}
+
+	public void setDescription(String description)
+	{
+		setCData("Description", description);
+	}
                                                 
 	// Element which is complex and is an OME XML "Ref"
 	public ExperimenterNode getExperimenter()
 	{
-		return (ExperimenterNode) 
+		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
                     
@@ -95,7 +100,7 @@ public class ExperimentNode extends OMEXMLNode
 	{
 		return getReferringNodes("Image");
 	}
-	
+
 	public int countImageList()
 	{
 		return getReferringCount("Image");
@@ -126,7 +131,7 @@ public class ExperimentNode extends OMEXMLNode
 	}
                           
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class MicrobeamManipulationNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a MicrobeamManipulation node with an associated DOM element. */
 	public MicrobeamManipulationNode(Element element)
 	{
@@ -80,7 +80,7 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 	// Element which is complex and is an OME XML "Ref"
 	public ExperimenterNode getExperimenter()
 	{
-		return (ExperimenterNode) 
+		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
                             
@@ -111,7 +111,7 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 	{
 		return getReferringNodes("Experiment");
 	}
-	
+
 	public int countExperimentList()
 	{
 		return getReferringCount("Experiment");
@@ -131,7 +131,7 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

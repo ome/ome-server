@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class LogicalChannelNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a LogicalChannel node with an associated DOM element. */
 	public LogicalChannelNode(Element element)
 	{
@@ -113,7 +113,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	// Attribute which is an OME XML "ID"
 	public FilterNode getSecondaryExcitationFilter()
 	{
-		return (FilterNode) 
+		return (FilterNode)
 			getAttrReferencedNode("Filter", "SecondaryExcitationFilter");
 	}
                                                 
@@ -142,14 +142,14 @@ public class LogicalChannelNode extends OMEXMLNode
 	// Element which is complex and is an OME XML "Ref"
 	public FilterSetNode getFilterSet()
 	{
-		return (FilterSetNode) 
+		return (FilterSetNode)
 			getReferencedNode("FilterSet", "FilterSetRef");
 	}
                         
 	// Attribute which is an OME XML "ID"
 	public FilterNode getSecondaryEmissionFilter()
 	{
-		return (FilterNode) 
+		return (FilterNode)
 			getAttrReferencedNode("Filter", "SecondaryEmissionFilter");
 	}
                                                                         
@@ -202,14 +202,14 @@ public class LogicalChannelNode extends OMEXMLNode
 	// Element which is complex and is an OME XML "Ref"
 	public DetectorNode getDetector()
 	{
-		return (DetectorNode) 
+		return (DetectorNode)
 			getReferencedNode("Detector", "DetectorRef");
 	}
                                             
 	// Element which is complex and is an OME XML "Ref"
 	public OTFNode getOTF()
 	{
-		return (OTFNode) 
+		return (OTFNode)
 			getReferencedNode("OTF", "OTFRef");
 	}
                             
@@ -238,7 +238,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	// Element which is complex and is an OME XML "Ref"
 	public LightSourceNode getLightSource()
 	{
-		return (LightSourceNode) 
+		return (LightSourceNode)
 			getReferencedNode("LightSource", "LightSourceRef");
 	}
                             
@@ -265,7 +265,7 @@ public class LogicalChannelNode extends OMEXMLNode
 	}
                               
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

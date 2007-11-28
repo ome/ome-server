@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class InstrumentNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Instrument node with an associated DOM element. */
 	public InstrumentNode(Element element)
 	{
@@ -104,7 +104,7 @@ public class InstrumentNode extends OMEXMLNode
 	{
 		return getReferringNodes("Image");
 	}
-	
+
 	public int countImageList()
 	{
 		return getReferringCount("Image");
@@ -135,7 +135,7 @@ public class InstrumentNode extends OMEXMLNode
 	// Element which is complex (has sub-elements)
 	public MicroscopeNode getMicroscope()
 	{
-		return (MicroscopeNode) 
+		return (MicroscopeNode)
 			getChildNode("Microscope", "Microscope");
 	}
                                 
@@ -175,7 +175,7 @@ public class InstrumentNode extends OMEXMLNode
 	}
                       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

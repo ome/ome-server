@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class ObjectiveNode extends ManufactSpecNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a Objective node with an associated DOM element. */
 	public ObjectiveNode(Element element)
 	{
@@ -82,13 +82,18 @@ public class ObjectiveNode extends ManufactSpecNode
 	{
 		return getFloatCData("WorkingDistance");
 	}
+
+	public void setWorkingDistance(Float workingDistance)
+	{
+		setCData("WorkingDistance", workingDistance);
+	}
                         
 	// Virtual, inferred back reference ObjectiveSettings_BackReference
 	public List getObjectiveSettingsList()
 	{
 		return getReferringNodes("ObjectiveSettings");
 	}
-	
+
 	public int countObjectiveSettingsList()
 	{
 		return getReferringCount("ObjectiveSettings");
@@ -99,11 +104,21 @@ public class ObjectiveNode extends ManufactSpecNode
 	{
 		return getStringCData("Immersion");
 	}
+
+	public void setImmersion(String immersion)
+	{
+		setCData("Immersion", immersion);
+	}
                                             
 	// Element which is not complex (has only a text node)
 	public String getCorrection()
 	{
 		return getStringCData("Correction");
+	}
+
+	public void setCorrection(String correction)
+	{
+		setCData("Correction", correction);
 	}
                                             
 	// Element which is not complex (has only a text node)
@@ -111,11 +126,21 @@ public class ObjectiveNode extends ManufactSpecNode
 	{
 		return getFloatCData("LensNA");
 	}
+
+	public void setLensNA(Float lensNA)
+	{
+		setCData("LensNA", lensNA);
+	}
                                             
 	// Element which is not complex (has only a text node)
 	public Integer getNominalMagnification()
 	{
 		return getIntegerCData("NominalMagnification");
+	}
+
+	public void setNominalMagnification(Integer nominalMagnification)
+	{
+		setCData("NominalMagnification", nominalMagnification);
 	}
                                             
 	// Element which is not complex (has only a text node)
@@ -123,11 +148,16 @@ public class ObjectiveNode extends ManufactSpecNode
 	{
 		return getFloatCData("CalibratedMagnification");
 	}
+
+	public void setCalibratedMagnification(Float calibratedMagnification)
+	{
+		setCData("CalibratedMagnification", calibratedMagnification);
+	}
                                                         
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

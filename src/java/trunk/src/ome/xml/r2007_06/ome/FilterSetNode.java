@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class FilterSetNode extends FilterSpecNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a FilterSet node with an associated DOM element. */
 	public FilterSetNode(Element element)
 	{
@@ -82,7 +82,7 @@ public class FilterSetNode extends FilterSpecNode
 	{
 		return getReferringNodes("LogicalChannel");
 	}
-	
+
 	public int countLogicalChannelList()
 	{
 		return getReferringCount("LogicalChannel");
@@ -91,14 +91,14 @@ public class FilterSetNode extends FilterSpecNode
 	// Attribute which is an OME XML "ID"
 	public FilterNode getExFilterRef()
 	{
-		return (FilterNode) 
+		return (FilterNode)
 			getAttrReferencedNode("Filter", "ExFilterRef");
 	}
                                             
 	// Attribute which is an OME XML "ID"
 	public FilterNode getEmFilterRef()
 	{
-		return (FilterNode) 
+		return (FilterNode)
 			getAttrReferencedNode("Filter", "EmFilterRef");
 	}
                                                                         
@@ -107,12 +107,12 @@ public class FilterSetNode extends FilterSpecNode
 	// Attribute which is an OME XML "ID"
 	public DichroicNode getDichroicRef()
 	{
-		return (DichroicNode) 
+		return (DichroicNode)
 			getAttrReferencedNode("Dichroic", "DichroicRef");
 	}
                                   
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

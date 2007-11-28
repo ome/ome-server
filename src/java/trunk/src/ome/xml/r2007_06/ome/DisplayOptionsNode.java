@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class DisplayOptionsNode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a DisplayOptions node with an associated DOM element. */
 	public DisplayOptionsNode(Element element)
 	{
@@ -91,14 +91,14 @@ public class DisplayOptionsNode extends OMEXMLNode
 	// Element which is complex (has sub-elements)
 	public ChannelSpecTypeNode getGreenChannel()
 	{
-		return (ChannelSpecTypeNode) 
+		return (ChannelSpecTypeNode)
 			getChildNode("ChannelSpecType", "GreenChannel");
 	}
                                             
 	// Element which is complex (has sub-elements)
 	public ProjectionNode getProjection()
 	{
-		return (ProjectionNode) 
+		return (ProjectionNode)
 			getChildNode("Projection", "Projection");
 	}
                         
@@ -116,7 +116,7 @@ public class DisplayOptionsNode extends OMEXMLNode
 	// Element which is complex (has sub-elements)
 	public ChannelSpecTypeNode getBlueChannel()
 	{
-		return (ChannelSpecTypeNode) 
+		return (ChannelSpecTypeNode)
 			getChildNode("ChannelSpecType", "BlueChannel");
 	}
                         
@@ -134,28 +134,28 @@ public class DisplayOptionsNode extends OMEXMLNode
 	// Element which is complex (has sub-elements)
 	public TimeNode getTime()
 	{
-		return (TimeNode) 
+		return (TimeNode)
 			getChildNode("Time", "Time");
 	}
                                             
 	// Element which is complex (has sub-elements)
 	public ChannelSpecTypeNode getRedChannel()
 	{
-		return (ChannelSpecTypeNode) 
+		return (ChannelSpecTypeNode)
 			getChildNode("ChannelSpecType", "RedChannel");
 	}
                                             
 	// Element which is complex (has sub-elements)
 	public GreyChannelNode getGreyChannel()
 	{
-		return (GreyChannelNode) 
+		return (GreyChannelNode)
 			getChildNode("GreyChannel", "GreyChannel");
 	}
                                                 
 	// *** WARNING *** Unhandled or skipped property ID
       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return true;

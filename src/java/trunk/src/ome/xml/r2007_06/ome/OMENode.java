@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-21 17:59:44-0600
+ * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 public class OMENode extends OMEXMLNode
 {
 	// -- Constructors --
-	
+
 	/** Constructs a OME node with an associated DOM element. */
 	public OMENode(Element element)
 	{
@@ -104,6 +104,11 @@ public class OMENode extends OMEXMLNode
 	{
 		return getStringCData("SemanticTypeDefinitions");
 	}
+
+	public void setSemanticTypeDefinitions(String semanticTypeDefinitions)
+	{
+		setCData("SemanticTypeDefinitions", semanticTypeDefinitions);
+	}
                                         
 	// Element which occurs more than once
 	public int getScreenCount()
@@ -120,6 +125,11 @@ public class OMENode extends OMEXMLNode
 	public String getAnalysisModuleLibrary()
 	{
 		return getStringCData("AnalysisModuleLibrary");
+	}
+
+	public void setAnalysisModuleLibrary(String analysisModuleLibrary)
+	{
+		setCData("AnalysisModuleLibrary", analysisModuleLibrary);
 	}
                                         
 	// Element which occurs more than once
@@ -160,6 +170,11 @@ public class OMENode extends OMEXMLNode
 	{
 		return getStringCData("CustomAttributes");
 	}
+
+	public void setCustomAttributes(String customAttributes)
+	{
+		setCData("CustomAttributes", customAttributes);
+	}
                                         
 	// Element which occurs more than once
 	public int getExperimentCount()
@@ -195,7 +210,7 @@ public class OMENode extends OMEXMLNode
 	}
                       
 	// -- OMEXMLNode API methods --
-	
+
 	public boolean hasID()
 	{
 		return false;
