@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -94,6 +94,12 @@ public class ExperimentNode extends OMEXMLNode
 		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
+
+	public ExperimenterRefNode getExperimenterRef()
+	{
+		return (ExperimenterRefNode)
+			getChildNode("ExperimenterRef", "ExperimenterRef");
+	}
                     
 	// Virtual, inferred back reference Image_BackReference
 	public List getImageList()
@@ -128,6 +134,11 @@ public class ExperimentNode extends OMEXMLNode
 	public Vector getMicrobeamManipulationList()
 	{
 		return getReferencedNodes("MicrobeamManipulation", "MicrobeamManipulationRef");
+	}
+
+	public Vector getMicrobeamManipulationRefList()
+	{
+		return getChildNodes("MicrobeamManipulationRef");
 	}
                           
 	// -- OMEXMLNode API methods --

@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -105,6 +105,12 @@ public class DatasetNode extends OMEXMLNode
 		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
+
+	public ExperimenterRefNode getExperimenterRef()
+	{
+		return (ExperimenterRefNode)
+			getChildNode("ExperimenterRef", "ExperimenterRef");
+	}
                                 
 	// Element which occurs more than once and is an OME XML "Ref"
 	public int getProjectCount()
@@ -115,6 +121,11 @@ public class DatasetNode extends OMEXMLNode
 	public Vector getProjectList()
 	{
 		return getReferencedNodes("Project", "ProjectRef");
+	}
+
+	public Vector getProjectRefList()
+	{
+		return getChildNodes("ProjectRef");
 	}
                                 
 	// Virtual, inferred back reference Image_BackReference
@@ -133,6 +144,12 @@ public class DatasetNode extends OMEXMLNode
 	{
 		return (GroupNode)
 			getReferencedNode("Group", "GroupRef");
+	}
+
+	public GroupRefNode getGroupRef()
+	{
+		return (GroupRefNode)
+			getChildNode("GroupRef", "GroupRef");
 	}
                                         
 	// Element which is not complex (has only a text node)

@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -77,15 +77,15 @@ public class GroupNode extends OMEXMLNode
 
 	// -- Group API methods --
       
-	// Virtual, inferred back reference Dataset_BackReference
-	public List getDatasetList()
+	// Virtual, inferred back reference Project_BackReference
+	public List getProjectList()
 	{
-		return getReferringNodes("Dataset");
+		return getReferringNodes("Project");
 	}
 
-	public int countDatasetList()
+	public int countProjectList()
 	{
-		return getReferringCount("Dataset");
+		return getReferringCount("Project");
 	}
                                                                         
 	// Element which is complex (has sub-elements)

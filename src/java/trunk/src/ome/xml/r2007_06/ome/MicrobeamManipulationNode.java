@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -83,6 +83,12 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
+
+	public ExperimenterRefNode getExperimenterRef()
+	{
+		return (ExperimenterRefNode)
+			getChildNode("ExperimenterRef", "ExperimenterRef");
+	}
                             
 	// Attribute
 	public String getType()
@@ -105,6 +111,11 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 	{
 		return getReferencedNodes("ROI", "ROIRef");
 	}
+
+	public Vector getROIRefList()
+	{
+		return getChildNodes("ROIRef");
+	}
                                 
 	// Virtual, inferred back reference Experiment_BackReference
 	public List getExperimentList()
@@ -126,6 +137,11 @@ public class MicrobeamManipulationNode extends OMEXMLNode
 	public Vector getLightSourceList()
 	{
 		return getReferencedNodes("LightSource", "LightSourceRef");
+	}
+
+	public Vector getLightSourceRefList()
+	{
+		return getChildNodes("LightSourceRef");
 	}
                                                                 
 	// *** WARNING *** Unhandled or skipped property ID

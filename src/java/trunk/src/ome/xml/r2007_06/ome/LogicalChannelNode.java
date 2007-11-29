@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -145,6 +145,12 @@ public class LogicalChannelNode extends OMEXMLNode
 		return (FilterSetNode)
 			getReferencedNode("FilterSet", "FilterSetRef");
 	}
+
+	public FilterSetRefNode getFilterSetRef()
+	{
+		return (FilterSetRefNode)
+			getChildNode("FilterSetRef", "FilterSetRef");
+	}
                         
 	// Attribute which is an OME XML "ID"
 	public FilterNode getSecondaryEmissionFilter()
@@ -205,12 +211,24 @@ public class LogicalChannelNode extends OMEXMLNode
 		return (DetectorNode)
 			getReferencedNode("Detector", "DetectorRef");
 	}
+
+	public DetectorRefNode getDetectorRef()
+	{
+		return (DetectorRefNode)
+			getChildNode("DetectorRef", "DetectorRef");
+	}
                                             
 	// Element which is complex and is an OME XML "Ref"
 	public OTFNode getOTF()
 	{
 		return (OTFNode)
 			getReferencedNode("OTF", "OTFRef");
+	}
+
+	public OTFRefNode getOTFRef()
+	{
+		return (OTFRefNode)
+			getChildNode("OTFRef", "OTFRef");
 	}
                             
 	// Attribute
@@ -240,6 +258,12 @@ public class LogicalChannelNode extends OMEXMLNode
 	{
 		return (LightSourceNode)
 			getReferencedNode("LightSource", "LightSourceRef");
+	}
+
+	public LightSourceRefNode getLightSourceRef()
+	{
+		return (LightSourceRefNode)
+			getChildNode("LightSourceRef", "LightSourceRef");
 	}
                             
 	// Attribute

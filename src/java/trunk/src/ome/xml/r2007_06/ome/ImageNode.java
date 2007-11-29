@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -90,12 +90,24 @@ public class ImageNode extends OMEXMLNode
 		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
+
+	public ExperimenterRefNode getExperimenterRef()
+	{
+		return (ExperimenterRefNode)
+			getChildNode("ExperimenterRef", "ExperimenterRef");
+	}
                                             
 	// Element which is complex and is an OME XML "Ref"
 	public ObjectiveSettingsNode getObjectiveSettings()
 	{
 		return (ObjectiveSettingsNode)
 			getReferencedNode("ObjectiveSettings", "ObjectiveSettingsRef");
+	}
+
+	public ObjectiveSettingsRefNode getObjectiveSettingsRef()
+	{
+		return (ObjectiveSettingsRefNode)
+			getChildNode("ObjectiveSettingsRef", "ObjectiveSettingsRef");
 	}
                                         
 	// Element which is not complex (has only a text node)
@@ -162,12 +174,24 @@ public class ImageNode extends OMEXMLNode
 		return (GroupNode)
 			getReferencedNode("Group", "GroupRef");
 	}
+
+	public GroupRefNode getGroupRef()
+	{
+		return (GroupRefNode)
+			getChildNode("GroupRef", "GroupRef");
+	}
                                             
 	// Element which is complex and is an OME XML "Ref"
 	public InstrumentNode getInstrument()
 	{
 		return (InstrumentNode)
 			getReferencedNode("Instrument", "InstrumentRef");
+	}
+
+	public InstrumentRefNode getInstrumentRef()
+	{
+		return (InstrumentRefNode)
+			getChildNode("InstrumentRef", "InstrumentRef");
 	}
                                     
 	// Element which occurs more than once
@@ -222,6 +246,12 @@ public class ImageNode extends OMEXMLNode
 		return (ExperimentNode)
 			getReferencedNode("Experiment", "ExperimentRef");
 	}
+
+	public ExperimentRefNode getExperimentRef()
+	{
+		return (ExperimentRefNode)
+			getChildNode("ExperimentRef", "ExperimentRef");
+	}
                         
 	// Attribute which is an OME XML "ID"
 	public PixelsNode getDefaultPixels()
@@ -240,12 +270,23 @@ public class ImageNode extends OMEXMLNode
 	{
 		return getReferencedNodes("Dataset", "DatasetRef");
 	}
+
+	public Vector getDatasetRefList()
+	{
+		return getChildNodes("DatasetRef");
+	}
                                                         
 	// Element which is complex and is an OME XML "Ref"
 	public PixelsNode getAcquiredPixels()
 	{
 		return (PixelsNode)
 			getReferencedNode("AcquiredPixels", "AcquiredPixelsRef");
+	}
+
+	public PixelsNode getAcquiredPixelsRef()
+	{
+		return (PixelsNode)
+			getChildNode("Pixels", "AcquiredPixelsRef");
 	}
                                         
 	// Element which is not complex (has only a text node)

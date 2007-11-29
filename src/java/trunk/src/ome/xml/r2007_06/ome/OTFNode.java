@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -127,6 +127,12 @@ public class OTFNode extends OMEXMLNode
 		return (FilterSetNode)
 			getReferencedNode("FilterSet", "FilterSetRef");
 	}
+
+	public FilterSetRefNode getFilterSetRef()
+	{
+		return (FilterSetRefNode)
+			getChildNode("FilterSetRef", "FilterSetRef");
+	}
                             
 	// Attribute
 	public Boolean getOpticalAxisAveraged()
@@ -144,6 +150,12 @@ public class OTFNode extends OMEXMLNode
 	{
 		return (ObjectiveNode)
 			getReferencedNode("Objective", "ObjectiveRef");
+	}
+
+	public ObjectiveRefNode getObjectiveRef()
+	{
+		return (ObjectiveRefNode)
+			getChildNode("ObjectiveRef", "ObjectiveRef");
 	}
                                         
 	// Element which is not complex (has only a text node)

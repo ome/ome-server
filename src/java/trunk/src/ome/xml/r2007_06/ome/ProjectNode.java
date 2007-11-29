@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 05:45:18-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -94,12 +94,24 @@ public class ProjectNode extends OMEXMLNode
 		return (ExperimenterNode)
 			getReferencedNode("Experimenter", "ExperimenterRef");
 	}
+
+	public ExperimenterRefNode getExperimenterRef()
+	{
+		return (ExperimenterRefNode)
+			getChildNode("ExperimenterRef", "ExperimenterRef");
+	}
                                             
 	// Element which is complex and is an OME XML "Ref"
 	public GroupNode getGroup()
 	{
 		return (GroupNode)
 			getReferencedNode("Group", "GroupRef");
+	}
+
+	public GroupRefNode getGroupRef()
+	{
+		return (GroupRefNode)
+			getChildNode("GroupRef", "GroupRef");
 	}
                     
 	// Virtual, inferred back reference Dataset_BackReference
