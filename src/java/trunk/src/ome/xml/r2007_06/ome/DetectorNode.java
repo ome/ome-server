@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -122,14 +122,14 @@ public class DetectorNode extends ManufactSpecNode
 	}
                                     
 	// Virtual, inferred back reference LogicalChannel_BackReference
+	public int getLogicalChannelCount()
+	{
+		return getReferringCount("LogicalChannel");
+	}
+
 	public List getLogicalChannelList()
 	{
 		return getReferringNodes("LogicalChannel");
-	}
-
-	public int countLogicalChannelList()
-	{
-		return getReferringCount("LogicalChannel");
 	}
                                                     
 	// Attribute

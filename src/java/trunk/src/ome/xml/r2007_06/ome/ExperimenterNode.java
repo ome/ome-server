@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -139,15 +139,15 @@ public class ExperimenterNode extends OMEXMLNode
                                                                 
 	// *** WARNING *** Unhandled or skipped property ID
             
-	// Virtual, inferred back reference Project_BackReference
-	public List getProjectList()
+	// Virtual, inferred back reference Dataset_BackReference
+	public int getDatasetCount()
 	{
-		return getReferringNodes("Project");
+		return getReferringCount("Dataset");
 	}
 
-	public int countProjectList()
+	public List getDatasetList()
 	{
-		return getReferringCount("Project");
+		return getReferringNodes("Dataset");
 	}
                                                                 
 	// Element which is not complex (has only a text node)

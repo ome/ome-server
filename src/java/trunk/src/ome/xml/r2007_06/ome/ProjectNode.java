@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -115,14 +115,14 @@ public class ProjectNode extends OMEXMLNode
 	}
                     
 	// Virtual, inferred back reference Dataset_BackReference
+	public int getDatasetCount()
+	{
+		return getReferringCount("Dataset");
+	}
+
 	public List getDatasetList()
 	{
 		return getReferringNodes("Dataset");
-	}
-
-	public int countDatasetList()
-	{
-		return getReferringCount("Dataset");
 	}
                                                                             
 	// *** WARNING *** Unhandled or skipped property ID

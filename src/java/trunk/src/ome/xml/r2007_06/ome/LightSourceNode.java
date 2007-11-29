@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -112,14 +112,14 @@ public class LightSourceNode extends ManufactSpecNode
 	}
                 
 	// Virtual, inferred back reference MicrobeamManipulation_BackReference
+	public int getMicrobeamManipulationCount()
+	{
+		return getReferringCount("MicrobeamManipulation");
+	}
+
 	public List getMicrobeamManipulationList()
 	{
 		return getReferringNodes("MicrobeamManipulation");
-	}
-
-	public int countMicrobeamManipulationList()
-	{
-		return getReferringCount("MicrobeamManipulation");
 	}
                                       
 	// -- OMEXMLNode API methods --

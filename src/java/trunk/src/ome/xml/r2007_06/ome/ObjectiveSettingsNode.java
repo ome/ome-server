@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -102,14 +102,14 @@ public class ObjectiveSettingsNode extends OMEXMLNode
 	}
                     
 	// Virtual, inferred back reference Image_BackReference
+	public int getImageCount()
+	{
+		return getReferringCount("Image");
+	}
+
 	public List getImageList()
 	{
 		return getReferringNodes("Image");
-	}
-
-	public int countImageList()
-	{
-		return getReferringCount("Image");
 	}
                                                     
 	// Attribute

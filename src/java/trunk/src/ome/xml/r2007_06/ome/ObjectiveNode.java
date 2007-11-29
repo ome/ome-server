@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:09:30-0600
+ * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
  *
  *-----------------------------------------------------------------------------
  */
@@ -87,7 +87,18 @@ public class ObjectiveNode extends ManufactSpecNode
 	{
 		setCData("WorkingDistance", workingDistance);
 	}
-                                            
+                        
+	// Virtual, inferred back reference ObjectiveSettings_BackReference
+	public int getObjectiveSettingsCount()
+	{
+		return getReferringCount("ObjectiveSettings");
+	}
+
+	public List getObjectiveSettingsList()
+	{
+		return getReferringNodes("ObjectiveSettings");
+	}
+                                                                
 	// Element which is not complex (has only a text node)
 	public String getImmersion()
 	{
@@ -109,18 +120,7 @@ public class ObjectiveNode extends ManufactSpecNode
 	{
 		setCData("Correction", correction);
 	}
-                        
-	// Virtual, inferred back reference OTF_BackReference
-	public List getOTFList()
-	{
-		return getReferringNodes("OTF");
-	}
-
-	public int countOTFList()
-	{
-		return getReferringCount("OTF");
-	}
-                                                                
+                                            
 	// Element which is not complex (has only a text node)
 	public Float getLensNA()
 	{
