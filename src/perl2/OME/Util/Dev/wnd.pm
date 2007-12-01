@@ -51,17 +51,42 @@ use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use Time::HiRes qw(gettimeofday tv_interval);
 
 
-# use Inline => Config => LIBS => '-L/usr/local/mylib -lmylib';
-# use Inline => Config => INC  => '-I/usr/include';
+our $CACHE_DIR;
+our $LIB_DIR;
+our $INC_DIR;
+our $PACKAGE_NAME = 'OME::Util::Dev::wnd';
+BEGIN {
+	my $environment = initialize OME::Install::Environment;
+	if ($environment and $environment->base_dir()) {
+		$CACHE_DIR = $environment->base_dir().'/Inline';
+		$LIB_DIR = $environment->base_dir().'/lib';
+		$INC_DIR = $environment->base_dir().'/include';
+	} else {
+# Uncomment the following lines and comment out the line after that if the intent really is to
+# be able to run this without an OME install environment bootstrap.
+#		$CACHE_DIR = '/var/tmp/Inline';
+#		$LIB_DIR = '/usr/local/lib';
+#		$INC_DIR = '/usr/local/include';
+		croak "$PACKAGE_NAME was loaded without an OME installation environment!";
+	}
+	if (not -d $CACHE_DIR) {
+		mkpath $CACHE_DIR
+			or croak "Could not create cache directory for $PACKAGE_NAME";
+	}
+	if (not -d $LIB_DIR or not -d $INC_DIR) {
+		croak "Both  $LIB_DIR and $INC_DIR must exist in order for $PACKAGE_NAME to compile.";
+	}
+}
 
-# use Inline (Config => DIRECTORY => $CACHE_DIRECTORY);
+use Inline (Config => DIRECTORY => $CACHE_DIR);
+
 use Inline (
 	C  => 'DATA',
 	CC => 'g++',
-#        INC  => '-I/home/shamirl/sigs',
-        INC  => '-I/Volumes/Windows/projects/sigs',
-        LIBS => '-ltiff -L/home/shamirl/sigs -limfit -lfftw3',
-	NAME => 'OME::Util::Dev::wnd',
+	LD => 'g++',
+    INC  => "-I$INC_DIR",
+    LIBS => "-ltiff -L$LIB_DIR -limfit -lfftw3",
+	NAME => $PACKAGE_NAME,
 );
 
 Inline->init;
