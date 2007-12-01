@@ -49,6 +49,7 @@ use Time::HiRes qw(gettimeofday tv_interval);
 our $CACHE_DIR;
 our $LIB_DIR;
 our $INC_DIR;
+our $PACKAGE_NAME = 'OME::Analysis::Modules::ImageClassifier::ComputeFeatures';
 BEGIN {
 	my $environment = initialize OME::Install::Environment;
 	if ($environment and $environment->base_dir()) {
@@ -61,14 +62,14 @@ BEGIN {
 #		$CACHE_DIR = '/var/tmp/Inline';
 #		$LIB_DIR = '/usr/local/lib';
 #		$INC_DIR = '/usr/local/include';
-		croak "OME::Analysis::Modules::ImageClassifier::ComputeFeatures was loaded without an OME installation environment!";
+		croak "$PACKAGE_NAME was loaded without an OME installation environment!";
 	}
 	if (not -d $CACHE_DIR) {
 		mkpath $CACHE_DIR
-			or croak "Could not create cache directory for OME::Util::cURL";
+			or croak "Could not create cache directory for $PACKAGE_NAME";
 	}
 	if (not -d $LIB_DIR or not -d $INC_DIR) {
-		croak "Both  $LIB_DIR and $INC_DIR must exist in order for OME::Analysis::Modules::ImageClassifier::ComputeFeatures to compile.";
+		croak "Both  $LIB_DIR and $INC_DIR must exist in order for $PACKAGE_NAME to compile.";
 	}
 }
 
@@ -80,7 +81,7 @@ use Inline (
 	LD => 'g++',
     INC  => "-I$INC_DIR",
     LIBS => "-ltiff -L$LIB_DIR -limfit -lfftw3",
-	NAME    => 'OME::Analysis::Modules::ImageClassifier::ComputeFeatures',
+	NAME    => $PACKAGE_NAME
 #	CLEAN_AFTER_BUILD => 0,
 );
 
