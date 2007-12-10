@@ -1,4 +1,4 @@
-# OME/Util/ExportChain.pm
+# OME/Util/ExecuteChain.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -285,7 +285,7 @@ sub execute {
 	
 	print "Executing Analysis Chain `".$chain->name()."`\n";
 	my $task = OME::Tasks::NotificationManager->
-		new("Executing `".$chain->name()."`", -1);
+		new_remote_task("Executing `".$chain->name()."`", -1);
 	$task->setMessage('Start Execution of Analysis Chain');
 	
 	my $pid = OME::Fork->fork();
@@ -315,7 +315,7 @@ sub execute {
 			
 			if ($step != $lastStep ) {
 				print "	 $step/",$task->n_steps(),": [",
-				  $task->state(),"] Currently ",
+				  $task->state(),"] ",
 				  $message;
 				$lastStep = $step;
 				if ($mem_usage > 0) {
@@ -343,26 +343,13 @@ sub execute {
 		$task->refresh();
 		my $step = $task->last_step();
 		print "	 $step/",$task->n_steps(),": [",
-		  $task->state(),"] Currently",
+		  $task->state(),"] ",
 		  $task->message();
 		if ($mem_usage > 0) {
 			printf(" (Past Usage: %.2dmb)",$mem_usage/1024/$mem_usage_steps);
 		}
 		print "\n";	
 	}
-		
-	# my $cache = OME::DBObject->__cache();
-	# my $numClasses = scalar(keys %$cache);
-	# my $numObjects = 0;
-	
-	# foreach my $class (keys %$cache) {
-	#	 my $classCache = $cache->{$class};
-	#	 my $numClassObjects = scalar(keys %$classCache);
-	#	 printf STDERR "%5d %s\n", $numClassObjects, $class;
-	# 	 $numObjects += $numClassObjects;
-	# }
-	
-	# printf STDERR "\n%5d TOTAL\n", $numObjects;
 }
 
 sub END {
