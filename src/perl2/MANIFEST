@@ -5,7 +5,6 @@ newdevelopers.pod
 OME-startup.pl
 OME.pm
 OME/Analysis/Engine.pm
-OME/Analysis/Engine/DataPaths.pm
 OME/Analysis/Engine/Executor.pm
 OME/Analysis/Engine/FeatureHierarchy.pm
 OME/Analysis/Engine/ForkedPerlExecutor.pm
@@ -33,11 +32,6 @@ OME/Analysis/Modules/PPM/Typecast2DerivedPixels.pm
 OME/Analysis/Modules/ROI/Image2DROIs.pm
 OME/Analysis/Modules/ROI/Image2DTiledROIs.pm
 OME/Analysis/Modules/ROI/ImageROI.pm
-OME/Analysis/Modules/Slicers/Channels.pm
-OME/Analysis/Modules/Slicers/Pixels.pm
-OME/Analysis/Modules/Slicers/Planes.pm
-OME/Analysis/Modules/Slicers/Stacks.pm
-OME/Analysis/Modules/Slicers/Timepoints.pm
 OME/Analysis/Modules/Statistics/PlaneStatistics.pm
 OME/Analysis/Modules/Statistics/StackStatistics.pm
 OME/Analysis/Modules/Tests/DatasetSignature.pm
@@ -85,8 +79,6 @@ OME/Image/Pixels.pm
 OME/Image/Server.pm
 OME/Image/Server/File.pm
 OME/Image/Server/Pixels.pm
-OME/ImportEngine/.#AbstractFormat.pm.1.44
-OME/ImportEngine/.#TIFFreader.pm.1.42
 OME/ImportEngine/AbstractFormat.pm
 OME/ImportEngine/BioradReader.pm
 OME/ImportEngine/BMPreader.pm
@@ -95,7 +87,6 @@ OME/ImportEngine/DICOM.pm
 OME/ImportEngine/DICOMconstants.pm
 OME/ImportEngine/DICOMreader.pm
 OME/ImportEngine/DVreader.pm
-OME/ImportEngine/FilenamePatternNotes.txt
 OME/ImportEngine/GELreader.pm
 OME/ImportEngine/ImportEngine.pm
 OME/ImportEngine/LSMreader.pm
@@ -123,7 +114,6 @@ OME/ImportExport/Repacker/test.pl
 OME/ImportExport/ResolveFiles.pm
 OME/ImportExport/SemanticTypeExport.pm
 OME/ImportExport/SemanticTypeImport.pm
-OME/Install/AnalysisConfigTask.pm
 OME/Install/ApacheConfigTask.pm
 OME/Install/CoreDatabaseTablesTask.pm
 OME/Install/CoreSystemTask.pm
@@ -198,7 +188,6 @@ OME/Remote/Facades/XMLUtils.pm
 OME/Remote/Prototypes.pm
 OME/Remote/RPC2.pm
 OME/Remote/SerializerXMLRPC.pm
-OME/Remote/XMLRPC.pm
 OME/SemanticType.pm
 OME/SemanticType/BootstrapExperimenter.pm
 OME/SemanticType/BootstrapExperimenterGroup.pm
@@ -244,11 +233,9 @@ OME/Util/Admin/GroupAdmin.pm
 OME/Util/Admin/OMEAdmin.pm
 OME/Util/Admin/Uninstall.pm
 OME/Util/Admin/UserAdmin.pm
-OME/Util/Annotate/Annotate.pm
 OME/Util/Annotate/AnnotationWizards.pm
 OME/Util/Annotate/SpreadsheetReader.pm
 OME/Util/Annotate/SpreadsheetWriter.pm
-OME/Util/ChainStats.pm
 OME/Util/Commands.pm
 OME/Util/cURL.pm
 OME/Util/Data/dbAdmin.pm
