@@ -103,10 +103,7 @@ our $IMPORT_FORMATS = [qw/
 /];
 
 # Database version
-our $DB_VERSION = "2.28";
-
-# Default analysis executor
-our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
+our $DB_VERSION = "2.29";
 
 # Default DB configuration
 our $DEFAULT_DB_CONF = {
@@ -158,15 +155,17 @@ our @core_classes =
    'OME::AnalysisChain',
    'OME::AnalysisChain::Node',
    'OME::AnalysisChain::Link',
+   'OME::Analysis::Engine::Job',
    'OME::Analysis::Engine::Worker',
    'OME::ModuleExecution',
    'OME::ModuleExecution::ActualInput',
    'OME::ModuleExecution::SemanticTypeOutput',
    'OME::ModuleExecution::ParentalOutput',
    'OME::ModuleExecution::VirtualMEXMap',
+   'OME::Task',
    'OME::AnalysisChainExecution',
    'OME::AnalysisChainExecution::NodeExecution',
-   'OME::Task',
+   'OME::AnalysisChainExecutionUserInputs',
    # Make sure this next one is last
    'OME::Configuration::Variable',
   );
@@ -815,7 +814,6 @@ BLURB
 		ome_root         => $OME_BASE_DIR,
 		template_dir     => $OME_BASE_DIR."/html/Templates",
 		lang             => 'en',
-		executor         => $DEFAULT_EXECUTOR,
 		allow_guest_access => $GUEST_ACCESS,
 	});
 
@@ -856,8 +854,6 @@ sub update_configuration {
 		# was ignored due to a pre-existing configuration    
     	db_version         => $DB_VERSION,
 		import_formats     => $IMPORT_FORMATS,
-		# Make sure there is an executor
-		# executor         => $DEFAULT_EXECUTOR,
 		super_user         => $session->experimenter_id(),
 		template_dir       => $APACHE->{TEMPLATE_DIR},
 		lang               => $APACHE->{LANG},
