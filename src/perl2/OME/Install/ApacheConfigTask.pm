@@ -1233,11 +1233,11 @@ BLURB
 		print $LOGFILE "Set APACHE_WEB_INCLUDE to $APACHE_WEB_INCLUDE\n";
 		
 		#********
-		#******** Install DAE web by copying NonblockingSlaveWorkerCGI.pl
+		#******** Install DAE web by copying DistributedAnalysisEngineCGI.pl
 		#********
-		print $LOGFILE "Installing DAE web by copying NonblockingSlaveWorkerCGI\n";
-		$source = 'src/perl2/OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl';
-		$dest = $OME_BASE_DIR.'/perl2/NonblockingSlaveWorkerCGI.pl';
+		print $LOGFILE "Installing DAE web by copying DistributedAnalysisEngineCGI\n";
+		$source = 'src/perl2/OME/Analysis/Engine/DistributedAnalysisEngineCGI.pl';
+		$dest = $OME_BASE_DIR.'/perl2/DistributedAnalysisEngineCGI.pl';
 		print $LOGFILE "Copying $source to $dest\n";
 		copy ($source,$dest) or
 			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
@@ -1253,8 +1253,8 @@ BLURB
 		
 		# sym-link if it's set to Apache Configuration
 		if ($APACHE->{DEV_CONF}) {
-			$source = 'OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl';
-			$dest = 'src/perl2/NonblockingSlaveWorkerCGI.pl';
+			$source = 'OME/Analysis/Engine/DistributedAnalysisEngineCGI.pl';
+			$dest = 'src/perl2/DistributedAnalysisEngineCGI.pl';
 			unlink( $dest ) if (-e $dest and ! -d $dest);
 			print $LOGFILE "Making sym-link $dest->$source\n";
 				symlink ($source, $dest) or
