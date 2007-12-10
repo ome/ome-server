@@ -653,6 +653,35 @@ sub findObject {
     return $objects? $objects->next(): undef;
 }
 
+=head2 lockTable
+
+	$factory->lockTable("OME::Analysis::Engine::Job");
+
+Gets an exclusive lock on the DBObject's table. In Posgress there
+is no corresponding unlock table and the lock is released
+at the end of the transaction.
+
+=cut
+
+sub lockTable {
+    my ($self,$class) = @_;
+
+    __checkClass($class);
+    $class->require();
+    
+	my $dbh = $self->{__ourDBH};
+	my $table = $class->__defaultTable();
+
+	eval {
+		logdbg "debug", "LOCK TABLE ".$table.";";
+		$dbh->do("LOCK TABLE ".$table."; ");
+	};
+	die $@ if $@;
+
+    return;
+}
+
+
 sub findObjects {
     my ($self, $class, @criteria) = @_;
 
