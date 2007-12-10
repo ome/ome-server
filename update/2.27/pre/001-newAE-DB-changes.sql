@@ -5,6 +5,7 @@ UPDATE analysis_chain_executions SET results_reuse=false;
 ALTER TABLE analysis_chain_executions ADD COLUMN additional_jobs BOOLEAN DEFAULT FALSE;
 
 ALTER TABLE tasks ADD COLUMN visible BOOLEAN DEFAULT true;
+ALTER TABLE tasks DROP CONSTRAINT tasks_session_id_fkey;
 
 ALTER TABLE analysis_chain_nodes ADD COLUMN dependence CHAR(1);
 

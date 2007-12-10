@@ -161,7 +161,7 @@ sub ping {
     $tasks = [$class->taskFactory()->findObjectsLike('OME::Task',
     	{
     		session_id => OME::Session->instance()->id(),
-    		process_id => 'ne 0',
+    		process_id => '!NULL',
     	})] unless $tasks;
 
 	foreach my $task (@$tasks) {

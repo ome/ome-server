@@ -136,7 +136,6 @@ __PACKAGE__->addColumn(name => 'name',
 __PACKAGE__->addColumn(process_id => 'process_id',
                        {
                         SQLType => 'integer',
-                        NotNull => 1,
                        });
 __PACKAGE__->addColumn(session_id => 'session_id',
                        {
