@@ -433,6 +433,27 @@ BLURB
 		print $LOGFILE "chmod 0755 $MAINT_CONF->{omeadmin_path}/ome\n";
 	}
 	
+	#
+	# Install ome-worker to /OME/bin and /usr/local/bin
+	#
+	copy(getcwd()."/src/util/ome-worker", "$OME_BASE_DIR/bin/ome-worker") or
+		print $LOGFILE "Could not copy src/util/ome-worker to $OME_BASE_DIR/bin/ome-worker: $!\n" and
+		croak "Could not copy src/util/ome-worker to $OME_BASE_DIR/bin/ome-worker: $!";
+	print $LOGFILE "copied src/util/ome-worker to $OME_BASE_DIR/bin/ome-worker\n";
+	chmod(0755,"$OME_BASE_DIR/bin/ome-worker") or
+		print $LOGFILE "Could not chmod $OME_BASE_DIR/bin/ome-worker: $!\n" and
+		croak "Could not chmod $OME_BASE_DIR/bin/ome-worker: $!";
+	print $LOGFILE "chmod 0755 $OME_BASE_DIR/bin/ome-worker\n";
+
+	copy(getcwd()."/src/util/ome-worker", "/usr/local/bin/ome-worker") or
+		print $LOGFILE "Could not copy src/util/ome-worker to /usr/local/bin/ome-worker: $!\n" and
+		croak "Could not copy src/util/ome-worker to /usr/local/bin/ome-worker: $!";
+	print $LOGFILE "copied src/util/ome-worker to /usr/local/bin/ome-worker\n";
+	chmod(0755,"/usr/local/bin/ome-worker") or
+		print $LOGFILE "Could not chmod /usr/local/bin/ome-worker: $!\n" and
+		croak "Could not chmod /usr/local/bin/ome-worker: $!";
+	print $LOGFILE "chmod 0755 /usr/local/bin/ome-worker\n";
+	
 	# Return unless we're actually going to do something.
 	unless ($MAINT_CONF->{do_it}) {
 		print $LOGFILE "Not setting up Maintenance tasks\n";
