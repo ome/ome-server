@@ -387,7 +387,53 @@ sub createWithKey {
 	return $session;
 }
 
+sub su_session {
+	my $self = shift;
 
+#	croak "You must be root to create an OME superuser session" unless $< == 0;
+#	my $DSN = OME::Database::Delegate->getDefaultDelegate()->getDSN();
+#	croak "You can only create an OME superuser session on a local database" if $DSN =~ /host/;
+	
+    my $factory = OME::Factory->new();
+    croak "Couldn't create a new factory" unless $factory;
+    
+	my $var = $factory->findObject('OME::Configuration::Variable',
+			configuration_id => 1, name => 'super_user');
+    my $experimenterID = $var->value();
+    
+   
+	croak "The super_user Expreimenter is not defined in the configuration table.\n"
+		unless $experimenterID;
+	my $userState = $self->makeOrGetUserState ($factory, experimenter_id => $experimenterID);
+
+    # print "  \\__ Getting session for user state ID=".$userState->id()."\n";
+    # N.B.: In this case, we are not specifying the visible groups and users - they are all visible.
+    my $session = OME::Session->instance($userState, $factory);
+
+    croak "Could not create session from userState.  Something is probably very very wrong" unless defined $session;
+
+    $userState->storeObject();
+    $session->commitTransaction();
+
+    return $session;
+}
+
+sub sudo_session {
+	my ($self, $username) = @_;
+
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
+#	croak "You can only call sudo_session on a super_user session"
+#		unless $factory->Configuration()->super_user() == $session->experimenter_id();
+
+	my $userState = $self->makeOrGetUserState ($factory, OMEName => $username);
+	croak "Could not get user state for $username" unless $userState;
+
+	# N.B.:  This disables ACL on the sudo session
+	return ( OME::Session->instance($userState, $factory,undef) );
+	
+}	
+	
 sub updateACL {
 	my $self = shift;
 	my $session       = OME::Session->instance();
