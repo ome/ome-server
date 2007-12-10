@@ -1,0 +1,157 @@
+#!/usr/bin/perl -w
+# OME/Tasks/Analysis/Engine/ome-worker
+
+#-------------------------------------------------------------------------------
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institute of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+# Written by:    Tom Macura <tmacura@nih.gov>
+#-------------------------------------------------------------------------------
+
+use strict;
+use Carp;
+use English;
+use Log::Agent;
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+use Time::HiRes qw(gettimeofday tv_interval);
+
+use OME::SessionManager;
+use OME::Module;
+use OME::ModuleExecution;
+use OME::Analysis::Handler;
+use OME::Analysis::Engine::DistributedAnalysisEngineClient;
+
+my $remote_ae = OME::Analysis::Engine::DistributedAnalysisEngineClient->new();
+
+####################################
+# connect to the right master node
+####################################
+my $remote_ae_url;
+GetOptions ('u|url=s' => \$remote_ae_url);
+$remote_ae->useRemoteAnalysisEngine($remote_ae_url)
+	if ($remote_ae_url);
+
+####################################
+# register as a worker
+####################################
+my $worker_id = $remote_ae->RegisterWorker(OME::Install::Environment->initialize()->hostname(),"$PID");
+
+# set what happens if the worker is killed (e.g. ctrl^C)
+$SIG{INT} = sub {
+	$remote_ae->UnregisterWorker($worker_id);
+	CORE::exit;
+};
+
+while (1) {
+	# get a job
+	logdbg ("debug", "GetJob($worker_id)");
+	my ($nex_id, $DataSource, $DBUser, $DBPassword, $SessionKey) = 
+		$remote_ae->GetJob($worker_id);
+
+	# no job means wait for 10 seconds
+	unless (defined $nex_id and $nex_id ne "") {
+		logdbg ("debug", "... wait 10sec");
+		sleep 10;
+		next;
+	}
+
+	logdbg ("debug", "   Creating Remote Session");
+	# use session key etc. to CONNECT TO THE DB!
+	my $session = OME::SessionManager->createSession ($SessionKey,{
+		DataSource => $DataSource,
+		DBUser     => $DBUser,
+		DBPassword => $DBPassword,
+	});
+
+	croak ("Unable to get remote session: \n".
+		   "SessionKey: '$SessionKey'\n\tDataSource: '$DataSource'\n\tDBUser: '$DBUser'")
+	unless $session;
+	
+	# do we want to su our session to another user
+	# or do we want to be sent the right session keys?
+
+	####################################
+	# Execute MEX
+	####################################
+	my $factory = $session->Factory();
+	my $nex = $factory->findObject ('OME::AnalysisChainExecution::NodeExecution', {id => $nex_id})
+		or croak ("could not find MEX $nex_id");
+						
+	my $mex = $nex->module_execution();					
+	my $module = $mex->module();
+	my $handler_class = $module->module_type();
+	my $location = $module->location();
+
+	croak ("Malformed class name $handler_class")
+	  unless $handler_class =~ /^\w+(\:\:\w+)*$/;
+
+	logdbg ("debug", "   executing ".$module->name());
+
+	my $start_time = [gettimeofday()];
+	$mex->timestamp('now()');
+	eval {
+		$handler_class->require();
+		my $handler = $handler_class->new($mex);
+		$mex->storeObject();
+		$session->commitTransaction(); # make sure the MEX status is set to BUSY
+		$handler->startAnalysis();
+		
+		my $dependence = $nex->analysis_chain_node()->dependence();
+		my $target;
+		if ($dependence eq 'I') {
+			$target = $nex->module_execution()->image();
+		}elsif ($dependence eq 'D') {
+			$target = $nex->module_execution()->dataset();
+		}
+	
+		$handler->execute($dependence,$target);
+		$handler->finishAnalysis();
+	};
+	$mex->total_time(tv_interval($start_time));
+	
+	if ($@) {
+		$mex->status('ERROR');
+		if (defined($mex->error_message)) {
+			$mex->error_message($mex->error_message."\n".$@);
+		} else {
+			$mex->error_message($@);
+		}
+		croak ("debug", "      Error during execution: $@\n");
+	} else {
+		$mex->status('FINISHED');
+	}
+	
+	$mex->storeObject();
+	$session->commitTransaction();
+	OME::SessionManager->logout($session);
+
+	# record the finished job
+	logdbg ("debug", "FinishedJob($worker_id)");
+	$remote_ae->FinishedJob($worker_id);
+}
+
+
+
