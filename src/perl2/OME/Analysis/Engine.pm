@@ -747,10 +747,15 @@ sub getJob {
     logdbg ("debug", "trying for lock");
 	$factory->lockTable("OME::Analysis::Engine::Job");
     logdbg ("debug", "got it!");
+    
 	my $job = $factory->findObject ('OME::Analysis::Engine::Job',
-							  {
-							   status => 'READY',
-							  });
+								{
+								status => 'READY',
+								});
+	my $worker = $factory->findObject ('OME::Analysis::Engine::Worker',
+								{
+								id => $worker_id,
+								});
 	my $nex;
 	if ( defined ($job) ) {
 		$nex = $job->NEX();
