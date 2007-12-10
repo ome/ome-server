@@ -56,7 +56,10 @@ OME::Tasks::NotificationManager - utility methods to manage OME::Tasks objects
 
 	# Create a new task notification object
 	# $nsteps is optional, but the first parameter (name) is required.
-	my $progress = new OME::Tasks::NotificationManager ("Reaaly long task", $nsteps);
+	my $progress = OME::Tasks::NotificationManager->new ("Reaaly long task", $nsteps);
+	
+	# remote tasks lack ping updates
+	my $progress = OME::Tasks::NotificationManager->new_remote_task ("Reaaly long task", $nsteps);
 
 	# do something
 	$progress->step(); # or optionally, $progress->step ($theStepNum)
@@ -107,7 +110,32 @@ sub new {
 		last_step   => 0,
 		t_start     => 'now',
 		t_stop      => undef,
-		t_last      => undef
+		t_last      => undef,
+		visible     => 'true',
+	});
+	return ($task);
+
+}
+
+sub new_remote_task {
+	my $proto = shift;
+    my $class = ref($proto) || $proto;
+   	my ($name,$nsteps) = @_;
+
+	$class->ping();
+	$task = $class->taskFactory()->newObject("OME::Task", {
+		name        => $name,
+		process_id  => 0,
+		session_id  => OME::Session->instance()->id(),
+		state       => 'IN PROGRESS',
+		message     => undef,
+		error       => undef,
+		n_steps     => $nsteps,
+		last_step   => 0,
+		t_start     => 'now',
+		t_stop      => undef,
+		t_last      => undef,
+		visible     => 'true',
 	});
 	return ($task);
 
@@ -130,8 +158,11 @@ sub ping {
     my $tasks;
     
     $tasks = $param{tasks} if exists $param{tasks};
-    $tasks = [$class->taskFactory()->findObjects('OME::Task',
-    	session_id=>OME::Session->instance()->id())] unless $tasks;
+    $tasks = [$class->taskFactory()->findObjectsLike('OME::Task',
+    	{
+    		session_id => OME::Session->instance()->id(),
+    		process_id => 'ne 0',
+    	})] unless $tasks;
 
 	foreach my $task (@$tasks) {
 		next unless $task->state() eq 'IN PROGRESS';
@@ -158,7 +189,9 @@ sub list {
     $criteria{session_id} = OME::Session->instance()->id()
     	unless exists $criteria{session_id}
     	or  exists $criteria{session};
-
+    $criteria{visible} = 'true'
+    	unless exists $criteria{visible};
+    	
     $criteria{__order} = '!id' unless exists $criteria{__order};
 
     return ($class->taskFactory()->findObjects('OME::Task',%criteria));
@@ -182,8 +215,9 @@ sub clear {
     	or  exists $criteria{session};
 
     my @tasks = $class->taskFactory()->findObjects('OME::Task',%criteria);
-    foreach (@tasks) {
-    	$_->deleteObject();
+    foreach my $task (@tasks) {
+    	$task->visible('false');
+		$task->storeObject();
     }
 }
 
