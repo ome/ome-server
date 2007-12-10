@@ -209,6 +209,11 @@ sub uninstall {
 			print "    \\_ Removing $file_path \n";
 			unlink($file_path);
 		}
+
+		# uninstall ome-worker
+		my $file_path = "/usr/local/bin/ome-worker";
+		print "    \\_ Removing $file_path \n";
+		unlink($file_path);
 	}
 }
 
