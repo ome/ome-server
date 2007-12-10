@@ -123,9 +123,9 @@ use constant SERVER_BUSY     => 503;
 # Start of Code
 ################
 
-my $CGI = new CGI;
-my $SESSION = OME::SessionManager->su_session();
-my $FACTORY = $SESSION->Factory();
+our $CGI = new CGI;
+our $SESSION = OME::SessionManager->su_session();
+our $FACTORY = $SESSION->Factory();
 
 # figure out what method is called
 my $Method = $CGI->url_param('Method');
@@ -217,8 +217,8 @@ if ($Method eq 'RegisterWorker') {
 	# worker can now go execute some more jobs
 	##########################################
 	$worker->status('IDLE');
-	$worker->executing_mex('');
-	$worker->storeObject;
+	$worker->executing_mex(undef);
+	$worker->storeObject();
 	$SESSION->commitTransaction();
 	non_exiting_do_response (STATUS_OK,'OK');
 

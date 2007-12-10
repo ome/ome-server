@@ -125,7 +125,7 @@ sub new_remote_task {
 	$class->ping();
 	$task = $class->taskFactory()->newObject("OME::Task", {
 		name        => $name,
-		process_id  => 0,
+		process_id  => undef,
 		session_id  => OME::Session->instance()->id(),
 		state       => 'IN PROGRESS',
 		message     => undef,
