@@ -361,18 +361,6 @@ sub matlab_conf{
     return;
 }
 
-sub worker_conf{
-	my $self = shift;
-
-    if (scalar @_) {
-		$self->{worker_conf} = shift @_;
-    } else {
-		return $self->{worker_conf} unless not exists $self->{worker_conf};
-    }
-
-    return;
-}
-
 sub DB_conf{
 	my $self = shift;
 
