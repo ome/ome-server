@@ -291,52 +291,8 @@ BLURB
 		}
 	}
 	
-	my $worker_conf_def = {
-		MaxWorkers => 2
-	};
-	
-	my $workerConf = defined $environment->worker_conf() ? $environment->worker_conf() : $worker_conf_def;
-	$workerConf->{MaxWorkers} = $max_local_workers if $max_local_workers;
-	$workerConf->{MaxWorkers} = "?" unless exists $workerConf->{MaxWorkers};
-	
-	my $executor = $conf->executor or croak "couldn't retrieve executor from configuration";
-	
-    while (1) {
-        if ($confirm_all) {
-			print BOLD,"Analysis Engine Configuration:\n",RESET;
-			print      "     Analysis Engine Executor: ";
-			if ($executor eq "OME::Analysis::Engine::ForkedPerlExecutor") {
-				print BOLD, 'Threaded', RESET, "\n";
-			} elsif ($executor eq "OME::Analysis::Engine::UnthreadedPerlExecutor") {
-				print BOLD, 'Unthreaded', RESET, "\n";
-			} elsif ($executor eq "OME::Analysis::Engine::SimpleWorkerExecutor") {
-				print BOLD, 'Distributed', RESET, "\n"; 
-			}
-			print      "       Local Worker Processes: ", BOLD, $workerConf->{MaxWorkers}, RESET, "\n";
-			print "\n";  # Spacing
-			
-			# Don't be interactive if we got any parameters
-			last if ($interactive);
-			if (y_or_n ("Are these values correct ?","y")) {
-				last;
-			}
-			
-			my $ans = multiple_choice("Analysis Engine Executor ", "Unthreaded", "Unthreaded", "Threaded", "Distributed"); 
-			if ($ans eq "Threaded") {
-				$executor = "OME::Analysis::Engine::ForkedPerlExecutor";
-			} elsif ($ans eq "Unthreaded") {
-				$executor = "OME::Analysis::Engine::UnthreadedPerlExecutor";
-			} elsif ($ans eq "Distributed") {
-				$executor = "OME::Analysis::Engine::SimpleWorkerExecutor";
-			}
-
-			$workerConf->{MaxWorkers} = confirm_default ('Maximum workers :', $workerConf->{MaxWorkers});
-		}
-	}
-	
     # Update configuration variables
 	my %update_configuration_variables = (
-		executor       => $executor,
 		lsid_authority => $lsid,
 #		super_user     => $session->experimenter_id(),
 		template_dir   => $apacheConf->{TEMPLATE_DIR},
@@ -362,7 +318,6 @@ BLURB
 	$environment->lsid ($lsid);
 	$environment->apache_conf($apacheConf);
  	$environment->matlab_conf($matlabConf);
-	$environment->worker_conf($workerConf);
 	$environment->store_to();
 }
 
