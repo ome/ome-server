@@ -266,6 +266,7 @@ sub calculateDependences {
         # Check if the node is globally-dependent by seeing if it
         # creates any global outputs.  If so, it cannot have any
         # non-global inputs.
+
         if ($factory->
             objectExists("OME::Module::FormalOutput",
                          {
@@ -284,11 +285,13 @@ sub calculateDependences {
                              })) {
                 die "Node ".$node->id()." illegally generates global outputs";
             }
+
             next NODE;
         }
 
         # Check if the node is trivially dataset-dependent, by seeing if
         # if has any dataset inputs or outputs.
+
         if ($factory->
             objectExists("OME::Module::FormalInput",
                          {
@@ -750,12 +753,16 @@ sub getJob {
 							  });
 	my $nex;
 	if ( defined ($job) ) {
+		$nex = $job->NEX();
+		logdbg ("debug", "  got NEX: ".$nex->id());
+		
 		$job->status('BUSY');
 		$job->executing_worker($worker_id);
 		$job->storeObject;
-
-		$nex = $job->NEX();
-		logdbg ("debug", "  got NEX: ".$nex->id());
+		
+		$worker->status('BUSY');
+		$worker->executing_mex($nex->module_execution());
+		$worker->storeObject;
 
 		my $task = $nex->analysis_chain_execution()->task();
 		$task->refresh();

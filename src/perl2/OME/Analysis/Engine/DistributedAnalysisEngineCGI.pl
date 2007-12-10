@@ -123,7 +123,9 @@ use constant SERVER_BUSY     => 503;
 # Start of Code
 ################
 
-our $CGI = new CGI;
+my $CGI = new CGI;
+my $SESSION = OME::SessionManager->su_session();
+my $FACTORY = $SESSION->Factory();
 
 # figure out what method is called
 my $Method = $CGI->url_param('Method');
@@ -141,8 +143,19 @@ if ($Method eq 'RegisterWorker') {
 	$Worker_PID = $CGI->param('PID') unless $Worker_PID;
 	do_response (BAD_REQUEST,"Worker's PID not specified") unless $Worker_PID;
 
-	my $worker_ID = register_worker($Worker_URL, $Worker_PID);
-	do_response (STATUS_OK,"$worker_ID");
+	my $worker = $FACTORY->newObject ('OME::Analysis::Engine::Worker',
+									 {
+									  PID => $Worker_PID,
+									  URL => $Worker_URL,
+									  last_used => 'now()',
+									  status => 'IDLE'
+									 });
+	do_response (SERVER_ERROR,"Unable to register new worker: $@") unless $worker;
+
+	$worker->storeObject();
+	$SESSION->commitTransaction();
+
+	do_response (STATUS_OK,$worker->id());
 
 } elsif ($Method eq 'GetJob') {
 	my $Worker_ID; # required
@@ -150,6 +163,7 @@ if ($Method eq 'RegisterWorker') {
 	$Worker_ID = $CGI->url_param('WorkerID');
 	$Worker_ID = $CGI->param('WorkerID') unless $Worker_ID;
 	do_response (BAD_REQUEST,"Worker's ID not specified") unless $Worker_ID;
+
 	get_job ($Worker_ID);
 } elsif ($Method eq 'JobUpdate') {
 	my $Worker_ID; # required
@@ -167,131 +181,21 @@ if ($Method eq 'RegisterWorker') {
 	$Worker_ID = $CGI->param('WorkerID') unless $Worker_ID;
 	do_response (BAD_REQUEST,"Worker's ID not specified") unless $Worker_ID;
 
-	# Acknowledge Message
-	non_exiting_do_response (STATUS_OK,'OK');
-	finished_job($Worker_ID);
-	#do_response (STATUS_OK,'OK');	
-
-} elsif ($Method eq 'UnregisterWorker') {
-	my $Worker_ID; # required
-
-	$Worker_ID = $CGI->url_param('WorkerID');
-	$Worker_ID = $CGI->param('WorkerID') unless $Worker_ID;
-	do_response (BAD_REQUEST,"Worker's ID not specified") unless $Worker_ID;
-
-	non_exiting_do_response (STATUS_OK,'OK');
-	unregister_worker($Worker_ID);
-	#do_response (STATUS_OK,'OK');
-} else {
-	do_response (BAD_REQUEST,"Method $Method is not supported");
-}
-
-exit;
-################
-# End of Code
-################
-
-sub register_worker {
-	my ($url, $worker_pid) = @_;
-	my $session = OME::SessionManager->su_session();
-	my $factory = $session->Factory();
-	my $worker;
-	eval {
-		 $worker = $factory->newObject ('OME::Analysis::Engine::Worker',
+	my $worker = $FACTORY->findObject ('OME::Analysis::Engine::Worker',
 										 {
-										  PID => $worker_pid,
-										  URL => $url,
-										  last_used => 'now()',
-										  status => 'IDLE'
+										  id => $Worker_ID,
 										 });
-	};
-	do_response (SERVER_ERROR,"Unable to register new worker: $@") unless $worker;
+	do_response (SERVER_ERROR,"Worker $Worker_ID doesn`t seem to exist: $@") unless $worker;
+	do_response (SERVER_ERROR,"Worker $Worker_ID is not BUSY. It's ".$worker->status())
+		unless ($worker->status() eq 'BUSY');
 
-	$worker->storeObject();
-	$session->commitTransaction();
-	return $worker->worker_id();
-}
-
-sub unregister_worker {
-	my ($worker_id) = shift;
-	my $session = OME::SessionManager->su_session();
-	my $factory = $session->Factory();
-	my $worker;
-	
-	eval {
-		 $worker = $factory->findObject ('OME::Analysis::Engine::Worker',
-										 {
-										  id => $worker_id,
-										 });
-	};
-	do_response (SERVER_ERROR,"Worker $worker_id doesn`t seem to exist: $@") unless $worker;
-	
-	# FIXME: if the worker is executing a NEX when it is unregistered, clean up the NEX
-	
-	$worker->last_used ('now()');
-	$worker->status ('OFFLINE');
-	$worker->storeObject();
-	$session->commitTransaction();
-
-}
-
-sub get_job {
-	my ($worker_id) = shift;
-	my $session = OME::SessionManager->su_session();
-	my $factory = $session->Factory();
-	my $worker;
-	
-	eval {
-		 $worker = $factory->findObject ('OME::Analysis::Engine::Worker',
-										 {
-										  id => $worker_id,
-										 });
-	};
-	do_response (SERVER_ERROR,"Worker $worker_id doesn`t seem to exist: $@") unless $worker;
-	do_response (SERVER_ERROR,"Worker $worker_id is not IDLE. It's ".$worker->status())
-		unless ($worker->status() eq 'IDLE');
-
-
-	my $nex = OME::Analysis::Engine->getJob($worker_id);
-
-	if (defined ($nex)) {
-		# Parameters for database connection 
-		my $DATA_SOURCE = OME::Database::Delegate->getDefaultDelegate()->getDSN();
-		my $DB_conf = OME::Install::Environment->initialize()->DB_conf();
-		my $DB_USER = $DB_conf->{User};
-		$DB_USER = getpwuid($<) unless $DB_USER;
-		my $DB_PASS = $DB_conf->{Password};
-		$DB_PASS = "" unless $DB_PASS;
-
-		# convert the superuser's SessionKey to the right experimenter's SessionKey
-		my $experimenter = $factory->findObject ('OME::SemanticType::BootstrapExperimenter',
+	my $job = $FACTORY->findObject ('OME::Analysis::Engine::Job',
 						  {
-						   id => $nex->module_execution->experimenter->id(),
-						  });
-		my $sudo_session = OME::SessionManager->sudo_session($experimenter->OMEName());
-		my $SessionKey = $sudo_session->SessionKey();
-		
-		do_response (STATUS_OK, "NEX=".$nex->id()."\n".
-								"DataSource=".$DATA_SOURCE."\n".
-							    "DBUser=".$DB_USER."\n".
-							    "DBPassword=".$DB_PASS."\n".
-							    "SessionKey=".$SessionKey."\n");
-	} else {
-		do_response (STATUS_OK, "No Jobs");
-	}
-}
-
-sub finished_job {
-	my ($worker_id) = shift;
-	
-	my $session = OME::SessionManager->su_session();
-	my $factory = $session->Factory();
-	
-	my $job = $factory->findObject ('OME::Analysis::Engine::Job',
-						  {
-						   executing_worker => $worker_id,						  
+						   executing_worker => $Worker_ID,						  
 						   status => 'BUSY',
 						  });
+	do_response (SERVER_ERROR,"Worker $Worker_ID doesn`t seem to be executing a job: $@") unless $job;
+
 	my $nex  = $job->NEX();
 	my $node = $nex->analysis_chain_node();
 	my $chex = $nex->analysis_chain_execution();
@@ -308,15 +212,102 @@ sub finished_job {
 	}
 
 	$job->deleteObject(); # must be done before finishedJob();
-	
-	# change sessions from the super-user to the experimenter
-	my $experimenter = $factory->findObject ('OME::SemanticType::BootstrapExperimenter',
+
+	###########################################
+	# worker can now go execute some more jobs
+	##########################################
+	$worker->status('IDLE');
+	$worker->executing_mex('');
+	$worker->storeObject;
+	$SESSION->commitTransaction();
+	non_exiting_do_response (STATUS_OK,'OK');
+
+	###########################################
+	# master can analyze chain structure to add new jobs
+	##########################################
+
+	# change sessions from the super-user to the experimenter (so the new MEXs
+	# are created in the name of the experimenter)
+	my $experimenter = $FACTORY->findObject ('OME::SemanticType::BootstrapExperimenter',
 					  {
 					   id => $nex->module_execution->experimenter->id(),
 					  });
 	my $sudo_session = OME::SessionManager->sudo_session($experimenter->OMEName());
 	OME::Analysis::Engine->finishedJob($chex,$nex,$node,$target);
+
 	$sudo_session->commitTransaction();
+
+} elsif ($Method eq 'UnregisterWorker') {
+	my $Worker_ID; # required
+
+	$Worker_ID = $CGI->url_param('WorkerID');
+	$Worker_ID = $CGI->param('WorkerID') unless $Worker_ID;
+	do_response (BAD_REQUEST,"Worker's ID not specified") unless $Worker_ID;
+
+	non_exiting_do_response (STATUS_OK,'OK');
+	
+	my $worker = $FACTORY->findObject ('OME::Analysis::Engine::Worker',
+									 {
+									  id => $Worker_ID,
+									 });
+	if ($worker) {									
+		# FIXME: if the worker is executing a NEX when it is unregistered, clean up the NEX
+		$worker->last_used ('now()');
+		$worker->status ('OFFLINE');
+		$worker->storeObject();
+		$SESSION->commitTransaction();
+	}	
+} else {
+	do_response (BAD_REQUEST,"Method $Method is not supported");
+}
+
+exit;
+################
+# End of Code
+################
+
+sub get_job {
+	my ($worker_id) = shift;
+
+	my $worker = $FACTORY->findObject ('OME::Analysis::Engine::Worker',
+										 {
+										  id => $worker_id,
+										 });
+	do_response (SERVER_ERROR,"Worker $worker_id doesn`t seem to exist: $@") unless $worker;
+	do_response (SERVER_ERROR,"Worker $worker_id is not IDLE. It's ".$worker->status())
+		unless ($worker->status() eq 'IDLE');
+
+	my $nex = OME::Analysis::Engine->getJob($worker_id);
+
+	if (defined ($nex)) {
+		my $ENVIRONMENT = OME::Install::Environment->initialize();
+		
+		# Parameters for database connection 
+		my $DATA_SOURCE = OME::Database::Delegate->getDefaultDelegate()->getDSN();
+		$DATA_SOURCE .= ';host='.$ENVIRONMENT->hostname()
+			unless ($DATA_SOURCE =~ /;host=\S+/);
+		my $DB_conf = $ENVIRONMENT->DB_conf();
+		my $DB_USER = $DB_conf->{User};
+		$DB_USER = getpwuid($<) unless $DB_USER;
+		my $DB_PASS = $DB_conf->{Password};
+		$DB_PASS = "" unless $DB_PASS;
+
+		# convert the superuser's SessionKey to the right experimenter's SessionKey
+		my $experimenter = $FACTORY->findObject ('OME::SemanticType::BootstrapExperimenter',
+						  {
+						   id => $nex->module_execution->experimenter->id(),
+						  });
+		my $sudo_session = OME::SessionManager->sudo_session($experimenter->OMEName());
+		my $SessionKey = $sudo_session->SessionKey();
+
+		do_response (STATUS_OK, "NEX=".$nex->id()."\n".
+								"DataSource=".$DATA_SOURCE."\n".
+							    "DBUser=".$DB_USER."\n".
+							    "DBPassword=".$DB_PASS."\n".
+							    "SessionKey=".$SessionKey."\n");
+	} else {
+		do_response (STATUS_OK, "No Jobs");
+	}
 }
 
 # Note that this always results in an exit
