@@ -98,6 +98,24 @@ __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
                         Indexed => 1,
                         ForeignKey => 'experimenters',
                        });
+                       
+__PACKAGE__->addColumn(task => 'task','OME::Task',
+                       {
+                        SQLType => 'integer',
+                        ForeignKey => 'tasks',
+                       });
+__PACKAGE__->addColumn(results_reuse => 'results_reuse',
+                       {
+                        SQLType => 'boolean',
+                        NotNull => 1,
+                        Default => 'false',
+                       });
+__PACKAGE__->addColumn(additional_jobs => 'additional_jobs',
+                       {
+                        SQLType => 'boolean',
+                        NotNull => 1,
+                        Default => 'false',
+                       });
 __PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
 __PACKAGE__->hasMany('node_executions',
                      'OME::AnalysisChainExecution::NodeExecution' =>

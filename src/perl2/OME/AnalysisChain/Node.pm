@@ -73,6 +73,11 @@ __PACKAGE__->addColumn(module => 'module_id',
                         Indexed => 1,
                         ForeignKey => 'modules',
                        });
+__PACKAGE__->addColumn(dependence => 'dependence',
+                       {
+                        SQLType => 'char(1)',
+                        Check   => "(dependence in ('G','D','I'))",
+                       });
 __PACKAGE__->addColumn(iterator_tag => 'iterator_tag',
                        {SQLType => 'varchar(128)'});
 __PACKAGE__->addColumn(new_feature_tag => 'new_feature_tag',

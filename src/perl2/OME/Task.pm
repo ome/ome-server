@@ -179,6 +179,11 @@ __PACKAGE__->addColumn(t_last => 't_last',
                        {
                         SQLType => 'timestamp',
                        });
+__PACKAGE__->addColumn(visible => 'visible',
+                       {
+                        SQLType => 'boolean',
+                        Default => 'true',
+                       });
 
 use OME::Tasks::NotificationManager;
 
