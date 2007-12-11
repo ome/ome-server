@@ -264,11 +264,15 @@ sub processDOM {
                 logdie ref ($self) . ": While processing existing Semantic Type $stName, ".
                     "existing declaration has no Semantic Element $seName."
                     unless defined $seCol and $seCol->name() eq $seName;
-                
-                my $actual_seDBloc = $seCol->data_column()->data_table()->table_name().'.'.$seCol->data_column()->column_name();
-                logdie ref ($self) . ": While processing Semantic Type $stName, ".
-                    "existing semantic element $seName is stored in $actual_seDBloc instead of $seDBloc."
-                    unless defined $actual_seDBloc and $actual_seDBloc eq $seDBloc;
+
+				# We ignore how STs are recorded in DB tables/columns
+				# the explicitely defined DBLocations of the past sometimes conflict
+				# with the auto-generated DBLocations
+				
+                #my $actual_seDBloc = $seCol->data_column()->data_table()->table_name().'.'.$seCol->data_column()->column_name();
+                #logdie ref ($self) . ": While processing Semantic Type $stName, ".
+                #    "existing semantic element $seName is stored in $actual_seDBloc instead of $seDBloc."
+                #    unless defined $actual_seDBloc and $actual_seDBloc eq $seDBloc;
 
                 my $actual_seDataType = $seCol->data_column()->sql_type();
                 logdie ref ($self) . ": While processing Semantic Type $stName, ".
