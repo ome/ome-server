@@ -15,7 +15,7 @@ my $PROJECT_NAME = 'ES Bank';
 my $PROJECT_DESCRIPTION = 'Genetic Manipulation of Embryonic Stem Cells';
 
 # my $session = OME::SessionManager->TTYlogin();
-my $session = su_session();
+my $session = OME::SessionManager->su_session();
 my $factory = $session->Factory();
 
 my ($filename) = @ARGV;
@@ -87,7 +87,7 @@ foreach my $record (@data) {
 my ($username,$files);
 while ( ($username,$files) = each %$new_imgs) {
 	# Make a sudo_session
-	$session = sudo_session ($session,$username);
+	$session = OME::SessionManager->sudo_session ($username);
 	die "Could not make session for $username" unless $session;
 
 	# Make a project and dataset if necessary
@@ -142,7 +142,7 @@ while ( ($username,$records) = each %$user_records ) {
 
 # Get a global MEX for this user.  If this MEX doesn't produce anything, we'll delete it at the end.
 	# Make a sudo_session
-	$session = sudo_session ($session,$username);
+	$session = OME::SessionManager->sudo_session ($username);
 	die "Could not make session for $username" unless $session;
 	
 	# Set up a global MEX
@@ -442,53 +442,4 @@ my ($factory,$type,$MEX,$criteria) = @_;
 	}
 	$object = $factory->newAttribute ($type, undef, $MEX, \%Fields);
 	return $object;
-}
-
-
-
-
-
-
-sub su_session {
-#	croak "You must be root to create an OME superuser session" unless $< == 0;
-#	my $DSN = OME::Database::Delegate->getDefaultDelegate()->getDSN();
-#	croak "You can only create an OME superuser session on a local database" if $DSN =~ /host/;
-	
-    my $factory = OME::Factory->new();
-    croak "Couldn't create a new factory" unless $factory;
-    
-	my $var = $factory->findObject('OME::Configuration::Variable',
-			configuration_id => 1, name => 'super_user');
-    my $experimenterID = $var->value();
-    
-   
-	croak "The super_user Expreimenter is not defined in the configuration table.\n"
-		unless $experimenterID;
-	my $userState = OME::SessionManager->makeOrGetUserState ($factory, experimenter_id => $experimenterID);
-
-    print "  \\__ Getting session for user state ID=".$userState->id()."\n";
-    # N.B.: In this case, we are not specifying the visible groups and users - they are all visible.
-    my $session = OME::Session->instance($userState, $factory);
-
-    croak "Could not create session from userState.  Something is probably very very wrong" unless defined $session;
-
-    $userState->storeObject();
-    $session->commitTransaction();
-
-    return $session;
-}
-
-sub sudo_session {
-	my $session = shift;
-	my $username = shift;
-	my $factory = $session->Factory();
-#	croak "You can only call sudo_session on a super_user session"
-#		unless $factory->Configuration()->super_user() == $session->experimenter_id();
-
-	my $userState = OME::SessionManager->makeOrGetUserState ($factory, OMEName => $username);
-	croak "Could not get user state for $username" unless $userState;
-
-	# N.B.:  This disables ACL on the sudo session
-	return ( OME::Session->instance($userState, $factory,undef) );
-	
 }
