@@ -139,7 +139,7 @@ while (1) {
 		} else {
 			$mex->error_message($@);
 		}
-		croak ("debug", "      Error during execution: $@\n");
+		logdbg ("debug", "      Error during execution: $@\n");
 	} else {
 		$mex->status('FINISHED');
 	}
