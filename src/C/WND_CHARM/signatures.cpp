@@ -67,6 +67,7 @@ signatures *signatures::duplicate()
    signatures *new_samp;
    new_samp=new signatures();
    new_samp->sample_class=sample_class;
+   new_samp->interpolated_value=interpolated_value;
    new_samp->count=count;
    new_samp->NamesTrainingSet=NamesTrainingSet;   
    new_samp->ScoresTrainingSet=ScoresTrainingSet;

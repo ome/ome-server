@@ -62,6 +62,7 @@ class signatures
   public:
     signature data[MAX_SIGNATURE_NUM];
     unsigned short sample_class;                    /* the class of the sample */
+	double interpolated_value;
     long count;
     char full_path[IMAGE_PATH_LENGTH];              /* optional - full path the the image file   */
 	void *NamesTrainingSet;             /* the training set in which this set of signatures belongs - is assigned so that the signature names will be added */

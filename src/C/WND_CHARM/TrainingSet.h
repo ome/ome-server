@@ -48,6 +48,7 @@ typedef struct
    char *feature_names;
    char *individual_images;
    unsigned short method;
+   double pearson_coefficient;
 }data_split;
 
 class TrainingSet
@@ -82,6 +83,7 @@ public:
    long WNNclassify(signatures *test_sample, double *probabilities, double *normalization_factor, signatures **closest_sample);/* classify a sample using weighted nearest neighbor */
    long classify2(signatures *test_sample, double *probabilities,double *normalization_factor); /* classify using -5                         */
    long classify3(signatures *test_sample, double *probabilities,double *normalization_factor);
+   double pearson();                                               /* a pearson correlation of the interpolated and the class labels (if all labels are numeric) */
    long PrintConfusion(FILE *output_file, unsigned short *confusion_matrix, double *similarity_matrix, unsigned short dend_file, unsigned short method);  /* print a confusion or similarity matrix */
    long report(FILE *output_file, char *data_set_name, data_split *splits, unsigned short split_num, int tiles, int max_train_images,char *phylib_path, int phylip_algorithm, int export_tsv, char *path_to_test_set);  /* report on few splits */
 };

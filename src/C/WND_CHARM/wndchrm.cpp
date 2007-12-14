@@ -221,6 +221,7 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
        splits[split_index].accuracy=accuracy;
        splits[split_index].individual_images=individual_images;
        splits[split_index].method=method;
+	   splits[split_index].pearson_coefficient=test->pearson();
 
 	 delete train;
 	 delete test;
