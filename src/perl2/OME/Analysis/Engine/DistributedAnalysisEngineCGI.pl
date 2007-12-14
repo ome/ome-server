@@ -250,11 +250,27 @@ if ($Method eq 'RegisterWorker') {
 									 {
 									  id => $Worker_ID,
 									 });
-	if ($worker) {									
-		# FIXME: if the worker is executing a NEX when it is unregistered, clean up the NEX
+	if ($worker) {							
+		my $mex = $worker->executing_mex();
 		$worker->last_used ('now()');
 		$worker->status ('OFFLINE');
 		$worker->storeObject();
+
+		# clean up the MEX
+		$mex->status('UNFINISHED');
+		$mex->executed_by_worker(undef);
+		$mex->storeObject();
+		OME::Util::Data::Delete->delete_mex_output_attributes($mex,1);
+		
+		# put the MEX back on the job queue
+		my $job = $FACTORY->findObject ('OME::Analysis::Engine::Job',
+								{
+								'NEX.module_execution' => $mex->id(),
+								});
+		$job->executing_worker(undef);
+		$job->status('READY');
+		$job->storeObject();
+		
 		$SESSION->commitTransaction();
 	}	
 } else {
@@ -286,6 +302,10 @@ sub get_job {
 		my $DATA_SOURCE = OME::Database::Delegate->getDefaultDelegate()->getDSN();
 		$DATA_SOURCE .= ';host='.$ENVIRONMENT->hostname()
 			unless ($DATA_SOURCE =~ /;host=\S+/);
+
+		# This line makes it possible for the backend to be a Mac
+		$DATA_SOURCE =~ s/\.local//;
+
 		my $DB_conf = $ENVIRONMENT->DB_conf();
 		my $DB_USER = $DB_conf->{User};
 		$DB_USER = getpwuid($<) unless $DB_USER;
