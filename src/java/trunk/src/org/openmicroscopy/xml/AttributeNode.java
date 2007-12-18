@@ -39,6 +39,7 @@
 package org.openmicroscopy.xml;
 
 import ome.xml.DOMUtil;
+import ome.xml.OMEXMLNode;
 import org.openmicroscopy.ds.dto.*;
 import org.w3c.dom.Element;
 
@@ -46,7 +47,7 @@ import org.w3c.dom.Element;
  * AttributeNode is the superclass of nodes (semantic types) implementing the
  * Attribute DTO interface.
  */
-public class AttributeNode extends OMEXMLNode implements Attribute {
+public class AttributeNode extends LegacyOMEXMLNode implements Attribute {
 
   // -- Constructors --
 

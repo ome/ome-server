@@ -41,12 +41,13 @@ package org.openmicroscopy.xml;
 import java.util.Calendar;
 import java.util.List;
 import ome.xml.DOMUtil;
+import ome.xml.OMEXMLNode;
 import org.openmicroscopy.ds.dto.Image;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;
 
 /** ImageNode is the node corresponding to the "Image" XML element. */
-public class ImageNode extends OMEXMLNode implements Image {
+public class ImageNode extends LegacyOMEXMLNode implements Image {
 
   // -- Constructors --
 

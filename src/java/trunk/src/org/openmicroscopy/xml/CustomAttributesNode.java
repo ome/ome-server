@@ -41,13 +41,14 @@ package org.openmicroscopy.xml;
 import java.util.List;
 import java.util.Vector;
 import ome.xml.DOMUtil;
+import ome.xml.OMEXMLNode;
 import org.w3c.dom.*;
 
 /**
  * CustomAttributesNode is the node corresponding to the
  * "CustomAttributes" XML element.
  */
-public class CustomAttributesNode extends OMEXMLNode {
+public class CustomAttributesNode extends LegacyOMEXMLNode {
 
   // -- Constructors --
 

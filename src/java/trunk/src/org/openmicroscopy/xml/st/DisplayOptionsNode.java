@@ -32,7 +32,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via Xmlgen on Oct 19, 2007 5:03:39 PM CDT
+ * Created by curtis via Xmlgen on Dec 18, 2007 12:41:44 PM CST
  *
  *-----------------------------------------------------------------------------
  */
@@ -40,6 +40,7 @@
 package org.openmicroscopy.xml.st;
 
 import java.util.List;
+import ome.xml.OMEXMLNode;
 import org.openmicroscopy.xml.*;
 import org.openmicroscopy.ds.st.*;
 import org.w3c.dom.Element;

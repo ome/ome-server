@@ -40,6 +40,7 @@ package org.openmicroscopy.xml;
 
 import java.util.List;
 import ome.xml.DOMUtil;
+import ome.xml.OMEXMLNode;
 import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.st.Group;
@@ -48,7 +49,7 @@ import org.openmicroscopy.xml.st.GroupNode;
 import org.w3c.dom.Element;
 
 /** DatasetNode is the node corresponding to the "Dataset" XML element. */
-public class DatasetNode extends OMEXMLNode implements Dataset {
+public class DatasetNode extends LegacyOMEXMLNode implements Dataset {
 
   // -- Constructors --
 

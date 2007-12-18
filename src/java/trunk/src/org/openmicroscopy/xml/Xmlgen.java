@@ -409,6 +409,7 @@ public class Xmlgen {
       if (listSTs[i] != null) {
         fout.println("import java.util.List;");
       }
+      fout.println("import ome.xml.OMEXMLNode;");
       fout.println("import org.openmicroscopy.xml.*;");
       fout.println("import org.openmicroscopy.ds.st.*;");
       fout.println("import org.w3c.dom.Element;");

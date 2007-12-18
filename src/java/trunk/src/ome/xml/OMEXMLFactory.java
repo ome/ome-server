@@ -38,10 +38,12 @@
 package ome.xml;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
-import ome.xml.r2007_06.ome.OMENode;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /** OMEXMLFactory is a factory for creating OME-XML node hierarchies. */
@@ -49,18 +51,29 @@ public final class OMEXMLFactory {
 
   // -- Constants --
 
+  /** Latest OME-XML version namespace. */
+  public static final String LATEST_VERSION = "2007-06";
+
   /** Basic skeleton for an OME-XML node. */
   protected static final String SKELETON =
     "<?xml version=\"1.0\"?>\n" +
-    "<OME xmlns=\"http://www.openmicroscopy.org/Schemas/OME/2007-06\" " +
-    "xmlns:CA=\"http://www.openmicroscopy.org/Schemas/CA/2007-06\" " +
-    "xmlns:STD=\"http://www.openmicroscopy.org/Schemas/STD/2007-06\" " +
-    "xmlns:Bin=\"http://www.openmicroscopy.org/Schemas/BinaryFile/2007-06\" " +
-    "xmlns:SPW=\"http://www.openmicroscopy.org/Schemas/SPW/2007-06\" " +
+    "<OME xmlns=\"http://www.openmicroscopy.org/Schemas/OME/VERSION\" " +
+    "xmlns:Bin=\"http://www.openmicroscopy.org/Schemas/BinaryFile/VERSION\" " +
+    "xmlns:CA=\"http://www.openmicroscopy.org/Schemas/CA/VERSION\" " +
+    "xmlns:STD=\"http://www.openmicroscopy.org/Schemas/STD/VERSION\" " +
+    "xmlns:SPW=\"http://www.openmicroscopy.org/Schemas/SPW/VERSION\" " +
     "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
     "xsi:schemaLocation=\"" +
-    "http://www.openmicroscopy.org/Schemas/OME/2007-06 " +
-    "http://www.openmicroscopy.org/Schemas/OME/2007-06/ome.xsd\"/>";
+    "http://www.openmicroscopy.org/Schemas/OME/VERSION " +
+    "http://www.openmicroscopy.org/Schemas/OME/VERSION/ome.xsd " +
+    "http://www.openmicroscopy.org/Schemas/BinaryFile/VERSION " +
+    "http://www.openmicroscopy.org/Schemas/BinaryFile/VERSION/BinaryFile.xsd " +
+    "http://www.openmicroscopy.org/Schemas/CA/VERSION " +
+    "http://www.openmicroscopy.org/Schemas/CA/VERSION/CA.xsd " +
+    "http://www.openmicroscopy.org/Schemas/SPW/VERSION " +
+    "http://www.openmicroscopy.org/Schemas/SPW/VERSION/SPW.xsd " +
+    "http://www.openmicroscopy.org/Schemas/STD/VERSION " +
+    "http://www.openmicroscopy.org/Schemas/STD/VERSION/STD.xsd\"/>";
 
   // -- Constructor --
 
@@ -68,25 +81,80 @@ public final class OMEXMLFactory {
 
   // -- Static OMEXMLFactory API methods --
 
-  /** Constructs a new, empty OME-XML root node. */
-  public static OMENode newOMEDocument()
+  /** Constructs a new, empty OME-XML root node of the latest schema version. */
+  public static OMEXMLNode newOMENode()
     throws ParserConfigurationException, SAXException, IOException
   {
-    return newOMEDocument(SKELETON);
+    return newOMENode(LATEST_VERSION);
   }
 
-  /** Constructs a new OME-XML root node from the given file on disk. */
-  public static OMENode newOMEDocument(File file)
+  /**
+   * Constructs a new, empty OME-XML root node of the given schema version.
+   * @param version The schema version (e.g., 2007-06) to use for the OME-XML.
+   */
+  public static OMEXMLNode newOMENode(String version)
     throws ParserConfigurationException, SAXException, IOException
   {
-    return new OMENode(parseOME(file).getDocumentElement());
+    // courtesy check for legacy schema version
+    if (version.startsWith("2003")) {
+      throw new IllegalArgumentException("OMEXMLFactory cannot " +
+        "construct OME-XML root nodes for legacy schemas");
+    }
+    return newOMENodeFromSource(SKELETON.replaceAll("VERSION", version));
   }
 
-  /** Constructs a new OME-XML root node from the given XML string. */
-  public static OMENode newOMEDocument(String xml)
+  /** Constructs an OME-XML root node from the given file on disk. */
+  public static OMEXMLNode newOMENodeFromSource(File file)
     throws ParserConfigurationException, SAXException, IOException
   {
-    return new OMENode(parseOME(xml).getDocumentElement());
+    return newOMENodeFromSource(parseOME(file));
+  }
+
+  /** Constructs an OME-XML root node from the given XML string. */
+  public static OMEXMLNode newOMENodeFromSource(String xml)
+    throws ParserConfigurationException, SAXException, IOException
+  {
+    return newOMENodeFromSource(parseOME(xml));
+  }
+
+  /** Constructs an OME-XML root node from the given DOM tree. */
+  public static OMEXMLNode newOMENodeFromSource(Document doc) {
+    final String legacy = "http://www.openmicroscopy.org/XMLschemas/";
+    final String modern = "http://www.openmicroscopy.org/Schemas/OME/";
+
+    Element el = doc.getDocumentElement();
+
+    // parse schema version from xmlns attribute
+    String xmlns = DOMUtil.getAttribute("xmlns", el);
+    if (xmlns == null) return null;
+    xmlns = xmlns.trim();
+    if (xmlns.startsWith(legacy)) {
+      // legacy schema; use org.openmicroscopy.xml instead
+      throw new IllegalArgumentException("OMEXMLFactory cannot " +
+        "construct OME-XML root nodes for legacy schema versions");
+    }
+    if (!xmlns.startsWith(modern)) return null; // unknown schema
+
+    // modern schema; use ome.xml subpackage
+    int len = modern.length();
+    int slash = modern.indexOf("/", len);
+    if (slash < 0) slash = xmlns.length();
+    String version = xmlns.substring(len, slash).replaceAll("\\W", "");
+    Object o = null;
+    try {
+      Class c = Class.forName("ome.xml.r" + version + ".ome.OMENode");
+      Constructor con = c.getConstructor(new Class[] {Element.class});
+      o = con.newInstance(new Object[] {el});
+    }
+    catch (ClassNotFoundException exc) { }
+    catch (NoClassDefFoundError err) { }
+    catch (NoSuchMethodException exc) { }
+    catch (InstantiationException exc) { }
+    catch (IllegalAccessException exc) { }
+    catch (InvocationTargetException exc) { }
+    if (o == null || !(o instanceof OMEXMLNode)) return null;
+
+    return (OMEXMLNode) o;
   }
 
   // -- Utility methods --
@@ -112,10 +180,8 @@ public final class OMEXMLFactory {
     return doc;
   }
 
-  // -- Helper methods --
-
-  /** Parses a DOM from the given OME-XML or OMECA-XML input stream. */
-  protected static Document parseOME(InputStream is)
+  /** Parses a DOM from the given OME-XML input stream. */
+  public static Document parseOME(InputStream is)
     throws ParserConfigurationException, SAXException, IOException
   {
     DocumentBuilder db = DOMUtil.DOC_FACT.newDocumentBuilder();

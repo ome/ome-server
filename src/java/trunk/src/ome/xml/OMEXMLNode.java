@@ -85,7 +85,8 @@ public abstract class OMEXMLNode {
       String name = getElementName();
       Integer id = (Integer) nextIds.get(name);
       int q = id == null ? 0 : id.intValue();
-      setNodeID(idPrefix + ":" + name + ":" + q);
+      if (isLegacy()) setNodeID(idPrefix + ":" + name + ":" + q);
+      else setNodeID(name + ":" + q);
       nextIds.put(name, new Integer(q + 1));
     }
   }
@@ -118,6 +119,10 @@ public abstract class OMEXMLNode {
         "Prefix does not match regular expression: " + regex);
     }
     idPrefix = prefix;
+  }
+
+  public boolean isLegacy() {
+    return getClass().getName().startsWith("org.openmicroscopy.xml.");
   }
 
   // -- Internal OMEXMLNode API methods --

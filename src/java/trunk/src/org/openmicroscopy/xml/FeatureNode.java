@@ -40,12 +40,13 @@ package org.openmicroscopy.xml;
 
 import java.util.List;
 import ome.xml.DOMUtil;
+import ome.xml.OMEXMLNode;
 import org.openmicroscopy.ds.dto.Feature;
 import org.openmicroscopy.ds.dto.Image;
 import org.w3c.dom.Element;
 
 /** FeatureNode is the node corresponding to the "Feature" XML element. */
-public class FeatureNode extends OMEXMLNode implements Feature {
+public class FeatureNode extends LegacyOMEXMLNode implements Feature {
 
   // -- Constructors --
 

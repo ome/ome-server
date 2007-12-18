@@ -57,7 +57,7 @@ import org.xml.sax.SAXException;
  * stylesheet. In addition, OMENode functionality is provided to dump the DOM
  * to XML in either OME-XML or OMECA-XML format.
  */
-public class OMENode extends OMEXMLNode {
+public class OMENode extends LegacyOMEXMLNode {
 
   // -- Constants --
 

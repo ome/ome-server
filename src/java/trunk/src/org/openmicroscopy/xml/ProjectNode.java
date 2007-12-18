@@ -40,6 +40,7 @@ package org.openmicroscopy.xml;
 
 import java.util.List;
 import ome.xml.DOMUtil;
+import ome.xml.OMEXMLNode;
 import org.openmicroscopy.ds.dto.Project;
 import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.st.Group;
@@ -48,7 +49,7 @@ import org.openmicroscopy.xml.st.GroupNode;
 import org.w3c.dom.Element;
 
 /** ProjectNode is the node corresponding to the "Project" XML element. */
-public class ProjectNode extends OMEXMLNode implements Project {
+public class ProjectNode extends LegacyOMEXMLNode implements Project {
 
   // -- Constructors --
 
