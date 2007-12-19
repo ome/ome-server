@@ -1003,7 +1003,7 @@ public final class SampleTest {
     System.out.println("Creating OME node...");
     OMENode ome = null;
     if (build) ome = createNode();
-    else ome = OMEXMLFactory.newOMEDocument(new File(path));
+    else ome = (OMENode) OMEXMLFactory.newOMENodeFromSource(new File(path));
     System.out.println();
 
     // perform some tests on Sample.ome structure
