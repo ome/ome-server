@@ -47,7 +47,7 @@
   <target name="apidocs">
     <mkdir dir="${apidocs}"/>
     <javadoc sourcepath="${src}" destdir="${apidocs}"
-             packagenames="org.openmicroscopy.*"
+             packagenames="ome.* org.openmicroscopy.*"
              windowtitle="OME v2.2 Java API"
              use="true"
              author="true"
@@ -63,7 +63,7 @@
   <target name="privapidocs">
     <mkdir dir="${privapidocs}"/>
     <javadoc sourcepath="${src}" destdir="${privapidocs}"
-             packagenames="org.openmicroscopy.*"
+             packagenames="ome.* org.openmicroscopy.*"
              windowtitle="OME v2.2 Java Private API"
              use="true"
              author="true"
@@ -86,7 +86,7 @@
 			
     <jar destfile="${jar}/ome-java.jar"
          manifest="${src}/ome-java.manifest">
-      <fileset dir="build" includes="org/openmicroscopy/**/*.class org/openmicroscopy/xml/*.xslt"/>
+      <fileset dir="build" includes="ome/xml/**/*.class org/openmicroscopy/**/*.class org/openmicroscopy/xml/*.xslt"/>
     </jar>
 
   </target>
