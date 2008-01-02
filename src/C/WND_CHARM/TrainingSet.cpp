@@ -1154,7 +1154,9 @@ long TrainingSet::PrintConfusion(FILE *output_file,unsigned short *confusion_mat
          {  double dist=0;
             if (method==0) dist=max(1-similarity_matrix[class_index1*class_num+class_index2],1-similarity_matrix[class_index2*class_num+class_index1]);
             if (method==1) dist=((1-similarity_matrix[class_index1*class_num+class_index2])+(1-similarity_matrix[class_index2*class_num+class_index1]))/2;
-			if (dist==NAN) dist=0;
+#ifndef WIN32
+            if (dist==NAN) dist=0;
+#endif
             if (dend_file) fprintf(output_file,"%1.4f       ",dist*(dist>=0));
             else fprintf(output_file,"   %1.5f",similarity_matrix[class_index1*class_num+class_index2]);
          }
