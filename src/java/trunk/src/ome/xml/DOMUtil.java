@@ -217,19 +217,24 @@ public final class DOMUtil {
     return null;
   }
 
+  /** Gets a list of the given element's child DOM elements. */
+  public static Vector getChildElements(Element el) {
+    return getChildElements(null, el);
+  }
+
   /**
    * Gets a list of the given element's child DOM elements
-   * with the specified name.
+   * with the specified name, or all child elements if name is null.
    */
   public static Vector getChildElements(String name, Element el) {
-    if (name == null || el == null) return null;
+    if (el == null) return null;
     Vector v = new Vector();
     NodeList list = el.getChildNodes();
     int size = list.getLength();
     for (int i=0; i<size; i++) {
       Node node = list.item(i);
       if (!(node instanceof Element)) continue;
-      if (name.equals(getName(node))) v.add(node);
+      if (name == null || name.equals(getName(node))) v.add(node);
     }
     return v;
   }
@@ -246,6 +251,11 @@ public final class DOMUtil {
     }
     if (parent == null || (!(parent instanceof Element))) return null;
     return (Element) parent;
+  }
+
+  /** Finds the first (breadth first) DOM element with the specified name. */
+  public static Element findElement(String name, Document doc) {
+    return findElement(name, null, null, doc);
   }
 
   /**

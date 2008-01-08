@@ -121,6 +121,10 @@ public abstract class OMEXMLNode {
     idPrefix = prefix;
   }
 
+  /**
+   * Gets whether the current OME-XML hierarchy
+   * is the legacy (2003/FC) version.
+   */
   public boolean isLegacy() {
     return getClass().getName().startsWith("org.openmicroscopy.xml.");
   }
@@ -132,8 +136,13 @@ public abstract class OMEXMLNode {
     return getSize(DOMUtil.getChildElements(name, element));
   }
 
-  /** Gets an OME-XML node representing the first child with the given name. */
-  protected OMEXMLNode getChildNode(String name) {
+  /**
+   * Gets an OME-XML node representing the first child with the given name.
+   *
+   * <b>NB: This method has public access only for legacy reasons,
+   * and direct usage is discouraged.</b>
+   */
+  public OMEXMLNode getChildNode(String name) {
     return createNode(DOMUtil.getChildElement(name, element));
   }
 
@@ -145,8 +154,13 @@ public abstract class OMEXMLNode {
     return createNode(nodeType, DOMUtil.getChildElement(name, element));
   }
 
-  /** Gets a list of OME-XML node children with the given name. */
-  protected Vector getChildNodes(String name) {
+  /**
+   * Gets a list of OME-XML node children with the given name.
+   *
+   * <b>NB: This method has public access only for legacy reasons,
+   * and direct usage is discouraged.</b>
+   */
+  public Vector getChildNodes(String name) {
     return createNodes(DOMUtil.getChildElements(name, element));
   }
 
@@ -376,24 +390,14 @@ public abstract class OMEXMLNode {
     return DOMUtil.getAttributeValues(element);
   }
 
-  /** Gets the value of the DOM element's attribute with the given name. */
-  protected String getAttribute(String name) {
-    return DOMUtil.getAttribute(name, element);
-  }
-  
-  /** 
-   * Gets the value of the DOM element's attribute with the given name. 
-   * @see getAttribute()
-   */
-  protected String getStringAttribute(String name) {
-    return getAttribute(name);
-  }
-
   /**
    * Sets the value of the DOM element's attribute with the given name
    * to the specified value.
+   *
+   * <b>NB: This method has public access only for legacy reasons,
+   * and direct usage is discouraged.</b>
    */
-  protected void setAttribute(String name, String value) {
+  public void setAttribute(String name, String value) {
     DOMUtil.setAttribute(name, value, element);
   }
 
@@ -443,6 +447,11 @@ public abstract class OMEXMLNode {
    */
   protected Long getLongAttribute(String name) {
     return DOMUtil.getLongAttribute(name, element);
+  }
+
+  /** Gets the value of the DOM element's attribute with the given name. */
+  protected String getStringAttribute(String name) {
+    return DOMUtil.getAttribute(name, element);
   }
 
   /**
@@ -611,5 +620,24 @@ public abstract class OMEXMLNode {
 
   /** Gets a string representation of this node. */
   public String toString() { return element.toString(); }
+
+
+  // -- Deprecated methods --
+
+  /**
+   * @deprecated <b>NB: This method exists only
+   *   for legacy reasons, and usage is discouraged.</b>
+   */
+  public Vector getChildNodes() {
+    return createNodes(DOMUtil.getChildElements(null, element));
+  }
+
+  /**
+   * @deprecated <b>NB: This method exists only
+   *   for legacy reasons, and usage is discouraged.</b>
+   */
+  public String getAttribute(String name) {
+    return DOMUtil.getAttribute(name, element);
+  }
 
 }
