@@ -410,6 +410,16 @@ public abstract class OMEXMLNode {
   }
 
   /**
+   * Gets the value of the DOM element's attribute with the given name.
+   *
+   * <b>NB: This method has public access only for legacy reasons,
+   * and direct usage is discouraged.</b>
+   */
+  public String getAttribute(String name) {
+    return DOMUtil.getAttribute(name, element);
+  }
+
+  /**
    * Gets the value of the DOM element's attribute with the given name
    * as a Boolean, or null if the value is not a boolean.
    */
@@ -625,19 +635,11 @@ public abstract class OMEXMLNode {
   // -- Deprecated methods --
 
   /**
-   * @deprecated <b>NB: This method exists only
-   *   for legacy reasons, and usage is discouraged.</b>
+   * @deprecated <b>NB: This method exists only for legacy reasons,
+   *   and usage is discouraged.</b>
    */
   public Vector getChildNodes() {
     return createNodes(DOMUtil.getChildElements(null, element));
-  }
-
-  /**
-   * @deprecated <b>NB: This method exists only
-   *   for legacy reasons, and usage is discouraged.</b>
-   */
-  public String getAttribute(String name) {
-    return DOMUtil.getAttribute(name, element);
   }
 
 }
