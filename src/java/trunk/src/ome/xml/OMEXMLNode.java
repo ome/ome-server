@@ -68,33 +68,44 @@ public abstract class OMEXMLNode {
   /** Next free ID numbers for generating internal ID attribute values. */
   protected static Hashtable nextIds = new Hashtable();
 
+  /** Prefix used for generated internal ID values. */
+  protected static String idPrefix = "openmicroscopy.org";
+
   // -- Fields --
 
   /** Associated DOM element for this node. */
   protected Element element;
-
-  /** Prefix used for generated internal ID values. */
-  protected String idPrefix = "openmicroscopy.org";
 
   // -- Constructor --
 
   /** Constructs an OME-XML node with the given associated DOM element. */
   public OMEXMLNode(Element element) {
     this.element = element;
-    if (hasID() && getNodeID() == null) {
-      String name = getElementName();
-      Integer id = (Integer) nextIds.get(name);
-      int q = id == null ? 0 : id.intValue();
-      if (isLegacy()) setNodeID(idPrefix + ":" + name + ":" + q);
-      else setNodeID(name + ":" + q);
-      nextIds.put(name, new Integer(q + 1));
+    if (hasID() && getNodeID() == null) setNodeID(makeID(getElementName()));
+  }
+
+  // -- Static utility methods --
+
+  /** Gets the prefix used when generating internal ID values. */
+  public static String getIDPrefix() { return idPrefix; }
+
+  /** Sets the prefix used when generating internal ID values. */
+  public static void setIDPrefix(String prefix) {
+    String regex = "(\\S+\\.\\S+)+";
+    if (!prefix.matches(regex)) {
+      throw new IllegalArgumentException(
+        "Prefix does not match regular expression: " + regex);
     }
+    idPrefix = prefix;
   }
 
   // -- OMEXMLNode API methods --
 
   /** Gets the DOM element backing this OME-XML node. */
   public Element getDOMElement() { return element; }
+
+  /** Gets the name of the DOM element. */
+  public String getElementName() { return DOMUtil.getName(element); }
 
   /** Gets whether this type of node should have an ID. */
   public abstract boolean hasID();
@@ -105,20 +116,18 @@ public abstract class OMEXMLNode {
   /** Sets the ID for this node. */
   public void setNodeID(String id) { setAttribute("ID", id); }
 
-  /** Gets the name of the DOM element. */
-  public String getElementName() { return DOMUtil.getName(element); }
-
-  /** Gets the prefix used when generating internal ID values. */
-  public String getIDPrefix() { return idPrefix; }
-
-  /** Sets the prefix used when generating internal ID values. */
-  public void setIDPrefix(String prefix) {
-    String regex = "(\\S+\\.\\S+)+";
-    if (!prefix.matches(regex)) {
-      throw new IllegalArgumentException(
-        "Prefix does not match regular expression: " + regex);
-    }
-    idPrefix = prefix;
+  /**
+   * Gets the next available internal ID for use
+   * within this OME-XML node's tree structure.
+   */
+  public String makeID(String nodeType) {
+    Integer id = (Integer) nextIds.get(nodeType);
+    int q = id == null ? 0 : id.intValue();
+    nextIds.put(nodeType, new Integer(q + 1));
+    String s;
+    if (isLegacy()) s = idPrefix + ":" + nodeType + ":" + q;
+    else s = nodeType + ":" + q;
+    return s;
   }
 
   /**
@@ -630,7 +639,6 @@ public abstract class OMEXMLNode {
 
   /** Gets a string representation of this node. */
   public String toString() { return element.toString(); }
-
 
   // -- Deprecated methods --
 
