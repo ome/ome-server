@@ -596,7 +596,14 @@ public abstract class OMEXMLNode {
    */
   private Class getClass(String nodeName) {
     // determine base package; strip off sub-package suffixes
-    String pack = getClass().getPackage().getName();
+
+    //String pack = getClass().getPackage().getName();
+    // NB: getPackage() returns null within ImageJ for some reason
+    String className = getClass().getName();
+    int dot = className.lastIndexOf(".");
+    if (dot < 0) dot = 0;
+    String pack = className.substring(0, dot);
+
     for (int i=0; i<NODE_PACKAGES.length; i++) {
       if (pack.endsWith(NODE_PACKAGES[i])) {
         pack = pack.substring(0, pack.length() - NODE_PACKAGES[i].length());
