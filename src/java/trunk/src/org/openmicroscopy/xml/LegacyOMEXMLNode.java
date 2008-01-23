@@ -43,7 +43,7 @@ import org.openmicroscopy.ds.dto.DataInterface;
 import org.w3c.dom.Element;
 
 /**
- * LegacyOMEXMLNode is the abstract superclass of OME-XML 2003 (FC) nodes.
+ * LegacyOMEXMLNode is the abstract superclass of OME-XML 2003-FC nodes.
  *
  * Subclasses of this LegacyOMEXMLNode provide OME-specific functionality such
  * as more intuitive traversal of OME structures, achieved through
