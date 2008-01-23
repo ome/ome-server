@@ -63,7 +63,7 @@ public abstract class OMEXMLNode {
 
   protected static final String[] NODE_PACKAGES = {".ome", ".st", ""};
 
-  protected static final String LEGACY_VERSION = "2003 (FC)";
+  protected static final String LEGACY_VERSION = "2003-FC";
 
   // -- Static fields --
 
@@ -138,7 +138,7 @@ public abstract class OMEXMLNode {
   }
 
   /**
-   * Gets the OME-XML schema version ("2007-06", "2003 (FC)", etc.)
+   * Gets the OME-XML schema version ("2007-06", "2003-FC", etc.)
    * for the current OME-XML hierarchy.
    */
   public String getVersion() {
