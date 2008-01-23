@@ -95,11 +95,6 @@ public final class OMEXMLFactory {
   public static OMEXMLNode newOMENode(String version)
     throws ParserConfigurationException, SAXException, IOException
   {
-    // courtesy check for legacy schema version
-    if (version.startsWith("2003")) {
-      throw new IllegalArgumentException("OMEXMLFactory cannot " +
-        "construct OME-XML root nodes for legacy schemas");
-    }
     return newOMENodeFromSource(SKELETON.replaceAll("VERSION", version));
   }
 
@@ -129,9 +124,8 @@ public final class OMEXMLFactory {
     if (xmlns == null) return null;
     xmlns = xmlns.trim();
     if (xmlns.startsWith(legacy)) {
-      // legacy schema; use org.openmicroscopy.xml instead
-      throw new IllegalArgumentException("OMEXMLFactory cannot " +
-        "construct OME-XML root nodes for legacy schema versions");
+      // legacy schema; use org.openmicroscopy.xml
+      return new org.openmicroscopy.xml.OMENode(doc.getDocumentElement());
     }
     if (!xmlns.startsWith(modern)) return null; // unknown schema
 
