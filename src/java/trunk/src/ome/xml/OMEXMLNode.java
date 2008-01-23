@@ -63,6 +63,8 @@ public abstract class OMEXMLNode {
 
   protected static final String[] NODE_PACKAGES = {".ome", ".st", ""};
 
+  protected static final String LEGACY_VERSION = "2003 (FC)";
+
   // -- Static fields --
 
   /** Next free ID numbers for generating internal ID attribute values. */
@@ -130,12 +132,29 @@ public abstract class OMEXMLNode {
     return s;
   }
 
-  /**
-   * Gets whether the current OME-XML hierarchy
-   * is the legacy (2003/FC) version.
-   */
+  /** Gets whether the current OME-XML hierarchy is a legacy version. */
   public boolean isLegacy() {
-    return getClass().getName().startsWith("org.openmicroscopy.xml.");
+    return getVersion().equals(LEGACY_VERSION);
+  }
+
+  /**
+   * Gets the OME-XML schema version ("2007-06", "2003 (FC)", etc.)
+   * for the current OME-XML hierarchy.
+   */
+  public String getVersion() {
+    String name = getClass().getName();
+    if (name.startsWith("org.openmicroscopy.xml.")) return LEGACY_VERSION;
+    String prefix = "ome.xml.r";
+    if (name.startsWith(prefix)) {
+      int dot = name.indexOf(".", prefix.length());
+      if (dot >= 0) {
+        String numbers = name.substring(prefix.length(), dot);
+        if (numbers.length() == 6) {
+          return numbers.substring(0, 4) + "-" + numbers.substring(4, 6);
+        }
+      }
+    }
+    return null; // unknown package
   }
 
   // -- Internal OMEXMLNode API methods --
@@ -263,7 +282,7 @@ public abstract class OMEXMLNode {
 
   /**
    * Gets a list of nodes of a certain type (with the given name)
-   * that reference this OME-XML node using a *Ref child element. 
+   * that reference this OME-XML node using a *Ref child element.
    *
    * For example, if this node is a Project node and
    * getReferringNodes("Dataset") is called, it will search the DOM structure
@@ -328,7 +347,7 @@ public abstract class OMEXMLNode {
     return DOMUtil.getCharacterData(getChildElement(name));
   }
 
-  /** 
+  /**
    * Gets the given child node's character data.
    * @see getCData()
    */
@@ -553,7 +572,7 @@ public abstract class OMEXMLNode {
   /** Gets the first ancestor DOM element with the specified name. */
   protected Element getAncestorElement(String name) {
     return DOMUtil.getAncestorElement(name, element);
-  } 
+  }
 
   /** Finds the DOM element with the specified name and ID attribute value. */
   private Element findElement(String name, String id) {
