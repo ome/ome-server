@@ -73,10 +73,34 @@ public abstract class OMEXMLNode {
   /** Prefix used for generated internal ID values. */
   protected static String idPrefix = "openmicroscopy.org";
 
+  /**
+   * Table of existing nodes corresponding to known elements.
+   * This table allows us to have one node instance per element object, and
+   * reuse this node on demand, rather than creating a new one every time.
+   */
+  protected static Hashtable nodeHash = new Hashtable();
+
+  /**
+   * Table of existing classes for known node types.
+   * This table allows us to avoid searching for a Class object corresponding
+   * to a particular node type string within each schema version's package.
+   */
+  protected static Hashtable classHash = new Hashtable();
+
+  /**
+   * Table of existing constructor signatures corresponding to known
+   * OMEXMLNode subclasses. This table allows us to avoid searching the
+   * Class object for the appropriate constructor every time we need it.
+   */
+  protected static Hashtable constructorHash = new Hashtable();
+
   // -- Fields --
 
   /** Associated DOM element for this node. */
   protected Element element;
+
+  /** Base package of this node. */
+  protected String basePackage;
 
   // -- Constructor --
 
@@ -84,6 +108,24 @@ public abstract class OMEXMLNode {
   public OMEXMLNode(Element element) {
     this.element = element;
     if (hasID() && getNodeID() == null) setNodeID(makeID(getElementName()));
+
+    // determine base package
+
+    //String pack = getClass().getPackage().getName();
+    // NB: getPackage() returns null within ImageJ for some reason
+    String className = getClass().getName();
+    int dot = className.lastIndexOf(".");
+    if (dot < 0) dot = 0;
+    String pack = className.substring(0, dot);
+
+    // strip off sub-package suffix, if any
+    for (int i=0; i<NODE_PACKAGES.length; i++) {
+      if (pack.endsWith(NODE_PACKAGES[i])) {
+        pack = pack.substring(0, pack.length() - NODE_PACKAGES[i].length());
+        break;
+      }
+    }
+    basePackage = pack;
   }
 
   // -- Static utility methods --
@@ -171,7 +213,7 @@ public abstract class OMEXMLNode {
    * and direct usage is discouraged.</b>
    */
   public OMEXMLNode getChildNode(String name) {
-    return createNode(DOMUtil.getChildElement(name, element));
+    return getNode(DOMUtil.getChildElement(name, element));
   }
 
   /**
@@ -189,7 +231,7 @@ public abstract class OMEXMLNode {
    * and direct usage is discouraged.</b>
    */
   public Vector getChildNodes(String name) {
-    return createNodes(DOMUtil.getChildElements(name, element));
+    return getNodes(DOMUtil.getChildElements(name, element));
   }
 
   /**
@@ -197,7 +239,7 @@ public abstract class OMEXMLNode {
    * first ancestor element with the given name.
    */
   protected OMEXMLNode getAncestorNode(String name) {
-    return createNode(name, getAncestorElement(name));
+    return getNode(getAncestorElement(name));
   }
 
   /**
@@ -213,7 +255,7 @@ public abstract class OMEXMLNode {
     Element ref = getChildElement(refName);
     if (ref == null) return null;
     Element el = findElement(nodeType, DOMUtil.getAttribute("ID", ref));
-    return createNode(el);
+    return getNode(el);
   }
 
   /**
@@ -234,7 +276,7 @@ public abstract class OMEXMLNode {
       Element el = findElement(nodeType, DOMUtil.getAttribute("ID", ref));
       els.add(el);
     }
-    return createNodes(els);
+    return getNodes(els);
   }
 
   /**
@@ -248,7 +290,7 @@ public abstract class OMEXMLNode {
    */
   protected OMEXMLNode getAttrReferencedNode(String nodeType, String attrName) {
     Element el = findElement(nodeType, getAttribute(attrName));
-    return createNode(el);
+    return getNode(el);
   }
 
   /**
@@ -303,7 +345,7 @@ public abstract class OMEXMLNode {
    * elements whose IDs match this Experimenter node's ID value.
    */
   protected Vector getReferringNodes(String name, String refName) {
-    return createNodes(findReferringElements(name, refName, getNodeID()));
+    return getNodes(findReferringElements(name, refName, getNodeID()));
   }
 
   /**
@@ -325,7 +367,7 @@ public abstract class OMEXMLNode {
    * attributes whose values match this Pixels node's ID value.
    */
   protected Vector getAttrReferringNodes(String name, String attrName) {
-    return createNodes(DOMUtil.findElementList(name,
+    return getNodes(DOMUtil.findElementList(name,
       attrName, getNodeID(), element.getOwnerDocument()));
   }
 
@@ -492,13 +534,15 @@ public abstract class OMEXMLNode {
     return DOMUtil.getAttribute(name, element);
   }
 
-  /**
-   * Creates an OME-XML node of the proper type
-   * using the specified DOM element as a source.
-   */
-  protected OMEXMLNode createNode(Element el) {
+  /** Gets the OME-XML node corresponding to the specified DOM element. */
+  protected OMEXMLNode getNode(Element el) {
     if (el == null) return null;
-    return createNode(DOMUtil.getName(el), el);
+    OMEXMLNode node = (OMEXMLNode) nodeHash.get(el);
+    if (node == null) {
+      node = createNode(DOMUtil.getName(el), el);
+      nodeHash.put(el, node);
+    }
+    return node;
   }
 
   // -- Helper methods --
@@ -521,12 +565,13 @@ public abstract class OMEXMLNode {
   private OMEXMLNode createNode(Class nodeType, Element el) {
     if (nodeType == null || el == null) return null;
 
-    // node type must extend OMEXMLNode
-    if (!OMEXMLNode.class.isAssignableFrom(nodeType)) return null;
-
     // construct a new instance of the given OMEXMLNode subclass
     try {
-      Constructor con = nodeType.getConstructor(new Class[] {Element.class});
+      Constructor con = (Constructor) constructorHash.get(nodeType);
+      if (con == null) {
+        con = nodeType.getConstructor(new Class[] {Element.class});
+        constructorHash.put(nodeType, con);
+      }
       return (OMEXMLNode) con.newInstance(new Object[] {el});
     }
     catch (IllegalAccessException exc) { }
@@ -537,24 +582,21 @@ public abstract class OMEXMLNode {
   }
 
   /**
-   * Creates a list of OME-XML nodes of the proper types,
+   * Gets a list of OME-XML nodes of the proper types,
    * using the specified list of DOM elements as a source.
    */
-  private Vector createNodes(Vector els) {
+  private Vector getNodes(Vector els) {
     if (els == null) return null;
     int size = els.size();
     Vector nodes = new Vector(size);
     for (int i=0; i<size; i++) {
       Object o = (Object) els.elementAt(i);
+      OMEXMLNode node = null;
       if (o instanceof Element) {
         Element el = (Element) o;
-        OMEXMLNode node = createNode(el);
-        if (node != null && nodes.indexOf(node) < 0) {
-          nodes.addElement(node);
-          continue;
-        }
+        node = getNode(el);
       }
-      nodes.add(null);
+      nodes.add(node);
     }
     return nodes;
   }
@@ -614,28 +656,18 @@ public abstract class OMEXMLNode {
    * @return null if the class could not be loaded.
    */
   private Class getClass(String nodeName) {
-    // determine base package; strip off sub-package suffixes
-
-    //String pack = getClass().getPackage().getName();
-    // NB: getPackage() returns null within ImageJ for some reason
-    String className = getClass().getName();
-    int dot = className.lastIndexOf(".");
-    if (dot < 0) dot = 0;
-    String pack = className.substring(0, dot);
-
-    for (int i=0; i<NODE_PACKAGES.length; i++) {
-      if (pack.endsWith(NODE_PACKAGES[i])) {
-        pack = pack.substring(0, pack.length() - NODE_PACKAGES[i].length());
-        break;
-      }
-    }
+    String hashName = basePackage + ":" + nodeName;
+    Class c = (Class) classHash.get(hashName);
+    if (c != null) return c;
 
     // find class among sub-packages
     for (int i=0; i<NODE_PACKAGES.length; i++) {
-      String subPack = pack + NODE_PACKAGES[i];
+      String subPack = basePackage + NODE_PACKAGES[i];
       String name = subPack + "." + nodeName + "Node";
       try {
-        return Class.forName(name);
+        c = Class.forName(name);
+        classHash.put(hashName, c);
+        return c;
       }
       catch (ClassNotFoundException exc) { }
       catch (NoClassDefFoundError err) { }
@@ -673,7 +705,7 @@ public abstract class OMEXMLNode {
    *   and usage is discouraged.</b>
    */
   public Vector getChildNodes() {
-    return createNodes(DOMUtil.getChildElements(null, element));
+    return getNodes(DOMUtil.getChildElements(null, element));
   }
 
 }

@@ -231,10 +231,15 @@ public final class DOMUtil {
     Vector v = new Vector();
     NodeList list = el.getChildNodes();
     int size = list.getLength();
+    String cName = ":" + name;
     for (int i=0; i<size; i++) {
       Node node = list.item(i);
       if (!(node instanceof Element)) continue;
-      if (name == null || name.equals(getName(node))) v.add(node);
+      String nodeName = node.getNodeName();
+      //if (name == null || name.equals(getName(node))) v.add(node);
+      if (name == null || nodeName.equals(name) || nodeName.endsWith(cName)) {
+        v.add(node);
+      }
     }
     return v;
   }
