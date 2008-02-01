@@ -155,7 +155,7 @@ public class CustomAttributesNode extends LegacyOMEXMLNode {
       if (!(node instanceof Element)) continue;
       Element el = (Element) node;
       if (nodeType != null && !nodeType.equals(el.getTagName())) continue;
-      v.add(createNode(el));
+      v.add(getNode(el));
     }
     return v;
   }
