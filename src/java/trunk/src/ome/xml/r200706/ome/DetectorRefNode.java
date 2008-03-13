@@ -77,6 +77,17 @@ public class DetectorRefNode extends ReferenceNode
 
 	// -- DetectorRef API methods --
               
+  public DetectorNode getDetector()
+  {
+    return (DetectorNode)
+      getAttrReferencedNode("Detector", "ID");
+  }
+
+  public void setDetector(DetectorNode detector)
+  {
+    setNodeID(detector.getNodeID());
+  }
+
 	// Attribute
 	public Float getGain()
 	{

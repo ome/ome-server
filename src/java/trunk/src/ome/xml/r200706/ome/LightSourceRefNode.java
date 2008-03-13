@@ -77,6 +77,17 @@ public class LightSourceRefNode extends ReferenceNode
 
 	// -- LightSourceRef API methods --
               
+  public LightSourceNode getLightSource()
+  {
+    return (LightSourceNode)
+      getAttrReferencedNode("LightSource", "ID");
+  }
+
+  public void setLightSource(LightSourceNode lightSource)
+  {
+    setNodeID(lightSource.getNodeID());
+  }
+
 	// Attribute
 	public Integer getWavelength()
 	{
