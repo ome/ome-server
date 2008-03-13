@@ -124,6 +124,15 @@ public final class OMEXMLFactory {
     if (xmlns == null) return null;
     xmlns = xmlns.trim();
     if (xmlns.startsWith(legacy)) {
+      // CTR TODO - this doesn't work, because by the time we get here, we
+      // already have a DOM document that is not in OME-CA form, and the
+      // 2003/FC OMENode does not like such documents. It assumes you are
+      // giving it one in OME-CA form. Ideally, we'd pass the OMENode the
+      // file handle or string in the appropriate newOMENodeFromSource method,
+      // but at that point we do not yet know what kind of OME-XML block it is.
+      // So we should feed it into a SAX parser to find out first, I guess.
+      // Think about this some more...
+
       // legacy schema; use org.openmicroscopy.xml
       return new org.openmicroscopy.xml.OMENode(doc.getDocumentElement());
     }
