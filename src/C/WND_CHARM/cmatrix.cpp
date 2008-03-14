@@ -412,8 +412,8 @@ ImageMatrix::ImageMatrix(ImageMatrix *matrix,int x1, int y1, int x2, int y2)
    if (x2>=matrix->width) x2=matrix->width-1;
    if (y2>=matrix->height) y2=matrix->height-1;
 
-   width=x2-x1;
-   height=y2-y1;
+   width=x2-x1+1;
+   height=y2-y1+1;
    data=new pix_data *[width];
    for (x=0;x<width;x++)
      data[x]=new pix_data[height];
@@ -673,7 +673,7 @@ void ImageMatrix::BasicStatistics(double *mean, double *median, double *std, dou
 }
 
 /* normalize the pixel values into a given range */
-void ImageMatrix::normalize(double min, double max, int range)
+void ImageMatrix::normalize(double min, double max, long range)
 {  int x,y;
    for (y=0;y<height;y++)
      for (x=0;x<width;x++)
@@ -1002,6 +1002,7 @@ void ImageMatrix::EdgeTransform()
      }
 
    /* use otsu global threshold to set edges to 0 or 1 */
+/*   
    double OtsuGlobalThreshold,max_val;
    max_val=pow(2,bits)-1;
    OtsuGlobalThreshold=Otsu();
@@ -1009,7 +1010,7 @@ void ImageMatrix::EdgeTransform()
      for (x=0;x<width;x++)
        if (data[x][y].intensity>OtsuGlobalThreshold*max_val) data[x][y].intensity=max_val;
        else data[x][y].intensity=0;
-
+*/
    delete TempMatrix;
 }
 
@@ -1143,12 +1144,13 @@ void ImageMatrix::EdgeStatistics(long *EdgeArea, double *MagMean, double *MagMed
       DiffDirecHist[bin_index]=fabs(DirecHist[bin_index]-DirecHist[bin_index+(int)(num_bins/2)]);
    sum=0;
    for (bin_index=0;bin_index<(int)(num_bins/2);bin_index++)
-   {  DiffDirecHist[bin_index]=DiffDirecHist[bin_index]/(DirecHist[bin_index]+DirecHist[bin_index+(int)(num_bins/2)]);
+   {  if (DirecHist[bin_index]+DirecHist[bin_index+(int)(num_bins/2)]!=0)  /* protect from a numeric flaw */
+        DiffDirecHist[bin_index]=DiffDirecHist[bin_index]/(DirecHist[bin_index]+DirecHist[bin_index+(int)(num_bins/2)]);
       sum+=(DirecHist[bin_index]+DirecHist[bin_index+(int)(num_bins/2)]);
    }
 
    /* The fraction of edge pixels that are in the first two bins of the histogram measure edge homogeneity */
-   *DirecHomogeneity = (DirecHist[0]+DirecHist[1])/sum;
+   if (sum>0) *DirecHomogeneity = (DirecHist[0]+DirecHist[1])/sum;
 
    delete GradientMagnitude;
    delete GradientDirection;

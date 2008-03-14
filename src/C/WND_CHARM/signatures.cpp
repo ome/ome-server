@@ -565,7 +565,6 @@ void signatures::CompGroupA(ImageMatrix *matrix, char *transform_label)
    {  long EdgeArea=0;
       double MagMean=0, MagMedian=0, MagVar=0, MagHist[8]={0,0,0,0,0,0,0,0}, DirecMean=0, DirecMedian=0, DirecVar=0, DirecHist[8]={0,0,0,0,0,0,0,0}, DirecHomogeneity=0, DiffDirecHist[4]={0,0,0,0};
 
-
       if (IsNeeded(count,28))  /* check if this group of signatures is needed */
         matrix->EdgeStatistics(&EdgeArea, &MagMean, &MagMedian, &MagVar, MagHist, &DirecMean, &DirecMedian, &DirecVar, DirecHist, &DirecHomogeneity, DiffDirecHist, 8);
       Add("Edge Area",EdgeArea);
@@ -832,7 +831,8 @@ void signatures::ComputeGroups(ImageMatrix *matrix, int compute_colors)
   FourierChebyshev=ChebyshevTransform->duplicate();
   FourierChebyshev->fft2();
   WaveletFourier=WaveletSelector->duplicate();
-  WaveletFourier->Symlet5Transform();
+//  WaveletFourier->Symlet5Transform();
+  WaveletFourier->fft2();
   ChebyshevWavelet=WaveletSelector->duplicate();
   ChebyshevWavelet->ChebyshevTransform(0);
   EdgeTransform=matrix->duplicate();

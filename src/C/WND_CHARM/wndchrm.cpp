@@ -147,7 +147,6 @@ int classify_image(char *filename,char *image_filename, double max_features, int
 
 int compute_features(char *root_dir, char *output_file,int class_num, int tiles,  int multi_process, int large_set, int colors, int downsample)
 {  TrainingSet *ts;
-   double res,per;
    ts=new TrainingSet(MAX_SAMPLES,class_num);
    ts->LoadFromDir(root_dir,tiles,multi_process,large_set,colors,downsample);
    ts->SaveToFile(output_file);
@@ -160,7 +159,7 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
 {    TrainingSet *ts,*train,*test;
      data_split splits[MAX_SPLITS];
      char dataset_name[128];
-	 FILE *output_file;
+     FILE *output_file;
      int split_index;
      double res=0;
      char error_message[256];
@@ -174,9 +173,9 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
 	   return(show_error("File does not contain samples\n",0));
 	    
 	 if (N>0)
-	   while (ts->class_num>N)
+       while (ts->class_num>N)
 	     ts->RemoveClass(ts->class_num);
-	 
+
      randomize();
      for (split_index=0;split_index<split_num;split_index++)
      { unsigned short *confusion_matrix;
@@ -185,6 +184,7 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
 //     unsigned short confusion_matrix[(class_num+1)*(class_num+1)];
 //     double similarity_matrix[(class_num+1)*(class_num+1)];
        double accuracy;
+       double feature_weight_distance=-1.0;
 
        train=new TrainingSet(ts->count,class_num);
        test=new TrainingSet(ts->count,class_num);
@@ -196,14 +196,17 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
 	   if (test_set_path) 
 	     if (!test->ReadFromFile(test_set_path)) 
 	        return(show_error("Cannot open test set file",0));
+         else if (N>0) while (test->class_num>N) test->RemoveClass(test->class_num); /* cut the number of classes also in the test file */
+		 
        train->normalize();
        train->SetFisherScores(max_features,sig_names);
 	   if (weight_vector_action=='w') 
 	     if(!train->SaveWeightVector(weight_file_buffer))
 		   show_error("Could not write weight vector",1);
 	   if (weight_vector_action=='r' || weight_vector_action=='+' || weight_vector_action=='-') 
-	     if(train->LoadWeightVector(weight_file_buffer,(weight_vector_action=='+')-(weight_vector_action=='-'))<1)
-		   show_error("Could not load weight vector",1);	   
+	   {  feature_weight_distance=train->LoadWeightVector(weight_file_buffer,(weight_vector_action=='+')-(weight_vector_action=='-'));
+          if (feature_weight_distance<0) show_error("Could not load weight vector",1);
+       }
 	   if (report) individual_images=new char[(int)((test->count/(tiles*tiles))*(class_num*15))];
 	   else individual_images=NULL;
        accuracy=train->Test(test,method,confusion_matrix,similarity_matrix,tiles*tiles,first_n,individual_images);
@@ -218,10 +221,11 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
        splits[split_index].confusion_matrix=confusion_matrix;
        splits[split_index].similarity_matrix=similarity_matrix;
        splits[split_index].feature_names=sig_names;
+       splits[split_index].feature_weight_distance=feature_weight_distance;
        splits[split_index].accuracy=accuracy;
        splits[split_index].individual_images=individual_images;
        splits[split_index].method=method;
-	   splits[split_index].pearson_coefficient=test->pearson();
+       splits[split_index].pearson_coefficient=test->pearson();
 
 	 delete train;
 	 delete test;
@@ -230,10 +234,10 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
     strcpy(dataset_name,filename);
     if (strrchr(dataset_name,'.')) *strrchr(dataset_name,'.')='\0';
     if (strrchr(dataset_name,'/'))   /* extract the file name */
-	{  char buffer[128];
-	   strcpy(buffer,&(strrchr(dataset_name,'/')[1]));
-	   strcpy(dataset_name,buffer);
-	}
+    {  char buffer[128];
+       strcpy(buffer,&(strrchr(dataset_name,'/')[1]));
+       strcpy(dataset_name,buffer);
+    }
     if (report)
     {  if (report_file_name)
 	   {  if (!strchr(report_file_name,'.')) strcat(report_file_name,".html");
@@ -248,23 +252,25 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
 	   else output_file=stdout;  
 	   ts->report(output_file,dataset_name,splits,split_num,tiles,max_training_images,phylib_path,phylip_algorithm,export_tsv,test_set_path);
 	   if (output_file!=stdout) fclose(output_file);
-	   /* copy the .ps and .jpg of the dendrogram to the output path of the report */
-	   if (phylib_path && (strchr(phylib_path,'/'))) 
+	   /* copy the .ps and .jpg of the dendrogram to the output path of the report and also copy the tsv files */
+	   if (export_tsv || phylib_path)
 	   {  char command_line[512],ps_file_path[512];
-	      strcpy(ps_file_path,report_file_name);
-          (strrchr(ps_file_path,'/'))[1]='\0';
-          sprintf(command_line,"mv ./%s.ps %s",dataset_name,ps_file_path);
-          system(command_line);
-          sprintf(command_line,"mv ./%s.jpg %s",dataset_name,ps_file_path);
-          system(command_line);
-		  if (export_tsv)
-          {  sprintf(command_line,"cp -r ./tsv %s",ps_file_path);
-             system(command_line);		  
-             sprintf(command_line,"rm -r ./tsv");
-             system(command_line);
-          }
+            strcpy(ps_file_path,report_file_name);
+            (strrchr(ps_file_path,'/'))[1]='\0';	   
+            if (phylib_path && (strchr(phylib_path,'/'))) 
+            {  sprintf(command_line,"mv ./%s.ps %s",dataset_name,ps_file_path);
+               system(command_line);
+               sprintf(command_line,"mv ./%s.jpg %s",dataset_name,ps_file_path);
+               system(command_line);
+            }
+            if (export_tsv)
+            {  sprintf(command_line,"cp -r ./tsv %s",ps_file_path);
+               system(command_line);		  
+               sprintf(command_line,"rm -r ./tsv");
+               system(command_line);
+            }
 	   }
-	}
+    }
     delete ts;
     for (split_index=0;split_index<split_num;split_index++)
     {  delete splits[split_index].confusion_matrix;
@@ -279,7 +285,7 @@ int split_and_test(char *filename, char *report_file_name, int class_num, int me
 void ShowHelp()
 {
    printf("\nLaboratory of Genetics/NIA/NIH \n");
-   printf("usage: wndchrm [ train [-mtslcdh] <root directory> <feature_file> ] | [ test [-tsrwpijnfqvh] <feature_file> [<test_set_feature_file>] [<report_file>] ] | [ classify [-tswflcdh] <feature_file> <image_filename> ] \n");
+   printf("usage: wndchrm [ train [-mtslcdh] <root directory> <feature_file> ] | [ test [-tsrwpijnfqvNh] <feature_file> [<test_set_feature_file>] [<report_file>] ] | [ classify [-tswflcdh] <feature_file> <image_filename> ] \n");
    printf("<root directory> is a directory that has the directories of the class images as subdirectories. Images should be stored in a directory structure such that each subdirectory contains the images of one class. Currently supported file formats: TIFF, PPM. \n");
    printf("<feature_file> is the file generated by the train command. \n");       
    printf("<test_set_feature_file> optional file to a test feature file (also generated by train mode).\n");
@@ -293,7 +299,7 @@ void ShowHelp()
    printf("w - Classify with wnd instead of wnn. \n");
    printf("fN - maximum number of features out of the dataset (0,1) . The default is 0.15. \n");
    printf("rN - the split ratio of the dataset to training/test subsets (0,1). The default is 0.25. \n");
-   printf("i[#]N - Set a maximal number of training images (for each class). If the '!' is specified then the class is ignored if it doesn't have at least N samples.\n");
+   printf("i[!]N - Set a maximal number of training images (for each class). If the '!' is specified then the class is ignored if it doesn't have at least N samples.\n");
    printf("jN - Set a maximal number of test images (for each class). \n");
    printf("nN - Number of repeated random splits. The default is 1.\n");
    printf("p[+][k][path] - Output a full report in HTML format. 'path' is an optional path to phylib3.65 root dir for generating dendrograms. The optinal '+' creates a directory and exports the data into tsv files. 'k' is an optional digit (1..3) of the specific phylip algorithm to be used. \n");
@@ -388,7 +394,7 @@ int main(int argc, char *argv[])
         if (strchr(argv[arg_index],'q')) first_n=atoi(&(strchr(argv[arg_index],'q')[1]));
         if (strchr(argv[arg_index],'N')) N=atoi(&(strchr(argv[arg_index],'N')[1]));
         if (strchr(argv[arg_index],'i'))
-        {  exact_training_images=(strchr(argv[arg_index],'i')[1]=='#');
+        {  exact_training_images=(strchr(argv[arg_index],'i')[1]=='!');
            max_training_images=atoi(&(strchr(argv[arg_index],'i')[1+exact_training_images]));
         }
         if (strchr(argv[arg_index],'j')) max_test_images=atoi(&(strchr(argv[arg_index],'j')[1]));

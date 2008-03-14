@@ -90,7 +90,7 @@ class ImageMatrix
    ~ImageMatrix();                                 /* destructor */
    ImageMatrix *duplicate();                       /* create a new identical matrix        */
    void diff(ImageMatrix *matrix);                 /* compute the difference from another image */
-   void normalize(double min, double max, int range);
+   void normalize(double min, double max, long range);
    void to8bits();
    void flip();                                    /* flip an image horizonatally          */
    void Downsample(double x_ratio, double y_ratio);/* down sample an image                 */
