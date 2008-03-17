@@ -948,6 +948,7 @@ public class PixelsFactory
         fileAttr.setModuleExecution(mex);
         fileAttr.setFileID(new Long(fileID));
         fileAttr.setSHA1(sha1);
+        fileAttr.setPath(file.getAbsolutePath());
         factory.markForUpdate(fileAttr);
 
         return fileAttr;
