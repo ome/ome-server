@@ -42,8 +42,8 @@ import java.io.*;
 import java.util.*;
 import javax.xml.parsers.*;
 import javax.xml.transform.*;
-import javax.xml.transform.stream.StreamSource;
 //import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamSource;
 import ome.xml.DOMUtil;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -121,7 +121,7 @@ public class OMENode extends LegacyOMEXMLNode {
   }
 
   /** Constructs an OME root node with the given associated DOM element. */
-  public OMENode(Element element) { super(element); }
+  public OMENode(Element element) { super(parseOME(element).getDocumentElement()); }
 
 
   // -- OMENode API methods --
@@ -256,16 +256,8 @@ public class OMENode extends LegacyOMEXMLNode {
       if (nl != null) data.put(id, nl);
     }
 
-    // HACK - workaround for strange error that drops all attribute values
-    ByteArrayOutputStream os = new ByteArrayOutputStream();
-    DOMUtil.writeXML(os, caDoc);
-    os.close();
-    Source source = new StreamSource(
-      new ByteArrayInputStream(os.toByteArray()));
-    //Source source = new DOMSource(element.getOwnerDocument());
-
     // transform OMECA-XML -> OME-XML
-    Document doc = DOMUtil.transform(source, xsltOMECA2OME);
+    Document doc = transform(caDoc, xsltOMECA2OME);
 
     // re-insert dropped elements
     Vector pix = DOMUtil.findElementList("Pixels", doc);
@@ -329,7 +321,34 @@ public class OMENode extends LegacyOMEXMLNode {
     throws IOException, ParserConfigurationException, SAXException,
     TransformerConfigurationException, TransformerException
   {
-    byte[] bytes = xml.getBytes();
+    return parseOME(xml.getBytes());
+  }
+
+  /** Parses a DOM from the given OME-XML or OMECA-XML DOM. */
+  public static Document parseOME(Element el) {
+    try {
+      String xmlns = el.getAttribute("xmlns");
+      if (xmlns.endsWith("/ome.xsd")) {
+        // transform OME-XML into OMECA-XML using XSLT stylesheet
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        DOMUtil.writeXML(os, el.getOwnerDocument());
+        os.close();
+        return parseOME(os.toByteArray());
+      }
+      return el.getOwnerDocument();
+    }
+    catch (IOException exc) { }
+    catch (ParserConfigurationException exc) { }
+    catch (SAXException exc) { }
+    catch (TransformerConfigurationException exc) { }
+    catch (TransformerException exc) { }
+    return null;
+  }
+
+  /** Parses a DOM from the given OME-XML or OMECA-XML byte array. */
+  public static Document parseOME(byte[] bytes) throws IOException,
+    ParserConfigurationException, SAXException, TransformerException
+  {
     InputStream is = new ByteArrayInputStream(bytes);
     OMEXMLHandler handler = saxParse(is, null);
     is.close();
@@ -369,7 +388,7 @@ public class OMENode extends LegacyOMEXMLNode {
         xsltOME2OMECA = DOMUtil.makeTemplates(XSLT_OME2OMECA);
       }
       Source xmlSource = new StreamSource(is);
-      return DOMUtil.transform(new StreamSource(is), xsltOME2OMECA);
+      return DOMUtil.transform(xmlSource, xsltOME2OMECA);
     }
   }
 
@@ -406,6 +425,21 @@ public class OMENode extends LegacyOMEXMLNode {
         }
       }
     }
+  }
+
+  /** Transforms the given document using the specified XSLT template. */
+  protected static Document transform(Document doc, Templates t)
+    throws TransformerException, IOException,
+    ParserConfigurationException, SAXException
+  {
+    // HACK - workaround for strange error that drops all attribute values
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    DOMUtil.writeXML(os, doc);
+    os.close();
+    byte[] bytes = os.toByteArray();
+    Source source = new StreamSource(new ByteArrayInputStream(bytes));
+    //Source source = new DOMSource(doc);
+    return DOMUtil.transform(source, t);
   }
 
   // -- Deprecated methods --
