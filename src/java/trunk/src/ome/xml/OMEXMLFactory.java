@@ -54,7 +54,7 @@ public final class OMEXMLFactory {
   /** Latest OME-XML version namespace. */
   public static final String LATEST_VERSION = "2008-02";
 
-  /** Basic skeleton for an OME-XML node. */
+  /** Basic skeleton for an OME-XML root node with modern schema. */
   protected static final String SKELETON =
     "<?xml version=\"1.0\"?>\n" +
     "<OME xmlns=\"http://www.openmicroscopy.org/Schemas/OME/VERSION\" " +
@@ -74,6 +74,25 @@ public final class OMEXMLFactory {
     "http://www.openmicroscopy.org/Schemas/SPW/VERSION/SPW.xsd " +
     "http://www.openmicroscopy.org/Schemas/STD/VERSION " +
     "http://www.openmicroscopy.org/Schemas/STD/VERSION/STD.xsd\"/>";
+ 
+  /** Basic skeleton for an OME-XML root node with 2003-FC legacy schema. */
+  protected static final String LEGACY_SKELETON =
+    "<?xml version=\"1.0\"?>\n" +
+    "<OME xmlns=\"http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd\" " +
+    "xmlns:STD=\"http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd\" " +
+    "xmlns:CA=\"http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd\" " +
+    "xmlns:Bin=\"http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/" +
+    "BinaryFile.xsd\" " +
+    "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+    "xsi:schemaLocation = \"" +
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/CA/RC1/BinaryFile.xsd " +
+    "http://www.openmicroscopy.org/XMLschemas/CA/RC1/BinaryFile.xsd\"/>";
 
   // -- Constructor --
 
@@ -95,7 +114,10 @@ public final class OMEXMLFactory {
   public static OMEXMLNode newOMENode(String version)
     throws ParserConfigurationException, SAXException, IOException
   {
-    return newOMENodeFromSource(SKELETON.replaceAll("VERSION", version));
+    String xml = null;
+    if (version.equals("2003-FC")) xml = LEGACY_SKELETON; // legacy schema
+    else xml = SKELETON.replaceAll("VERSION", version); // modern schema
+    return newOMENodeFromSource(xml);
   }
 
   /** Constructs an OME-XML root node from the given file on disk. */
