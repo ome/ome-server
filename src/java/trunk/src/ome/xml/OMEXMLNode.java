@@ -192,7 +192,8 @@ public abstract class OMEXMLNode {
       if (dot >= 0) {
         String numbers = name.substring(prefix.length(), dot);
         if (numbers.length() == 6) {
-          return numbers.substring(0, 4) + "-" + numbers.substring(4, 6);
+          return numbers.substring(0, 4) + "-" +
+            numbers.substring(4, 6).toUpperCase();
         }
       }
     }

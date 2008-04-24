@@ -118,22 +118,25 @@ public final class OMEXMLFactory {
     final String modern = "http://www.openmicroscopy.org/Schemas/OME/";
 
     Element el = doc.getDocumentElement();
+    String version = null;
 
     // parse schema version from xmlns attribute
     String xmlns = DOMUtil.getAttribute("xmlns", el);
     if (xmlns == null) return null;
     xmlns = xmlns.trim();
     if (xmlns.startsWith(legacy)) {
-      // legacy schema; use org.openmicroscopy.xml
-      return new org.openmicroscopy.xml.OMENode(doc.getDocumentElement());
+      // legacy schema
+      version = "2003fc";
     }
-    if (!xmlns.startsWith(modern)) return null; // unknown schema
+    else if (xmlns.startsWith(modern)) {
+      // modern schema
+      int len = modern.length();
+      int slash = modern.indexOf("/", len);
+      if (slash < 0) slash = xmlns.length();
+      version = xmlns.substring(len, slash).replaceAll("\\W", "");
+    }
+    else return null; // unknown schema
 
-    // modern schema; use ome.xml subpackage
-    int len = modern.length();
-    int slash = modern.indexOf("/", len);
-    if (slash < 0) slash = xmlns.length();
-    String version = xmlns.substring(len, slash).replaceAll("\\W", "");
     Object o = null;
     try {
       Class c = Class.forName("ome.xml.r" + version + ".ome.OMENode");
