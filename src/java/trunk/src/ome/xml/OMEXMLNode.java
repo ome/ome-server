@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2007 Open Microscopy Environment
+ *  Copyright (C) 2007-2008 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -180,7 +180,7 @@ public abstract class OMEXMLNode {
   }
 
   /**
-   * Gets the OME-XML schema version ("2007-06", "2003-FC", etc.)
+   * Gets the OME-XML schema version ("2003-FC", "2007-06", etc.)
    * for the current OME-XML hierarchy.
    */
   public String getVersion() {

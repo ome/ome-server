@@ -3,7 +3,7 @@
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2007 Open Microscopy Environment
+ *  Copyright (C) 2007-2008 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -52,7 +52,7 @@ public final class OMEXMLFactory {
   // -- Constants --
 
   /** Latest OME-XML version namespace. */
-  public static final String LATEST_VERSION = "2007-06";
+  public static final String LATEST_VERSION = "2008-02";
 
   /** Basic skeleton for an OME-XML node. */
   protected static final String SKELETON =

@@ -1,9 +1,9 @@
 /*
- * ome.xml.CustomNode
+ * ome.xml.r200802.ome.DichroicNode
  *
  *-----------------------------------------------------------------------------
  *
- *  Copyright (C) 2007-2008 Open Microscopy Environment
+ *  Copyright (C) 2007 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee,
@@ -30,28 +30,60 @@
 
 /*-----------------------------------------------------------------------------
  *
- * Written by:    Curtis Rueden <ctrueden@wisc.edu>
+ * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
+ * Created by curtis via xsd-fu on 2008-04-20 22:13:42-0500
  *
  *-----------------------------------------------------------------------------
  */
 
-package ome.xml;
+package ome.xml.r200802.ome;
+
+import ome.xml.DOMUtil;
+import ome.xml.OMEXMLNode;
+
+import java.util.Vector;
+import java.util.List;
 
 import org.w3c.dom.Element;
 
-/**
- * CustomNode is the default node type for elements with no specific node type,
- * typically used to wrap custom semantic types within a CustomAttributes block.
- */
-public class CustomNode extends OMEXMLNode {
+public class DichroicNode extends FilterSpecNode
+{
+	// -- Constructors --
 
-  // -- Constructors --
+	/** Constructs a Dichroic node with an associated DOM element. */
+	public DichroicNode(Element element)
+	{
+		super(element);
+	}
 
-  public CustomNode(Element element) { super(element); }
+	/**
+	 * Constructs a Dichroic node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public DichroicNode(OMEXMLNode parent)
+	{
+		this(parent, true);
+	}
 
-  // -- OMEXMLNode API methods --
+	/**
+	 * Constructs a Dichroic node with an associated DOM element beneath
+	 * a given parent.
+	 */
+	public DichroicNode(OMEXMLNode parent, boolean attach)
+	{
+		super(DOMUtil.createChild(parent.getDOMElement(),
+		                          "Dichroic", attach));
+	}
 
-  /** Custom nodes do not have IDs. */
-  public boolean hasID() { return false; }
+	// -- Dichroic API methods --
+                                      
+	// *** WARNING *** Unhandled or skipped property ID
+      
+	// -- OMEXMLNode API methods --
 
+	public boolean hasID()
+	{
+		return true;
+	}
 }
+
