@@ -174,6 +174,14 @@ public abstract class OMEXMLNode {
     return s;
   }
 
+  /** Gets the node's character data. */
+  public String getCData() { return DOMUtil.getCharacterData(element); }
+
+  /** Sets the node's character data. */
+  public void setCData(String value) {
+    DOMUtil.setCharacterData(value, element);
+  }
+
   /** Gets whether the current OME-XML hierarchy is a legacy version. */
   public boolean isLegacy() {
     return getVersion().equals(LEGACY_VERSION);
