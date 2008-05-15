@@ -43,6 +43,8 @@
 
 #ifndef WIN32
 #include <stdlib.h>
+#else
+#include <dir.h>
 #endif
 
 
@@ -82,6 +84,7 @@ TrainingSet::TrainingSet(long samples_num, long class_num)
       SignatureMaxes[signature_index]=-INF;
    }
    this->class_num=class_num;
+   color_features=0;     /* by default - no color features are used */
    signature_count=0;
    for (sample_index=0;sample_index<MAX_CLASS_NUM;sample_index++)
      strcpy(class_labels[sample_index],"");
@@ -110,8 +113,6 @@ int TrainingSet::AddSample(signatures *new_sample)
    /* check if the sample can be added */
    if (new_sample->sample_class<1 || new_sample->sample_class>class_num) return(0);
    samples[count]=new_sample;
-//   for (sig_index=0;sig_index<new_sample->count;sig_index++)
-//      if (new_sample->data[sig_index].name[0]!='\0') strcpy(SignatureNames[sig_index],new_sample->data[sig_index].name);
    signature_count=new_sample->count;
    count++;
    return(1);
@@ -140,10 +141,10 @@ int TrainingSet::SaveToFile(char *filename)
    for (sample_index=0;sample_index<count;sample_index++)
    {
       for (sig_index=0;sig_index<signature_count;sig_index++)
-		if (samples[sample_index]->data[sig_index].value==(int)(samples[sample_index]->data[sig_index].value))   
-        fprintf(file,"%d ",(int)(samples[sample_index]->data[sig_index].value));      /* make the file smaller */
+        if (samples[sample_index]->data[sig_index].value==(int)(samples[sample_index]->data[sig_index].value))
+      fprintf(file,"%d ",(int)(samples[sample_index]->data[sig_index].value));      /* make the file smaller */
 //        else fprintf(file,"%.6f ",samples[sample_index]->data[sig_index].value);
-        else fprintf(file,"%.5e ",samples[sample_index]->data[sig_index].value);
+      else fprintf(file,"%.5e ",samples[sample_index]->data[sig_index].value);
       fprintf(file,"%d\n",samples[sample_index]->sample_class);
       fprintf(file,"%s\n",samples[sample_index]->full_path);
    }
@@ -174,11 +175,13 @@ int TrainingSet::ReadFromFile(char *filename)
    sample_count=atoi(buffer);
    samples=new signatures*[sample_count];
    count=0;         /* initialize the count before adding the samples to the training set */
+   color_features=0;
    /* read the signature names */
    for (sig_index=0;sig_index<signature_count;sig_index++)
    {  fgets(buffer,sizeof(buffer),file);
       strcpy(SignatureNames[sig_index],buffer);
       if (strchr(SignatureNames[sig_index],'\n')) *strchr(SignatureNames[sig_index],'\n')='\0';  /* make sure there is no line break in the name */
+      if (strstr(SignatureNames[sig_index],"color") || strstr(SignatureNames[sig_index],"Color")) color_features=1;   /* check if color signatures are used */
    }
    /* read the class labels */
    for (class_index=0;class_index<=class_num;class_index++)
@@ -186,17 +189,15 @@ int TrainingSet::ReadFromFile(char *filename)
       strcpy(class_labels[class_index],buffer);
       if (strchr(class_labels[class_index],'\n')) *strchr(class_labels[class_index],'\n')='\0';	  /* make sure there is no line break in the name */
    }
-    /* read the samples */
+   /* read the samples */
    for (sample_index=0;sample_index<sample_count;sample_index++)
-   {
-      char *p_buffer;
+   {  char *p_buffer;
       signatures *one_sample;
       one_sample=new signatures();
       fgets(buffer,sizeof(buffer),file);
       p_buffer=strtok(buffer," \n");
       for (sig_index=0;sig_index<signature_count;sig_index++)
-      {
-         one_sample->Add(SignatureNames[sig_index],atof(p_buffer));
+      {  one_sample->Add(SignatureNames[sig_index],atof(p_buffer));
          p_buffer=strtok(NULL," \n");
       }
       one_sample->sample_class=atoi(p_buffer);
@@ -230,8 +231,8 @@ void TrainingSet::RemoveClass(long class_index)
    /* change the indices of the samples */
    for (index=0;index<count;index++)
      if (samples[index]->sample_class>class_index)
-	   samples[index]->sample_class=samples[index]->sample_class-1;
-   /* change the number of classes and training samples */	   
+       samples[index]->sample_class=samples[index]->sample_class-1;
+   /* change the number of classes and training samples */
    class_num--;
    return;
 }
@@ -283,12 +284,12 @@ double TrainingSet::LoadWeightVector(char *filename, double factor)
 /*  split
     split randomly into a training set and a test set
     ratio -double- the ratio of the number of test set (e.g., 0.1 means 10% of the data are test data).
-	tiles -unsigned short- indicates the number of tiles to which each image was divided into. This means that
-	                       when splitting to train and test, all tiles of that one image will be either in the
-		     	       test set or training set.
+    tiles -unsigned short- indicates the number of tiles to which each image was divided into. This means that
+                           when splitting to train and test, all tiles of that one image will be either in the
+                           test set or training set.
     max_train_samples -int- the maximum number of samples to use for training (0 to ignore and use the proportional part of the set)
-	max_test_samples -int- the maximum namber of samples for the test set (0 to ignore and use the proportional part of the set)
-	exact_max_train -int- if 1 then the class is removed if its number of samples does not reach the "max_train_samples". (ignored if 0)
+    max_test_samples -int- the maximum namber of samples for the test set (0 to ignore and use the proportional part of the set)
+    exact_max_train -int- if 1 then the class is removed if its number of samples does not reach the "max_train_samples". (ignored if 0)
 */
 void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet, unsigned short tiles, int max_train_samples, int max_test_samples, int exact_max_train)
 {  long *class_samples;
@@ -370,6 +371,24 @@ void TrainingSet::split(double ratio,TrainingSet *TrainSet,TrainingSet *TestSet,
    delete class_samples;
 }
 
+/* SplitAreas
+   split into several classifiers based on the area (tile) of the image. E.g., a 4x4 tiling is divided into 16 sets. 
+   tiles_num -long- the number of tiles (total number, not the square root of the number of tiles)
+   TrainingSets -TrainingSet **- a pointer to an array of training sets.
+*/
+void TrainingSet::SplitAreas(long tiles_num, TrainingSet **TrainingSets)
+{  int samp_index,tile_index;
+   for (tile_index=0;tile_index<tiles_num;tile_index++)
+     TrainingSets[tile_index]=new TrainingSet((long)ceil(count/tile_index),class_num);   /* allocate memory for the new set of each tile location */
+   tile_index=0;
+   for (samp_index=0;samp_index<count;samp_index++)
+   {  TrainingSets[tile_index]->AddSample(samples[samp_index]->duplicate());
+      tile_index++;
+      if (tile_index>=tiles_num) tile_index=0;
+   }
+}
+
+
 /* LoadImages
    load a set of image into the training set
    filename -char *- a text file with a list of full path to the images
@@ -424,38 +443,26 @@ int TrainingSet::LoadImages(char *filename, int log)
 */
 
 int TrainingSet::AddAllSignatures(char *filename)
-{  DIR *root_dir,*class_dir;
+{  DIR *class_dir;
    struct dirent *ent;
    FILE *sig_file;
    char buffer[512],sig_file_name[512];
-   char files_in_class[4096][64];
+   char files_in_class[16384][64];  /* when compiling in Windows - the stack size must be set to support this structure */
    int res,samp_class=1;
-//   if (!(root_dir=opendir(filename))) return(0);   
-//   while (ent = readdir(root_dir))
    while (samp_class<=class_num)
    {  int file_index,files_in_class_count=0;
-//      if (strchr(ent->d_name,'.')) continue;   /* ignore the '.' and '..' entries or files     */
-//      strcpy(class_labels[samp_class],ent->d_name);        /* the label of the class is the directory name */
       sprintf(buffer,"%s/%s",filename,class_labels[samp_class]);
-//	  strcpy(buffer,filename);
-//      strcat(buffer,"/");
-//      strcat(buffer,ent->d_name);
       class_dir=opendir(buffer);
       /* read the files and make sure they are sorted */
       while (ent = readdir(class_dir))
         if (strstr(ent->d_name,".sig"))  /* read only the .sig files which store image feature data */
           strcpy(files_in_class[files_in_class_count++],ent->d_name);
+
       closedir(class_dir);
       qsort(files_in_class,files_in_class_count,sizeof(files_in_class[0]), comp_strings);
-
-	  /* now load and add the feature value files */
-//      while (ent = readdir(class_dir))
-//      {  if (strstr(ent->d_name,".sig"))
+      /* now load and add the feature value files */
       for (file_index=0;file_index<files_in_class_count;file_index++)
       {  signatures *ImageSignatures;
-//         strcpy(sig_file_name,buffer);
-//         strcat(sig_file_name,"/");
-//         strcat(sig_file_name,files_in_class[file_index]);
          sprintf(sig_file_name,"%s/%s",buffer,files_in_class[file_index]);
          ImageSignatures = new signatures;
          ImageSignatures->NamesTrainingSet=this;		 
@@ -464,12 +471,10 @@ int TrainingSet::AddAllSignatures(char *filename)
             AddSample(ImageSignatures);
          }
          else delete ImageSignatures;
-//         }
       }
-//      closedir(class_dir);
       samp_class++;
    }
-//   closedir(root_dir);
+   return(1);
 }
 
 
@@ -480,10 +485,11 @@ int TrainingSet::AddAllSignatures(char *filename)
    tiles -int- the number of tiles to break the image to (e.g., 4 means 4x4 = 16 tiles)
    multi_processor -int- 1 if more than one signatures process should be running
    large_set -int- whether to use the large set of image features or not
+   bounding_rect -rect *- a sub image area from which features are computed. ignored if NULL.
 */
 
 
-int TrainingSet::LoadFromDir(char *filename, int tiles, int multi_processor, int large_set, int compute_colors, int downsample)
+int TrainingSet::LoadFromDir(char *filename, int tiles, int multi_processor, int large_set, int compute_colors, int downsample, double mean, double stddev, rect *bounding_rect)
 {  DIR *root_dir,*class_dir;
    struct dirent *ent;
    FILE *sig_file;
@@ -496,6 +502,7 @@ int TrainingSet::LoadFromDir(char *filename, int tiles, int multi_processor, int
    if (filename[strlen(filename)-1]=='/') filename[strlen(filename)-1]='\0';  /* remove a last '/' is there is one       */
    if (!(root_dir=opendir(filename))) return(0);
    if (tiles<1) tiles=1;    /* at least one tile */
+   color_features=compute_colors;
    while (ent = readdir(root_dir))
    {  if (strchr(ent->d_name,'.') || strcmp(ent->d_name,"tsv")==0) continue;   /* ignore the '.' and '..' entries or files, and the automatically generated tsv directory */
       strcpy(class_labels[samp_class],ent->d_name);                            /* the label of the class is the directory name */
@@ -516,8 +523,12 @@ int TrainingSet::LoadFromDir(char *filename, int tiles, int multi_processor, int
       class_dir=opendir(buffer);
       while (ent = readdir(class_dir))
       {  if (ent->d_name[0]=='.') continue;          /* ignore the '.' and '..' entries */
+#ifdef WIN32	  
          if (strstr(ent->d_name,".bmp")==NULL && strstr(ent->d_name,".tif")==NULL && strstr(ent->d_name,".ppm")==NULL) continue;  /* process only image files */
-      	   strcpy(files_in_class[files_in_class_count++],ent->d_name);
+#else
+         if (strstr(ent->d_name,".tif")==NULL && strstr(ent->d_name,".ppm")==NULL) continue;  /* process only image files */		 
+#endif		 
+         strcpy(files_in_class[files_in_class_count++],ent->d_name);
       }
       closedir(class_dir);
       qsort(files_in_class,files_in_class_count,sizeof(files_in_class[0]), comp_strings);
@@ -526,43 +537,42 @@ int TrainingSet::LoadFromDir(char *filename, int tiles, int multi_processor, int
       for (file_index=0;file_index<files_in_class_count;file_index++)
       {  ImageMatrix *matrix;
          signatures *ImageSignatures;
-//ImageMatrix *TempMatrix;		 
          matrix=new ImageMatrix;
          strcpy(image_file_name,buffer);
          strcat(image_file_name,"/");
          strcat(image_file_name,files_in_class[file_index]);
          if (print_to_screen) printf("Loading image %s\n",image_file_name);
-         res=0;
-#ifdef WIN32
-         if (strstr(image_file_name,".bmp") || strstr(image_file_name,".BMP"))
-           res=matrix->LoadBMP(image_file_name,cmHSV);
-#else
-//         if (strstr(image_file_name,".bmp")) continue;
-         if (strstr(image_file_name,".tif") || strstr(image_file_name,".TIF"))
-         {  res=matrix->LoadTIFF(image_file_name);
+         res=matrix->OpenImage(image_file_name,downsample,bounding_rect,mean,stddev);
+//         res=0;
+//#ifdef WIN32
+//         if (strstr(image_file_name,".bmp") || strstr(image_file_name,".BMP"))
+//           res=matrix->LoadBMP(image_file_name,cmHSV);
+//#endif
+//         if (strstr(image_file_name,".tif") || strstr(image_file_name,".TIF"))
+//         {  res=matrix->LoadTIFF(image_file_name);
 // if (res && matrix->bits==16) matrix->to8bits();
-         }
-#endif
-         if (strstr(image_file_name,".ppm") || strstr(image_file_name,".PPM"))
-           res=matrix->LoadPPM(image_file_name,cmHSV);
+//         }
+//         if (strstr(image_file_name,".ppm") || strstr(image_file_name,".PPM"))
+//           res=matrix->LoadPPM(image_file_name,cmHSV);
          if (res)  /* add the image only if it was loaded properly */
          {  int tile_index_x,tile_index_y;
-            if (downsample>0 && downsample<100)
-              matrix->Downsample(((double)downsample)/100.0,((double)downsample)/100.0);   /* downsample the image */
-//matrix->flip();
-//printf("flipping image '%s'\n",image_file_name);			  
-//TempMatrix=new ImageMatrix(matrix,0,0,42,80);
-//delete matrix;
-//matrix=TempMatrix;
-//double min,max;
-//matrix->BasicStatistics(NULL, NULL, NULL, &min, &max, NULL, 0);
-//matrix->normalize(min,max,(int)(pow(2,16)));
+//            if (bounding_rect && bounding_rect->x>=0)    /* compute features only from an area of the image */
+//            {   ImageMatrix *TempMatrix=new ImageMatrix(matrix,bounding_rect->x,bounding_rect->y,bounding_rect->x+bounding_rect->w-1,bounding_rect->y+bounding_rect->h-1);
+//                delete matrix;
+//                matrix=TempMatrix;
+//            }
+//            if (downsample>0 && downsample<100)  /* downsample by a given factor */
+//              matrix->Downsample(((double)downsample)/100.0,((double)downsample)/100.0);   /* downsample the image */
+//            if (mean>0)  /* normalize to a given mean and standard deviation */
+//              matrix->normalize(-1,-1,-1,mean,stddev);
+////matrix->flip();
+////printf("flipping image '%s'\n",image_file_name);
             for (tile_index_y=0;tile_index_y<tiles;tile_index_y++)
               for (tile_index_x=0;tile_index_x<tiles;tile_index_x++)
               {  ImageMatrix *tile_matrix;
                  long tile_x_size=(long)(matrix->width/tiles);
                  long tile_y_size=(long)(matrix->height/tiles);
-                 if (tiles>1) tile_matrix=new ImageMatrix(matrix,tile_index_x*tile_x_size,tile_index_y*tile_y_size,(tile_index_x+1)*tile_x_size,(tile_index_y+1)*tile_y_size);
+                 if (tiles>1) tile_matrix=new ImageMatrix(matrix,tile_index_x*tile_x_size,tile_index_y*tile_y_size,(tile_index_x+1)*tile_x_size-1,(tile_index_y+1)*tile_y_size-1);
                  else tile_matrix=matrix;
                  /* compute the image features */
                  ImageSignatures=new signatures;
@@ -596,132 +606,225 @@ int TrainingSet::LoadFromDir(char *filename, int tiles, int multi_processor, int
       }
       samp_class++;
     }
-
     if (multi_processor)
-      AddAllSignatures(filename);
-
+      AddAllSignatures(filename);      /* collect the signature files and join them into one dataset */
     return(1);
 }
 
-
-
-/* Test
-   Test the classification accuracy using two sets of signatures
-   method -int- 0 - WNN,   1 - DWNN-5
-   confusion_matrix -unsigned short *- an (N+1)x(N+1) pre-allocated structure for the confusion matrix. will be ignored if NULL
-   confusion_matrix -unsigned short *- an (N+1)x(N+1) pre-allocated structure for the normalized similarity matrix. will be ignored if NULL
-   tiles -int- number of tiles of each image.
-   rank -long- the number of first closest classes among which a presence of the right class is considered a match
-   report_string -char *- the outpust string for showing the classification of each image (ignored if NULL)
+/* Classify 
+   Classify a test sample.
+   TestSet -TrainingSet *- one or more tiles of one or more test image
+   test_sample_index -int- the index of the image in TestSet that should be tested. if tiles, then the first tile.
 */
-double TrainingSet::Test(TrainingSet *TestSet, int method, unsigned short *confusion_matrix, double *similarity_matrix,int tiles, long rank, char *report_string)
-{  int test_sample_index,predicted_class,tile_index,class_index,b;
-   signatures *test_signature;
-   long accurate_prediction=0,interpolate=1;
-   double probabilities[MAX_CLASS_NUM],probabilities_sum[MAX_CLASS_NUM],normalization_factor;
-   char interpolated_value[128];
-   if (tiles<1) tiles=1;       /* make sure the number of tiles is at least 1 */
-   if (rank<=0) rank=1;  /* set a valid value to rank                */
-   if (report_string) strcpy(report_string,"");    /* make sure the string is initially empty */
+
+int TrainingSet::ClassifyImage(TrainingSet *TestSet, int test_sample_index,int method, int tiles, int rank, data_split *split, double *similarities)
+{  int predicted_class,tile_index,class_index,cand,sample_class,interpolate=1;
+   double probabilities[MAX_CLASS_NUM],probabilities_sum[MAX_CLASS_NUM],normalization_factor,normalization_factor_avg=0;
+   signatures *closest_sample, *test_signature;   
+   char interpolated_value[128],last_path[IMAGE_PATH_LENGTH];
    
    /* interpolate only if all class labels are values */
    for (class_index=1;class_index<class_num;class_index++)
      interpolate*=(atof(class_labels[class_index])!=0.0 || class_labels[class_index][0]=='0');
-        
-   /*initialize the confusion and similarity matrix */
-   if (confusion_matrix)
-     for (class_index=0;class_index<(class_num+1)*(class_num+1);class_index++) confusion_matrix[class_index]=0;
-   if (similarity_matrix)
-     for (class_index=0;class_index<(class_num+1)*(class_num+1);class_index++) similarity_matrix[class_index]=0.0;
-
-   /* test */
-   tile_index=0;
-   for (class_index=0;class_index<=class_num;class_index++) probabilities_sum[class_index]=0;
-   /* start going over the test samples */
-//TestSet->count=250*tiles;   /* FERET */
-   for (test_sample_index=0;test_sample_index<TestSet->count;test_sample_index++)
-   {  char last_path[IMAGE_PATH_LENGTH];
-      signatures *closest_sample;
-	  if (print_to_screen) printf("Testing image %s (%d/%d)...\n",TestSet->samples[test_sample_index]->full_path,test_sample_index/tiles,TestSet->count/tiles);	  
-      test_signature=TestSet->samples[test_sample_index]->duplicate();  //new signatures(&(TestSet->samples[test_sample_index]),TestSet->signature_count);
-      if (method==WNN) predicted_class=WNNclassify(test_signature, probabilities,&normalization_factor,&closest_sample);
-      if (method==WND) predicted_class=classify2(test_signature, probabilities,&normalization_factor);
+   if (tiles<=0) tiles=1;   /* make sure the number of tiles is valid */
+   strcpy(last_path,TestSet->samples[test_sample_index]->full_path);
+   sample_class=TestSet->samples[test_sample_index]->sample_class;   /* the ground truth class of the test sample */
+   for (class_index=1;class_index<=class_num;class_index++) probabilities_sum[class_index]=0.0;  /* initialize the array */
+   for (tile_index=test_sample_index;tile_index<test_sample_index+tiles;tile_index++)
+   {  if (print_to_screen) printf("Classifying image '%s' ",TestSet->samples[tile_index]->full_path);
+      if (TestSet->count/tiles>1) printf("(%d/%d)",1+test_sample_index/tiles,TestSet->count/tiles);   /* so that no image index will be displayed when using the "classify" option */
+      printf("...\n");
+      test_signature=TestSet->samples[tile_index]->duplicate();  //new signatures(&(TestSet->samples[test_sample_index]),TestSet->signature_count);
+      if (method==WNN) predicted_class=this->WNNclassify(test_signature, probabilities,&normalization_factor,&closest_sample);
+      if (method==WND) predicted_class=this->classify2(test_signature, probabilities,&normalization_factor);
 //if (method==WND) predicted_class=classify3(test_signature, probabilities, &normalization_factor);
 
-      /* check that the tile is consistent */
-      if (tile_index>0 && (strcmp(last_path,test_signature->full_path)!=0)) printf("inconsistent tile %d of image '%s' \n",tile_index,test_signature->full_path);
-      else strcpy(last_path,test_signature->full_path);
-      /* if the tiles are done for the image - classify the image based on the tile marginal probabilities */
-      tile_index++;
-      for (class_index=1;class_index<=class_num;class_index++) probabilities_sum[class_index]+=(probabilities[class_index]/(double)tiles);
-      if (tile_index==tiles)
-      {  int cand;
-         for (class_index=1;class_index<=class_num;class_index++) probabilities[class_index]=0.0;  /* initialize the array */
-         for (cand=0;cand<rank;cand++)
-         {
-            double max=0;
-            for (class_index=1;class_index<=class_num;class_index++)
-              if (probabilities_sum[class_index]>max && probabilities[class_index]==0.0)
-              {  max=probabilities_sum[class_index];
-                 predicted_class=class_index;
-              }
-            probabilities[predicted_class]=1.0;
-            if (predicted_class==test_signature->sample_class) break;  /* class was found among the n closest */
-         }
-         /* update confusion and similarity matrices */
-         if (predicted_class==test_signature->sample_class) accurate_prediction++;
-         if (print_to_screen) printf("Actual class ID: %d     Predicted class ID: %d      Ac: %f   (%d/%d)\n",test_signature->sample_class,predicted_class,(double)(accurate_prediction*tiles)/(double)(test_sample_index+1),accurate_prediction,(test_sample_index+1)/tiles);
-         if (confusion_matrix)  /* update the confusion matrix */
-           confusion_matrix[class_num*test_signature->sample_class+predicted_class]++;
-         if (similarity_matrix) /* update the similarity matrix */
-         for (class_index=1;class_index<=class_num;class_index++) similarity_matrix[class_num*test_signature->sample_class+class_index]+=probabilities_sum[class_index];
-
-         /* print the report to a string */
-         if (report_string)
-         {  char buffer[512],closest_image[512],color[128],one_image_string[MAX_CLASS_NUM*15];
-            sprintf(one_image_string,"<tr><td>%d</td> <td>%.3f</td>",(int)(test_sample_index/tiles)+1,normalization_factor);  /* image index and the normlization factor */
-            for (class_index=1;class_index<=class_num;class_index++)
-            {  if (class_index==test_signature->sample_class) sprintf(buffer,"<td><b>%.3f</b></td>",probabilities_sum[class_index]);  /* put the actual class in bold */
-               else sprintf(buffer,"<td>%.3f</td>",probabilities_sum[class_index]);
-               strcat(one_image_string,buffer);
-            }
-            if (predicted_class==test_signature->sample_class) sprintf(color,"<font color=\"#00FF00\">Correct</font>");
-            else sprintf(color,"<font color=\"#FF0000\">Incorrect</font>");
-			
-			/* add the interpolated value of the two top classes */
-			if (interpolate)  
-            {  double second_highest_prob=-1.0;
-			   int second_highest_class;
-               for (class_index=1;class_index<=class_num;class_index++)
-			     if (probabilities_sum[class_index]>second_highest_prob && class_index!=predicted_class) 
-				 {  second_highest_prob=probabilities_sum[class_index];
-				    second_highest_class=class_index;
-				 }
-               TestSet->samples[test_sample_index]->interpolated_value=(second_highest_prob*atof(class_labels[second_highest_class])+probabilities_sum[predicted_class]*atof(class_labels[predicted_class]))/(second_highest_prob+probabilities_sum[predicted_class]);
-               sprintf(interpolated_value,"<td>%.3f</td>",TestSet->samples[test_sample_index]->interpolated_value);
-		    }
-			else strcpy(interpolated_value,"");
-			
-            if (method==WNN && tiles==1) sprintf(closest_image,"<td><A HREF=\"%s\"><IMG WIDTH=40 HEIGHT=40 SRC=\"%s__1\"></A></td>",closest_sample->full_path,closest_sample->full_path);
-            else strcpy(closest_image,"");
-            sprintf(buffer,"<td></td><td>%s</td><td>%s</td><td>%s</td>%s<td><A HREF=\"%s\"><IMG WIDTH=40 HEIGHT=40 SRC=\"%s__1\"></A></td>%s</tr>\n",class_labels[test_signature->sample_class],class_labels[predicted_class],color,interpolated_value,test_signature->full_path,test_signature->full_path,closest_image);
-            strcat(one_image_string,buffer);
-            strcat(report_string,one_image_string);   /* add the image to the string */
-         }
-
-         /* initialize for the next image */
-         for (class_index=0;class_index<=class_num;class_index++) probabilities_sum[class_index]=0;
-         tile_index=0;
-      }
+      if ((strcmp(last_path,test_signature->full_path)!=0)) printf("inconsistent tile %d of image '%s' \n",tile_index-test_sample_index,test_signature->full_path); /* check that the tile is consistent */
+      for (class_index=1;class_index<=class_num;class_index++) probabilities_sum[class_index]+=(probabilities[class_index]/(double)tiles);  /* sum the marginal probabilities */
+      normalization_factor_avg+=normalization_factor;	  
       delete test_signature;
    }
+   
+   normalization_factor_avg/=tiles;
+   /* find the predicted class based on the rank */
+   for (class_index=1;class_index<=class_num;class_index++) probabilities[class_index]=0.0;  /* initialize the array */
+   for (cand=0;cand<rank;cand++)
+   {  double max=0.0;
+      for (class_index=1;class_index<=class_num;class_index++)
+        if (probabilities_sum[class_index]>max && probabilities[class_index]==0.0)
+        {  max=probabilities_sum[class_index];
+           predicted_class=class_index;
+        }	
+        if (probabilities) probabilities[predicted_class]=1.0;
+        if (predicted_class==sample_class) break;  /* class was found among the n closest */
+   }
+   
+   /* update confusion and similarity matrices */
+   if (split && split->confusion_matrix)  /* update the confusion matrix */
+     split->confusion_matrix[class_num*sample_class+predicted_class]++;
+   if (split && split->similarity_matrix) /* update the similarity matrix */
+     for (class_index=1;class_index<=class_num;class_index++) split->similarity_matrix[class_num*sample_class+class_index]+=probabilities_sum[class_index];
+
+   /* print the report to a string */
+   if (split && split->individual_images)
+   {  char buffer[512],closest_image[512],color[128],one_image_string[MAX_CLASS_NUM*15];
+      sprintf(one_image_string,"<tr><td>%d</td> <td>%.3f</td>",(int)(test_sample_index/tiles)+1,normalization_factor_avg);  /* image index and the normlization factor */
+      for (class_index=1;class_index<=class_num;class_index++)
+      {  if (class_index==sample_class) sprintf(buffer,"<td><b>%.3f</b></td>",probabilities_sum[class_index]);  /* put the actual class in bold */
+         else sprintf(buffer,"<td>%.3f</td>",probabilities_sum[class_index]);
+         strcat(one_image_string,buffer);
+      }
+      if (predicted_class==sample_class) sprintf(color,"<font color=\"#00FF00\">Correct</font>");
+      else sprintf(color,"<font color=\"#FF0000\">Incorrect</font>");
+			
+      /* add the interpolated value of the two top classes */
+      if (interpolate)  
+      {  double second_highest_prob=-1.0;
+         int second_highest_class;
+         for (class_index=1;class_index<=class_num;class_index++)
+         if (probabilities_sum[class_index]>second_highest_prob && class_index!=predicted_class) 
+         {  second_highest_prob=probabilities_sum[class_index];
+            second_highest_class=class_index;
+         }
+         TestSet->samples[test_sample_index]->interpolated_value=(second_highest_prob*atof(class_labels[second_highest_class])+probabilities_sum[predicted_class]*atof(class_labels[predicted_class]))/(second_highest_prob+probabilities_sum[predicted_class]);
+		 sprintf(interpolated_value,"<td>%.3f</td>",TestSet->samples[test_sample_index]->interpolated_value);
+      }
+      else strcpy(interpolated_value,"");
+			
+      if (method==WNN && tiles==1) sprintf(closest_image,"<td><A HREF=\"%s\"><IMG WIDTH=40 HEIGHT=40 SRC=\"%s__1\"></A></td>",closest_sample->full_path,closest_sample->full_path);
+      else strcpy(closest_image,"");
+      sprintf(buffer,"<td></td><td>%s</td><td>%s</td><td>%s</td>%s<td><A HREF=\"%s\"><IMG WIDTH=40 HEIGHT=40 SRC=\"%s__1\"></A></td>%s</tr>\n",class_labels[sample_class],class_labels[predicted_class],color,interpolated_value,TestSet->samples[test_sample_index]->full_path,TestSet->samples[test_sample_index]->full_path,closest_image);
+      strcat(one_image_string,buffer);
+      strcat(split->individual_images,one_image_string);   /* add the image to the string */
+   }
+   if (similarities) for (class_index=1;class_index<=class_num;class_index++) similarities[class_index]=probabilities_sum[class_index];
+   return(predicted_class);
+}
+
+/* Test
+   Test the classification accuracy using two sets of signatures
+   method -int- 0 - WNN,   1 - DWNN-5
+   split -*data_split- a pointer to a data split structure which contains the similarity matrix, confusion matrix, report string, feature_names, etc. ignored if NULL.
+   tiles -int- number of tiles of each image.
+   rank -long- the number of first closest classes among which a presence of the right class is considered a match
+*/
+double TrainingSet::Test(TrainingSet *TestSet, int method, int tiles, long rank, data_split *split)
+{  int test_sample_index,predicted_class,class_index,b;//tile_index;
+//   signatures *test_signature;
+   long accurate_prediction=0;//,interpolate=1;
+//   double probabilities[MAX_CLASS_NUM],probabilities_sum[MAX_CLASS_NUM],normalization_factor;
+//   char interpolated_value[128];
+   if (tiles<1) tiles=1;       /* make sure the number of tiles is at least 1 */
+   if (rank<=0) rank=1;  /* set a valid value to rank                */
+   if (split && split->individual_images) strcpy(split->individual_images,"");    /* make sure the string is initially empty */
+           
+   /*initialize the confusion and similarity matrix */
+   if (split && split->confusion_matrix)
+     for (class_index=0;class_index<(class_num+1)*(class_num+1);class_index++) split->confusion_matrix[class_index]=0;
+   if (split && split->similarity_matrix)
+     for (class_index=0;class_index<(class_num+1)*(class_num+1);class_index++) split->similarity_matrix[class_index]=0.0;
+
+   /* test */
+//   tile_index=0;
+//   for (class_index=0;class_index<=class_num;class_index++) probabilities_sum[class_index]=0;
+   /* start going over the test samples */
+//TestSet->count=250*tiles;   /* FERET */
+   for (test_sample_index=0;test_sample_index<TestSet->count;test_sample_index+=tiles)
+   {  predicted_class=ClassifyImage(TestSet,test_sample_index,method,tiles,rank,split,NULL);
+      if (predicted_class==TestSet->samples[test_sample_index]->sample_class) accurate_prediction++;
+      if (print_to_screen) printf("Actual class ID: %d     Predicted class ID: %d      Ac: %f   (%d/%d)\n",TestSet->samples[test_sample_index]->sample_class,predicted_class,(double)(accurate_prediction)/(double)(test_sample_index/tiles+1),accurate_prediction,(test_sample_index)/tiles+1);   
+   }
+   
+   
+   
+//   for (test_sample_index=0;test_sample_index<TestSet->count;test_sample_index++)
+//   {  char last_path[IMAGE_PATH_LENGTH];
+//      signatures *closest_sample;
+//	  if (print_to_screen) printf("Testing image %s (%d/%d)...\n",TestSet->samples[test_sample_index]->full_path,test_sample_index/tiles,TestSet->count/tiles);	  
+//      test_signature=TestSet->samples[test_sample_index]->duplicate();  //new signatures(&(TestSet->samples[test_sample_index]),TestSet->signature_count);
+//      if (method==WNN) predicted_class=WNNclassify(test_signature, probabilities,&normalization_factor,&closest_sample);
+//      if (method==WND) predicted_class=classify2(test_signature, probabilities,&normalization_factor);
+////if (method==WND) predicted_class=classify3(test_signature, probabilities, &normalization_factor);
+//
+//      /* check that the tile is consistent */
+//      if (tile_index>0 && (strcmp(last_path,test_signature->full_path)!=0)) printf("inconsistent tile %d of image '%s' \n",tile_index,test_signature->full_path);
+//      else strcpy(last_path,test_signature->full_path);
+//      /* if the tiles are done for the image - classify the image based on the tile marginal probabilities */
+//      tile_index++;
+//      for (class_index=1;class_index<=class_num;class_index++) probabilities_sum[class_index]+=(probabilities[class_index]/(double)tiles);
+//      if (tile_index==tiles)
+//      {  int cand;
+//         for (class_index=1;class_index<=class_num;class_index++) probabilities[class_index]=0.0;  /* initialize the array */
+//         for (cand=0;cand<rank;cand++)
+//         {
+//            double max=0;
+//            for (class_index=1;class_index<=class_num;class_index++)
+//              if (probabilities_sum[class_index]>max && probabilities[class_index]==0.0)
+//              {  max=probabilities_sum[class_index];
+//                 predicted_class=class_index;
+//              }
+//            probabilities[predicted_class]=1.0;
+//            if (predicted_class==test_signature->sample_class) break;  /* class was found among the n closest */
+//         }
+//         /* update confusion and similarity matrices */
+//         if (predicted_class==test_signature->sample_class) accurate_prediction++;
+//         if (print_to_screen) printf("Actual class ID: %d     Predicted class ID: %d      Ac: %f   (%d/%d)\n",test_signature->sample_class,predicted_class,(double)(accurate_prediction*tiles)/(double)(test_sample_index+1),accurate_prediction,(test_sample_index+1)/tiles);
+//         if (split && split->confusion_matrix)  /* update the confusion matrix */
+//           split->confusion_matrix[class_num*test_signature->sample_class+predicted_class]++;
+//         if (split && split->similarity_matrix) /* update the similarity matrix */
+//         for (class_index=1;class_index<=class_num;class_index++) split->similarity_matrix[class_num*test_signature->sample_class+class_index]+=probabilities_sum[class_index];
+//
+//         /* print the report to a string */
+//         if (split && split->individual_images)
+//         {  char buffer[512],closest_image[512],color[128],one_image_string[MAX_CLASS_NUM*15];
+//            sprintf(one_image_string,"<tr><td>%d</td> <td>%.3f</td>",(int)(test_sample_index/tiles)+1,normalization_factor);  /* image index and the normlization factor */
+//            for (class_index=1;class_index<=class_num;class_index++)
+//            {  if (class_index==test_signature->sample_class) sprintf(buffer,"<td><b>%.3f</b></td>",probabilities_sum[class_index]);  /* put the actual class in bold */
+//               else sprintf(buffer,"<td>%.3f</td>",probabilities_sum[class_index]);
+//               strcat(one_image_string,buffer);
+//            }
+//            if (predicted_class==test_signature->sample_class) sprintf(color,"<font color=\"#00FF00\">Correct</font>");
+//            else sprintf(color,"<font color=\"#FF0000\">Incorrect</font>");
+//			
+//			/* add the interpolated value of the two top classes */
+//			if (interpolate)  
+//            {  double second_highest_prob=-1.0;
+//			   int second_highest_class;
+//               for (class_index=1;class_index<=class_num;class_index++)
+//			     if (probabilities_sum[class_index]>second_highest_prob && class_index!=predicted_class) 
+//				 {  second_highest_prob=probabilities_sum[class_index];
+//				    second_highest_class=class_index;
+//				 }
+//               TestSet->samples[test_sample_index]->interpolated_value=(second_highest_prob*atof(class_labels[second_highest_class])+probabilities_sum[predicted_class]*atof(class_labels[predicted_class]))/(second_highest_prob+probabilities_sum[predicted_class]);
+//               sprintf(interpolated_value,"<td>%.3f</td>",TestSet->samples[test_sample_index]->interpolated_value);
+//		    }
+//			else strcpy(interpolated_value,"");
+			
+//            if (method==WNN && tiles==1) sprintf(closest_image,"<td><A HREF=\"%s\"><IMG WIDTH=40 HEIGHT=40 SRC=\"%s__1\"></A></td>",closest_sample->full_path,closest_sample->full_path);
+//            else strcpy(closest_image,"");
+//            sprintf(buffer,"<td></td><td>%s</td><td>%s</td><td>%s</td>%s<td><A HREF=\"%s\"><IMG WIDTH=40 HEIGHT=40 SRC=\"%s__1\"></A></td>%s</tr>\n",class_labels[test_signature->sample_class],class_labels[predicted_class],color,interpolated_value,test_signature->full_path,test_signature->full_path,closest_image);
+//            strcat(one_image_string,buffer);
+//            strcat(split->individual_images,one_image_string);   /* add the image to the string */
+//         }
+
+//         /* initialize for the next image */
+//         for (class_index=0;class_index<=class_num;class_index++) probabilities_sum[class_index]=0;
+//         tile_index=0;
+//      }
+//      delete test_signature;
+//   }
 
    /* normalize the similarity matrix */
-   if (similarity_matrix)
+   if (split && split->similarity_matrix)
      for (class_index=1;class_index<=class_num;class_index++)
-     { double class_sim=similarity_matrix[class_num*class_index+class_index];
+     { double class_sim;
+       int class_test_samples=0;
+	   for (b=1;b<=class_num;b++)
+	     class_test_samples+=split->confusion_matrix[class_num*class_index+b];
+       class_sim=split->similarity_matrix[class_num*class_index+class_index]/class_test_samples; 
        for (b=1;b<=class_num;b++)
-         similarity_matrix[class_num*class_index+b]/=class_sim;
+         split->similarity_matrix[class_num*class_index+b]/=(class_test_samples*class_sim);
+       if (split->similarity_normalization) split->similarity_normalization[class_index]=class_sim;
      }
    
    return((double)accurate_prediction/(TestSet->count/tiles));
@@ -767,15 +870,19 @@ void TrainingSet::normalize()
    used_signatures -double- what fraction of the signatures should be used (a value between 0 and 1).
    sorted_feature_names -char *- a text of the names and scores of the features (NULL to ignore)
 */
-void TrainingSet::SetFisherScores(double used_signatures, char *sorted_feature_names)
-{  int sample_index,sig_index,class_index;
+void TrainingSet::SetFisherScores(double used_signatures, data_split *split)
+{  int sample_index,sig_index,class_index,group=0;
    double mean,var,class_dev_from_mean,mean_inner_class_var;
    double *class_mean,*class_var,*class_count;
    double signature_weight_values[MAX_SIGNATURE_NUM],threshold;   
+   double sum_of_group=0.0;
+   char current_name[256]={'\0'},last_name[256]={'\0'},full_last_name[256],feature_string[128];   
    class_mean=new double[class_num+1];
    class_var=new double[class_num+1];
    class_count=new double[class_num+1];
 
+   if (split && split->feature_groups) strcpy(split->feature_groups,"");
+   
    for (sig_index=0;sig_index<signature_count;sig_index++)
    {
       /* initialize */
@@ -824,6 +931,26 @@ void TrainingSet::SetFisherScores(double used_signatures, char *sorted_feature_n
       if (mean_inner_class_var==0) mean_inner_class_var+=0.000001;   /* avoid division by zero - and avoid INF values */
 
       SignatureWeights[sig_index]=class_dev_from_mean/mean_inner_class_var;
+
+      /* add the sums of the fisher scores of each group of features */
+      if (split && split->feature_groups && SignatureNames[sig_index][0]>='A' && SignatureNames[sig_index][0]<='Z')
+      {  strcpy(current_name,SignatureNames[sig_index]);
+         if (strchr(current_name,' ')) *(strchr(current_name,' '))='\0';
+         if ((strcmp(current_name,last_name)!=0) && (sig_index>0))
+         {   int char_index;
+             for (char_index=0;char_index<strlen(full_last_name);char_index++) if (isdigit(full_last_name[char_index])) full_last_name[char_index]=' ';
+             if (strstr(full_last_name,"bin ")) strncpy(strstr(full_last_name,"bin "),"   ",3);
+             if (strncmp(full_last_name,"Feature",7)==0) strcpy(full_last_name,"Feature Statistics");
+             if (strncmp(full_last_name,"Edge",4)==0) strcpy(full_last_name,"Edge Statistics");
+             sprintf(feature_string,"%d. %s: %f\n",group,full_last_name,sum_of_group);
+             strcat(split->feature_groups,feature_string);
+             sum_of_group=0.0;
+             group++;
+         }
+         sum_of_group+=SignatureWeights[sig_index];
+         strcpy(last_name,current_name);
+         strcpy(full_last_name,SignatureNames[sig_index]);
+      }
    }
 
    /* now set to 0 all signatures that are below the threshold */
@@ -835,15 +962,14 @@ void TrainingSet::SetFisherScores(double used_signatures, char *sorted_feature_n
      if (SignatureWeights[sig_index]<threshold) SignatureWeights[sig_index]=0.0;
 
    /* copy the feature names and scores into a string. the features will be ordered by their fisher scores */
-   if (sorted_feature_names)
+   if (split && split->feature_names)
    {  int sig_index2;
-      sorted_feature_names[0]='\0';
+      split->feature_names[0]='\0';
       for (sig_index=signature_count-1;sig_index>=(long)((1-used_signatures)*signature_count)-5;sig_index--)
         for (sig_index2=0;sig_index2<signature_count;sig_index2++)
           if (signature_weight_values[sig_index]==SignatureWeights[sig_index2])
-          {  char feature_string[128];
-             sprintf(feature_string,"%d. %s: %f\n",signature_count-sig_index,SignatureNames[sig_index2],SignatureWeights[sig_index2]);
-             strcat(sorted_feature_names,feature_string);
+          {  sprintf(feature_string,"%d. %s: %f\n",signature_count-sig_index,SignatureNames[sig_index2],SignatureWeights[sig_index2]);
+             strcat(split->feature_names,feature_string);
              break;                                         /* no need to complete the loop */
           }
    }
@@ -851,6 +977,32 @@ void TrainingSet::SetFisherScores(double used_signatures, char *sorted_feature_n
    delete class_mean;
    delete class_var;
    delete class_count;
+}
+
+/* IgnoreFeatureGroup
+   classify without using one of the feature groups (identified by 'index'). This function is used for assessing the contribution of the different image features.
+   index -long- the index (in the group order) of the group to be ignored
+   group_name -char *- the name of the ignored group. This output variable is ignored if NULL.
+*/
+int TrainingSet::IgnoreFeatureGroup(long index,char *group_name)
+{  int group=0,sig_index=0,char_index;
+   char current_name[256]={'\0'},last_name[256]={'\0'};
+   
+   while(group<=index)
+   {  if (sig_index>=signature_count) return(0);   /* no more image features */
+      while (SignatureNames[sig_index][0]<'A' || SignatureNames[sig_index][0]>'Z') sig_index++;
+      strcpy(current_name,SignatureNames[sig_index]);
+      if (strchr(current_name,' ')) *(strchr(current_name,' '))='\0';
+      if (strcmp(current_name,last_name)!=0) group++;
+	  strcpy(last_name,current_name);
+	  if (group==index) 
+	  {  SignatureWeights[sig_index]=0;
+         if (group_name) strcpy(group_name,SignatureNames[sig_index]);   /* return the name of the group */	  
+         for (char_index=0;char_index<strlen(group_name);char_index++) if (isdigit(group_name[char_index])) group_name[char_index]=' ';          
+      }
+	  sig_index++;
+   }
+   return(1);
 }
 
 /* WNNclassify
@@ -921,7 +1073,7 @@ long TrainingSet::WNNclassify(signatures *test_sample, double *probabilities, do
 long TrainingSet::classify2(signatures *test_sample, double *probabilities, double *normalization_factor)
 {  int sample_index,class_index,sig_index;
    long most_probable_class;
-   double samp_sum,*class_sum,other_classes_sum,*samples_num;
+   double samp_sum,*class_sum,*samples_num;
    double dist,closest_dist=INF;
 
    /* normalize the test sample */
@@ -931,63 +1083,47 @@ long TrainingSet::classify2(signatures *test_sample, double *probabilities, doub
    class_sum=new double[class_num+1];
    samples_num=new double[class_num+1];
    for (class_index=0;class_index<=class_num;class_index++)
-   {  class_sum[class_index]=0;
-      samples_num[class_index]=0;
+   {  class_sum[class_index]=0.0;
+      samples_num[class_index]=0.0;
    }
-   other_classes_sum=0;
 
    for (sample_index=0;sample_index<count;sample_index++)
-   {  samp_sum=0;
+   {  samp_sum=0.0;
       for (sig_index=0;sig_index<signature_count;sig_index++)
         samp_sum+=pow(SignatureWeights[sig_index],1)*pow(test_sample->data[sig_index].value-samples[sample_index]->data[sig_index].value,2);
-      other_classes_sum+=pow(samp_sum,2);
-      class_sum[samples[sample_index]->sample_class]+=pow(samp_sum,2);
+      class_sum[samples[sample_index]->sample_class]+=pow(samp_sum,-5);
       samples_num[samples[sample_index]->sample_class]+=1;
    }
-
-   for (class_index=1;class_index<=class_num;class_index++)
-     class_sum[class_index]=pow(class_sum[class_index],-10);
-   other_classes_sum=pow(other_classes_sum,-10);
 	 
    for (class_index=1;class_index<=class_num;class_index++)
    {
-/*
-      class_sum=0;
-      other_classes_sum=0;
-      for (sample_index=0;sample_index<count;sample_index++)
-      {  samp_sum=0;
-         for (sig_index=0;sig_index<signature_count;sig_index++)
-           samp_sum+=pow(SignatureWeights[sig_index],1)*pow(test_sample->data[sig_index].value-samples[sample_index].data[sig_index],2);
-         if (samples[sample_index].sample_class==class_index)
-           class_sum+=pow(samp_sum,2);
-         else
-           other_classes_sum+=pow(samp_sum,2);
-      }
-*/
-      if (samples_num[class_index]==0) class_sum[class_index]=INF;   /* no samples for this class */
+      if (samples_num[class_index]==0.0) class_sum[class_index]=INF;   /* no samples for this class */
       class_sum[class_index]/=samples_num[class_index];    /* find the average distance per sample */
-      dist=class_sum[class_index];    ///(other_classes_sum/count-class_sum[class_index]);
+	  class_sum[class_index]=1/class_sum[class_index];     
+      dist=class_sum[class_index];   
       if (dist<closest_dist)
       {  closest_dist=dist;
          most_probable_class=class_index;
       }
       if (probabilities) probabilities[class_index]=dist;
    }
-
+   
+   /* normalize the marginal probabilities */
    if (probabilities)
    {  double sum_dists=0;
-      for (int dist_index=1;dist_index<=class_num;dist_index++)
-        if (probabilities[dist_index]!=0)
-           sum_dists+=1/probabilities[dist_index];
-      for (int dist_index=1;dist_index<=class_num;dist_index++)
-        if (sum_dists==0 || probabilities[class_index]==0) probabilities[class_index]=0;    /* protect from division by zero */
-        else probabilities[dist_index]=(1/probabilities[dist_index])/sum_dists;
-     if (normalization_factor) *normalization_factor=sum_dists;				
+      for (class_index=1;class_index<=class_num;class_index++)
+        if (probabilities[class_index]!=0)
+          sum_dists+=1/probabilities[class_index];
+      for (class_index=1;class_index<=class_num;class_index++)
+        if (sum_dists==0) probabilities[class_index]=0;    /* protect from division by zero */
+        else
+          if (probabilities[class_index]==0) probabilities[class_index]=1.0; /* exact match */
+          else probabilities[class_index]=(1/probabilities[class_index])/sum_dists;
+      if (normalization_factor) *normalization_factor=sum_dists;
    }
 
    delete class_sum;
    delete samples_num;
-
    return(most_probable_class);
 }
 
@@ -1109,30 +1245,31 @@ long TrainingSet::classify3(signatures *test_sample, double *probabilities,doubl
 	This function is used by wndchrm.cpp if all class labels are numerical.
 	The class labels are used as the values of one variable, and the interpolated values are used as the other
 */
-double TrainingSet::pearson()
+double TrainingSet::pearson(int tiles)
 {  double mean=0,stddev=0,mean_ground=0,stddev_ground=0,z_score_sum=0;
    int test_sample_index,class_index;
+   if (tiles<=0) tiles=1;
    /* check if the data can be interpolated (all class labels are numbers) */
    for (class_index=1;class_index<=class_num;class_index++)
      if (atof(class_labels[class_index])==0.0 && class_labels[class_index][0]!='0') return(0);
    /* compute the mean */
-   for (test_sample_index=0;test_sample_index<count;test_sample_index++)
+   for (test_sample_index=0;test_sample_index<count;test_sample_index+=tiles)
    {  mean+=samples[test_sample_index]->interpolated_value;
       mean_ground+=atof(class_labels[samples[test_sample_index]->sample_class]);
    }
-   mean/=count;
-   mean_ground/=count;
+   mean=mean/(count/tiles);
+   mean_ground=mean_ground/(count/tiles);
    /* compute the stddev */
-   for (test_sample_index=0;test_sample_index<count;test_sample_index++)
+   for (test_sample_index=0;test_sample_index<count;test_sample_index+=tiles)
    {  stddev+=pow(samples[test_sample_index]->interpolated_value-mean,2);
       stddev_ground+=pow(atof(class_labels[samples[test_sample_index]->sample_class])-mean_ground,2);
    }
-   stddev=sqrt(stddev/(count-1));
-   stddev_ground=sqrt(stddev_ground/(count-1));
+   stddev=sqrt(stddev/(count/tiles-1));
+   stddev_ground=sqrt(stddev_ground/(count/tiles-1));   
    /* now compute the pearson correlation */
-   for (test_sample_index=0;test_sample_index<count;test_sample_index++)
+   for (test_sample_index=0;test_sample_index<count;test_sample_index+=tiles)
      z_score_sum+=((samples[test_sample_index]->interpolated_value-mean)/stddev)*((atof(class_labels[samples[test_sample_index]->sample_class])-mean_ground)/stddev_ground);
-   return(z_score_sum/(count-1));
+   return(z_score_sum/(count/tiles-1));
 }
 
 /*
@@ -1192,10 +1329,10 @@ long TrainingSet::PrintConfusion(FILE *output_file,unsigned short *confusion_mat
 }
 
 
-long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *splits, unsigned short split_num, int tiles, int max_train_images, char *phylib_path, int phylip_algorithm, int export_tsv, char *path_to_test_set)
+long TrainingSet::report(FILE *output_file, char *output_file_name,char *data_set_name, data_split *splits, unsigned short split_num, int tiles, int max_train_images, char *phylib_path, int phylip_algorithm, int export_tsv, char *path_to_test_set)
 {  int class_index,class_index2,sample_index,split_index,a,test_set_size,train_set_size;
    int test_images[MAX_CLASS_NUM];
-   double *avg_similarity_matrix;
+   double *avg_similarity_matrix,*avg_similarity_normalization;
    double splits_accuracy,splits_class_accuracy,avg_pearson=0;
    FILE *tsvfile;
    char tsv_filename[512];
@@ -1208,7 +1345,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
 #endif
 
    /* print the header */
-   fprintf(output_file,"<HTML>\n<HEAD>\n<TITLE> %s </TITLE>\n </HEAD> \n <BODY> \n <br> <h1>%s</h1><br>\n ",data_set_name,data_set_name);
+   fprintf(output_file,"<HTML>\n<HEAD>\n<TITLE> %s </TITLE>\n </HEAD> \n <BODY> \n <br> <h1>%s</h1><br>\n ",output_file_name,data_set_name);
    if (path_to_test_set)  fprintf(output_file,"Testing with data file: %s<br>",path_to_test_set);
    fprintf(output_file,"<hr/><CENTER>\n");
    
@@ -1274,7 +1411,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
       fprintf(output_file,"Accuracy: <b>%.2f of total</b><br> \n",splits[split_index].accuracy);	  
       fprintf(output_file,"<b>%.2f &plusmn; %.1f Avg per Class Correct of total</b><br> \n",avg_accuracy,plus_minus);
 	  if (splits[split_index].pearson_coefficient!=0) 
-	    fprintf(output_file,"Peasron correlation coefficient: %.2f<br>\n",splits[split_index].pearson_coefficient);
+	    fprintf(output_file,"Pearson correlation coefficient: %.2f<br>\n",splits[split_index].pearson_coefficient);
       avg_pearson+=splits[split_index].pearson_coefficient;
       if (splits[split_index].feature_weight_distance>=0)
 	    fprintf(output_file,"Feature weight distance: %.2f<br>\n",splits[split_index].feature_weight_distance);	  	  
@@ -1288,7 +1425,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
    fprintf(output_file,"<b>%.2f Avg per Class Correct of total</b><br> \n",splits_class_accuracy/split_num);
    fprintf(output_file,"Accuracy: <b>%.2f of total</b><br> \n",splits_accuracy/split_num);
    if (avg_pearson!=0) 
-     fprintf(output_file,"Peasron correlation coefficient: %.2f<br>\n",avg_pearson/split_num);
+     fprintf(output_file,"Pearson correlation coefficient: %.2f<br>\n",avg_pearson/split_num);
    
    fprintf(output_file,"</table>\n");   /* close the splits table */
    fprintf(output_file,"<br><br><br><br><br><br> \n\n\n\n\n\n\n\n");
@@ -1331,7 +1468,8 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
    tsvfile=NULL;                                                   /* keep it null if the file doesn't open     */
    if (export_tsv) tsvfile=fopen(tsv_filename,"w");                /* open the file for tsv                     */   
    avg_similarity_matrix=new double[(class_num+1)*(class_num+1)];  /* this is used for creating the dendrograms */
-   fprintf(output_file,"<table border=\"1\" align=\"center\"><caption>Average Similarity Matrix</caption> \n");
+   avg_similarity_normalization=new double[class_num+1];
+   fprintf(output_file,"<table><tr><td><table border=\"1\" align=\"center\"><caption>Average Similarity Matrix</caption>\n");
    fprintf(output_file,"<tr><td></td> ");      /* space */
    if (tsvfile) fprintf(tsvfile,"\t");         /* space */   
    for (class_index=1;class_index<=class_num;class_index++)
@@ -1349,14 +1487,28 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
            sum+=splits[split_index].similarity_matrix[class_index*class_num+class_index2];
          avg_similarity_matrix[class_index*class_num+class_index2]=sum/split_num;    /* remember this value for the dendrogram file */
          fprintf(output_file,"<td>%.2f</td> ",sum/split_num);
-         if (tsvfile) fprintf(tsvfile,"%.2f\t");             /* print the values to the tsv file (for the tsv machine readable file a %.2f for all values should be ok) */		 		 
+         if (tsvfile) fprintf(tsvfile,"%.2f\t");              /* print the values to the tsv file (for the tsv machine readable file a %.2f for all values should be ok) */		 		 
       }
-      fprintf(output_file,"</tr>\n");                        /* end of the line in the html report */
-      if (tsvfile) fprintf(tsvfile,"\n");                    /* end of the line in the tsv file    */	  
+      fprintf(output_file,"</tr>\n");                         /* end of the line in the html report   */
+      if (tsvfile) fprintf(tsvfile,"\n");                     /* end of the line in the tsv file      */	  
+	  /* compute the avg normalization factor */
+	  avg_similarity_normalization[class_index]=0.0;
+	  for (split_index=0;split_index<split_num;split_index++) 
+	    if (splits[split_index].similarity_normalization)
+	      avg_similarity_normalization[class_index]+=(splits[split_index].similarity_normalization[class_index]/split_num);
    }
-   fprintf(output_file,"</table> \n <br><br><br><br> \n");   /* end of average similarity matrix */
+   fprintf(output_file,"</table></td>");   /* end of average similarity matrix */
    if (tsvfile) fclose(tsvfile);
-
+   /* write the normalization factors for each class */
+//   if (splits[0].similarity_normalization)
+//   {  fprintf(output_file,"<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td><td><table border=\"1\" align=\"center\"><caption>Norm. Factor</caption>\n");
+//      for (class_index=1;class_index<=class_num;class_index++)
+//      {  fprintf(output_file,"<TR><TD>%.3f</TD></TR><br>\n",avg_similarity_normalization[class_index]);
+//      }
+//	  fprintf(output_file,"</td></table> \n");  /* end of average similarity normalization factors list */
+//   }
+   fprintf(output_file,"</tr></table><br><br><br><br> \n");   
+   
    /* *** generate a dendrogram *** */
    if (phylib_path)  /* generate a dendrogram only if phlyb path was specified */
    {  FILE *dend_file;
@@ -1366,7 +1518,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
       sprintf(file_path,"%s/dend_file.txt",phylib_path);
       dend_file=fopen(file_path,"w");
       if (dend_file)
-	  {  PrintConfusion(dend_file, splits[0].confusion_matrix,avg_similarity_matrix,1,1);  /* print the dendrogram to a the "dend_file.txt" file */
+	  {  PrintConfusion(dend_file,splits[0].confusion_matrix,avg_similarity_matrix,1,1);  /* print the dendrogram to a the "dend_file.txt" file */
          fclose(dend_file);
 		 if (export_tsv)   /* write the phylip file to the tsv directory */
 		 {  sprintf(file_path,"tsv/dend_file.txt");
@@ -1386,13 +1538,13 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
 			alg[0]='\0';
 			for (algorithm_index=0;algorithm_index<phylip_algorithm;algorithm_index++)
 			  strcat(alg,"I\n");
-            fprintf(dend_file,"outtree\n%s/src/font1\n%sV\nN\nY\n",phylib_path,alg);     //D\n
+            fprintf(dend_file,"outtree\n%s/exe/font1\n%sV\nN\nY\n",phylib_path,alg);     //D\n
             fclose(dend_file);
 			/* create the dendrogram */
 			system("rm plotfile");
-            sprintf(file_path,"%s/src/fitch < %s/fitch.infile",phylib_path,phylib_path);
+            sprintf(file_path,"%s/exe/fitch < %s/fitch.infile",phylib_path,phylib_path);
             system(file_path);
-            sprintf(file_path,"%s/src/drawtree < %s/drawtree.infile",phylib_path,phylib_path);
+            sprintf(file_path,"%s/exe/drawtree < %s/drawtree.infile",phylib_path,phylib_path);
             system(file_path);
             sprintf(file_path,"mv plotfile ./%s.ps",data_set_name);
             system(file_path);			
@@ -1406,6 +1558,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
 	}		   
    }
    delete avg_similarity_matrix;  /* free the memory allocated for the dendrogram similarity matrix */
+   delete avg_similarity_normalization;
 
    /* *** print the confusion/similarity matrices, feature names and individual images for the splits *** */
    for (split_index=0;split_index<split_num;split_index++)
@@ -1435,7 +1588,7 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
       fprintf(output_file,"</table> \n <br><br> \n");
       
 	  /* print the similarity matrix */
-      fprintf(output_file,"<table border=\"1\" align=\"center\"><caption>Similarity Matrix</caption> \n");   
+      fprintf(output_file,"<table><tr><td><table border=\"1\" align=\"center\"><caption>Similarity Matrix</caption> \n");   
       fprintf(output_file,"<tr><td></td>\n");
       for (class_index=1;class_index<=class_num;class_index++)
         fprintf(output_file,"<td><b>%s</b></td>\n",class_labels[class_index]);   
@@ -1446,25 +1599,45 @@ long TrainingSet::report(FILE *output_file, char *data_set_name, data_split *spl
            fprintf(output_file,"<td>%.2f</td>\n",similarity_matrix[class_index*class_num+class_index2]);
          fprintf(output_file,"</tr>\n");
       }
-      fprintf(output_file,"</table> \n <br><br> \n");
+      fprintf(output_file,"</table></td>\n");
+      /* write the normalization factors for each class */
+//      if (splits[split_index].similarity_normalization)
+//      {  fprintf(output_file,"<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td><td><table border=\"1\" align=\"center\"><caption>Norm. Factor</caption>\n");
+//         for (class_index=1;class_index<=class_num;class_index++)
+//          fprintf(output_file,"<TR><TD>%.2f</TD></TR>\n",splits[split_index].similarity_normalization[class_index]);
+//         fprintf(output_file,"</td></table> \n");  /* end of average similarity normalization factors list */
+//      }
+      fprintf(output_file,"</tr></table><br><br><br><br> \n");    
 
-      /* count the number of features */
+      /* add the sorted features */
       strncpy(feature_names,splits[split_index].feature_names,sizeof(feature_names));
       feature_names[sizeof(feature_names)-1]='\0';  /* make sure the string is null-terminated */
       a=0;
-      while (feature_names[a]!='\0')
+      while (feature_names[a]!='\0') /* first count the features */
         features_num+=(feature_names[a++]=='\n');
-//      fprintf(output_file,"<A NAME=\"features%d\"> \n",split_index);
       fprintf(output_file,"%d features selected (out of %d features computed).<br>  <a href=\"#\" onClick=\"sigs_used=document.getElementById('FeaturesUsed_split%d'); if (sigs_used.style.display=='none'){ sigs_used.style.display='inline'; } else { sigs_used.style.display='none'; }\">Toggle feature names</a><br><br>\n",features_num,signature_count,split_index);
       fprintf(output_file,"<TABLE ID=\"FeaturesUsed_split%d\" border=\"1\" style=\"display: none;\">\n",split_index);
       p_feature_names=strtok(feature_names,"\n");
-      a=1;
       while (p_feature_names)
       {  fprintf(output_file,"<tr><td>%s</td></tr>\n",p_feature_names);
          p_feature_names=strtok(NULL,"\n");
       }
-      fprintf(output_file,"</table><br>\n");
-
+      fprintf(output_file,"</table><br>\n"); 
+	  
+      /* add the feature groups */
+      if (splits[split_index].feature_groups)
+      {  strncpy(feature_names,splits[split_index].feature_groups,sizeof(feature_names));
+         feature_names[sizeof(feature_names)-1]='\0';  /* make sure the string is null-terminated */
+         fprintf(output_file,"<a href=\"#\" onClick=\"sigs_used=document.getElementById('FeaturesGroups_split%d'); if (sigs_used.style.display=='none'){ sigs_used.style.display='inline'; } else { sigs_used.style.display='none'; }\">Feature groups (sum of Fisher scores) </a><br><br>\n",split_index);
+         fprintf(output_file,"<TABLE ID=\"FeaturesGroups_split%d\" border=\"1\" style=\"display: none;\">\n",split_index);
+         p_feature_names=strtok(feature_names,"\n");
+         while (p_feature_names)
+         {  fprintf(output_file,"<tr><td>%s</td></tr>\n",p_feature_names);
+            p_feature_names=strtok(NULL,"\n");
+         }
+         fprintf(output_file,"</table><br>\n");
+      }
+	  
       /* individual image predictions */
       if (splits[split_index].individual_images)
       {  char closest_image[256],interpolated_value[256];

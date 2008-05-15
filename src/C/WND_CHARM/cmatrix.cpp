@@ -52,6 +52,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tiffio.h>
+#else
+#include "libtiff32/tiffio.h"
 #endif
 
 #define MIN(a,b) (a<b?a:b)
@@ -186,7 +188,7 @@ int ImageMatrix::LoadBMP(char *filename,int ColorMode)
 */
 int ImageMatrix::LoadTIFF(char *filename)
 {
-#ifndef WIN32
+//#ifndef WIN32
    unsigned long h,w,x,y;
    unsigned short int spp,bps;
    TIFF *tif = NULL;
@@ -253,10 +255,10 @@ int ImageMatrix::LoadTIFF(char *filename)
      }
      _TIFFfree(buf8);
      _TIFFfree(buf16);
-     TIFFClose(tif); 
+     TIFFClose(tif);
    }
    else return(0);
-#endif
+//#endif
    return(1);
 }
 
@@ -265,7 +267,7 @@ int ImageMatrix::LoadTIFF(char *filename)
 */
 int ImageMatrix::SaveTiff(char *filename)
 {
-#ifndef WIN32
+//#ifndef WIN32
    int x,y;
    TIFF* tif = TIFFOpen(filename, "w");
    unsigned short *BufImage16 = new unsigned short[width*height];
@@ -295,7 +297,7 @@ int ImageMatrix::SaveTiff(char *filename)
    TIFFClose(tif);
    delete BufImage8;
    delete BufImage16;
-#endif
+//#endif
    return(1);
 }
 
@@ -372,6 +374,33 @@ int ImageMatrix::LoadPPM(char *filename, int ColorMode)
    delete buffer;
    fclose(fi);
    return(1);
+}
+
+int ImageMatrix::OpenImage(char *image_file_name, int downsample, rect *bounding_rect, double mean, double stddev)
+{  int res=0;
+#ifdef WIN32
+   if (strstr(image_file_name,".bmp") || strstr(image_file_name,".BMP"))
+     res=LoadBMP(image_file_name,cmHSV);
+#endif
+   if (strstr(image_file_name,".tif") || strstr(image_file_name,".TIF"))
+   {  res=LoadTIFF(image_file_name);
+// if (res && matrix->bits==16) matrix->to8bits();
+         }
+//#endif
+   if (strstr(image_file_name,".ppm") || strstr(image_file_name,".PPM"))
+     res=LoadPPM(image_file_name,cmHSV);
+   if (res)  /* add the image only if it was loaded properly */
+   {  if (bounding_rect && bounding_rect->x>=0)    /* compute features only from an area of the image */
+      {  //ImageMatrix *temp=this;
+         new ImageMatrix(this,bounding_rect->x,bounding_rect->y,bounding_rect->x+bounding_rect->w-1,bounding_rect->y+bounding_rect->h-1);
+         //delete temp;
+      }
+      if (downsample>0 && downsample<100)  /* downsample by a given factor */
+        Downsample(((double)downsample)/100.0,((double)downsample)/100.0);   /* downsample the image */
+      if (mean>0)  /* normalize to a given mean and standard deviation */
+        normalize(-1,-1,-1,mean,stddev);
+   }
+   return(res);
 }
 
 /* simple constructors */
@@ -672,18 +701,43 @@ void ImageMatrix::BasicStatistics(double *mean, double *median, double *std, dou
    delete pixels;
 }
 
-/* normalize the pixel values into a given range */
-void ImageMatrix::normalize(double min, double max, long range)
+/* normalize the pixel values into a given range 
+   min -double- the min pixel value (ignored if <0)
+   max -double- the max pixel value (ignored if <0)
+   range -long- nominal dynamic range (ignored if <0)
+   mean -double- the mean of the normalized image (ignored if <0)
+   stddev -double- the stddev of the normalized image (ignored if <0)
+*/
+void ImageMatrix::normalize(double min, double max, long range, double mean, double stddev)
 {  int x,y;
-   for (y=0;y<height;y++)
-     for (x=0;x<width;x++)
-     {  if (data[x][y].intensity<min) data[x][y].intensity=0;
-	    else if (data[x][y].intensity>max) data[x][y].intensity=range;
-	    else data[x][y].intensity=((data[x][y].intensity-min)/(max-min))*range;
-	 }
+   /* normalized to min and max */
+   if (min>=0 && max>0 && range>0)
+     for (y=0;y<height;y++)
+       for (x=0;x<width;x++)
+       {  if (data[x][y].intensity<min) data[x][y].intensity=0;
+	      else if (data[x][y].intensity>max) data[x][y].intensity=range;
+	      else data[x][y].intensity=((data[x][y].intensity-min)/(max-min))*range;
+	   }
+	
+    /* normalize to mean and stddev */
+	if (mean>0)
+	{   double original_mean,original_stddev;
+        BasicStatistics(&original_mean, NULL, &original_stddev, NULL, NULL, NULL, 0);	
+        for (y=0;y<height;y++)
+          for (x=0;x<width;x++)
+	      {  data[x][y].intensity-=(original_mean-mean);
+		     if (stddev>0)
+			   data[x][y].intensity=mean+(data[x][y].intensity-mean)*(stddev/original_stddev);
+			 if (data[x][y].intensity<0) data[x][y].intensity=0;
+			 if (data[x][y].intensity>pow(2,bits)-1) data[x][y].intensity=pow(2,bits)-1;  
+		  }
+//BasicStatistics(&original_mean, NULL, &original_stddev, NULL, NULL, NULL, 0);		  
+//printf("%f %f\n",original_mean,original_stddev);
+	}
+	   
 }
 
-/* concolve
+/* convolve
 */
 void ImageMatrix::convolve(ImageMatrix *filter)
 { int x,y,j;
@@ -790,14 +844,15 @@ void ImageMatrix::GetColorStatistics(double *hue_avg, double *hue_std, double *s
 /* ColorTransform
    Transform a color image to a greyscale image such that each
    color_hist -double *- a histogram (of COLOR_NUM + 1 bins) of the colors. This parameter is ignored if NULL
+   use_hue -int- 0 if classifying colors, 1 if using the hue component of the HSV vector
    grey level represents a different color
 */
-void ImageMatrix::ColorTransform(double *color_hist)
+void ImageMatrix::ColorTransform(double *color_hist, int use_hue)
 {  int x,y,base_color;
    double cb_intensity;
    double max_value;
    color hsv_pixel;
-   int color_index;   
+   int color_index=0;   
    RGBcolor rgb;
    float certainties[COLORS_NUM+1];
    max_value=pow(2,bits)-1;
@@ -809,11 +864,14 @@ void ImageMatrix::ColorTransform(double *color_hist)
    for (y=0;y<height;y++)
      for (x=0;x<width;x++)
      {  hsv_pixel=data[x][y].clr;
-        color_index=FindColor(hsv_pixel.HSV.hue,hsv_pixel.HSV.saturation,hsv_pixel.HSV.value,certainties);
-        if (color_hist)
-          color_hist[color_index]+=1;
-        cb_intensity=int((max_value*color_index)/COLORS_NUM);  /* convert the color index to a greyscale value */
-		rgb.red=rgb.green=rgb.blue=(byte)(255*(cb_intensity/max_value));
+        if (use_hue==0) 
+		{  color_index=FindColor(hsv_pixel.HSV.hue,hsv_pixel.HSV.saturation,hsv_pixel.HSV.value,certainties);
+           if (color_hist)
+             color_hist[color_index]+=1;
+           cb_intensity=int((max_value*color_index)/COLORS_NUM);  /* convert the color index to a greyscale value */
+        }
+		else cb_intensity=hsv_pixel.HSV.hue;
+        rgb.red=rgb.green=rgb.blue=(byte)(255*(cb_intensity/max_value));
         data[x][y].clr.HSV=RGB2HSV(rgb);
         data[x][y].intensity=cb_intensity;
      }
@@ -924,8 +982,11 @@ void ImageMatrix::ChebyshevTransform(int N)
    coeff -array of double- a pre-allocated array of 32 doubles
 */
 void ImageMatrix::ChebyshevFourierTransform(double *coeff)
-{
-   ChebyshevFourier(this, 0, coeff,32);
+{  ImageMatrix *matrix;
+   matrix=duplicate();
+   if (width*height>300*300) matrix->Downsample(min(300.0/(double)width,300.0/(double)height),min(300.0/(double)width,300.0/(double)height));  /* downsample for avoiding memory problems */
+   ChebyshevFourier(matrix, 0, coeff,32);
+   delete matrix;
 }
 
 

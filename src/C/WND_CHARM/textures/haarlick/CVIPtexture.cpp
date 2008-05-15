@@ -428,7 +428,7 @@ TEXTURE * Extract_Texture_Features(int distance, int angle,
   	Texture->diff_entropy  = f11_dentropy (P_matrix, tone_count);
   	Texture->meas_corr1    = f12_icorr    (P_matrix, tone_count);
   	Texture->meas_corr2    = f13_icorr    (P_matrix, tone_count);
-    Texture->max_corr_coef = f14_maxcorr  (P_matrix, tone_count);
+        Texture->max_corr_coef = f14_maxcorr  (P_matrix, tone_count);
 
         free_matrix(P_matrix,tone_count);
 	return (Texture);
@@ -468,10 +468,10 @@ double** CoOcMat_Angle_0 (int distance, u_int8_t **grays,
 
 	/* normalize matrix */
 	for (itone = 0; itone < tone_count; ++itone)
-		for (jtone = 0; jtone < tone_count; ++jtone)
-                   if (count==0)   /* protect from error */
-                     matrix[itone][jtone]=0;
-		     else matrix[itone][jtone] /= count;
+          for (jtone = 0; jtone < tone_count; ++jtone)
+            if (count==0)   /* protect from error */
+               matrix[itone][jtone]=0;
+               else matrix[itone][jtone] /= count;
 
 	return matrix;
 }
@@ -509,10 +509,9 @@ double** CoOcMat_Angle_90 (int distance, u_int8_t **grays,
 		
 	/* normalize matrix */
 	for (itone = 0; itone < tone_count; ++itone)
-		for (jtone = 0; jtone < tone_count; ++jtone)
-                  if (count==0) matrix[itone][jtone]=0;
-		  else
-                  matrix[itone][jtone] /= count;
+          for (jtone = 0; jtone < tone_count; ++jtone)
+            if (count==0) matrix[itone][jtone]=0;
+            else matrix[itone][jtone] /= count;
 
 	return matrix;
 }
@@ -552,8 +551,7 @@ double** CoOcMat_Angle_45 (int distance, u_int8_t **grays,
 	for (itone = 0; itone < tone_count; ++itone)
 		for (jtone = 0; jtone < tone_count; ++jtone)
                    if (count==0) matrix[itone][jtone]=0;       /* protect from error */
-                   else
-                   matrix[itone][jtone] /= count;
+                   else matrix[itone][jtone] /= count;
 			
 	return matrix;
 }
@@ -593,8 +591,7 @@ double** CoOcMat_Angle_135 (int distance, u_int8_t **grays,
 	for (itone = 0; itone < tone_count; ++itone)
 		for (jtone = 0; jtone < tone_count; ++jtone)
                 if (count==0) matrix[itone][jtone]=0;   /* protect from error */
-                else
-                matrix[itone][jtone] /= count;
+                else matrix[itone][jtone] /= count;
 			
 	return matrix;
 }
@@ -693,9 +690,8 @@ double f3_corr (double **P, int Ng) {
 			  tmp += i*j*P[i][j];
 	
 	free(px);
-        if (tmp - meanx * meany==0 && stddevx * stddevy==0) return(1);  /* protect from error */
-        else
-	return (tmp - meanx * meany) / (stddevx * stddevy);
+        if (stddevx * stddevy==0) return(1);  /* protect from error */
+        else return (tmp - meanx * meany) / (stddevx * stddevy);
 }
 
 /* Sum of Squares: Variance */
@@ -900,7 +896,7 @@ double f12_icorr (double **P, int Ng) {
 
 	free(px);
 	free(py);
-        if (hxy==hxy1 && (hx > hy ? hx : hy)==0) return(1);
+        if ((hx > hy ? hx : hy)==0) return(1);
         else
 	return ((hxy - hxy1) / (hx > hy ? hx : hy));
 }
@@ -950,7 +946,7 @@ double f14_maxcorr (double **P, int Ng) {
 	int i, j, k;
 	double *px, *py, **Q;
 	double *x, *iy, tmp;
-	double f;
+	double f=0.0;
 	
 	px = allocate_vector (0, Ng);
 	py = allocate_vector (0, Ng);
@@ -1019,8 +1015,7 @@ double *allocate_vector (int nl, int nh) {
 	double *v;
 	
 	v = (double *) calloc (1, (unsigned) (nh - nl + 1) * sizeof (double));
-	if (!v)
-		fprintf (stderr, "memory allocation failure (allocate_vector) "), exit (1);
+	if (!v) fprintf (stderr, "memory allocation failure (allocate_vector) "), exit (1);
 	
 	return v - nl;
 }
@@ -1041,15 +1036,13 @@ double **allocate_matrix (int nrl, int nrh, int ncl, int nch)
 
 	/* allocate pointers to rows */
 	m = (double **) malloc ((unsigned) (nrh - nrl + 1) * sizeof (double *));
-	if (!m)
-		fprintf (stderr, "memory allocation failure (allocate_matrix 1) "), exit (1);
+	if (!m) fprintf (stderr, "memory allocation failure (allocate_matrix 1) "), exit (1);
 	m -= ncl;
 
 	/* allocate rows and set pointers to them */
 	for (i = nrl; i <= nrh; i++) {
 		m[i] = (double *) malloc ((unsigned) (nch - ncl + 1) * sizeof (double));
-		if (!m[i])
-			fprintf (stderr, "memory allocation failure (allocate_matrix 2) "), exit (2);
+		if (!m[i]) fprintf (stderr, "memory allocation failure (allocate_matrix 2) "), exit (2);
 		m[i] -= ncl;
 	}
 
