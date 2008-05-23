@@ -143,6 +143,17 @@ public class PixelsNode extends OMEXMLNode
 		setAttribute("SizeZ", sizeZ);
 	}
                                             
+	// Element which occurs more than once
+	public int getTiffDataCount()
+	{
+		return getChildCount("TiffData");
+	}
+
+	public Vector getTiffDataList()
+	{
+		return getChildNodes("TiffData");
+	}
+                                    
 	// Attribute
 	public Boolean getBigEndian()
 	{
