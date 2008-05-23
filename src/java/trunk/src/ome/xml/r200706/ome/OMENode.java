@@ -80,12 +80,12 @@ public class OMENode extends OMEXMLNode
 	// Element which occurs more than once
 	public int getPlateCount()
 	{
-		return getChildCount("Plate");
+		return getChildCount("SPW:Plate");
 	}
 
 	public Vector getPlateList()
 	{
-		return getChildNodes("Plate");
+		return getChildNodes("SPW:Plate");
 	}
                                             
 	// Element which occurs more than once
@@ -113,13 +113,23 @@ public class OMENode extends OMEXMLNode
 	// Element which occurs more than once
 	public int getScreenCount()
 	{
-		return getChildCount("Screen");
+		return getChildCount("SPW:Screen");
 	}
 
 	public Vector getScreenList()
 	{
-		return getChildNodes("Screen");
+		return getChildNodes("SPW:Screen");
 	}
+
+  public int getWellCount()
+  {
+    return getChildCount("SPW:Well");
+  }
+
+  public Vector getWellList()
+  {
+    return getChildNodes("SPW:Well");
+  }
                                                 
 	// Element which is not complex (has only a text node)
 	public String getAnalysisModuleLibrary()
