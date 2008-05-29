@@ -61,7 +61,7 @@ public abstract class OMEXMLNode {
 
   // -- Constants --
 
-  protected static final String[] NODE_PACKAGES = {".ome", ".st", ""};
+  protected static final String[] NODE_PACKAGES = {".ome", ".spw", ".st", ""};
 
   protected static final String LEGACY_VERSION = "2003-FC";
 
