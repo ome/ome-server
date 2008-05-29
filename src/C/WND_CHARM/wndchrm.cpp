@@ -67,7 +67,7 @@ int classify_image(char *filename,char *image_filename, double max_features, int
   signatures *image_signatures;
   double probabilities[MAX_CLASS_NUM],probabilities_sum[MAX_CLASS_NUM],max_probability=0.0;
   int res,class_index,tile_index_y,tile_index_x;
-  char image_files[1024][64];  /* all the image files that should be classified */
+  char image_files[1024][256];  /* all the image files that should be classified */
   int file_index,class_predictions[MAX_CLASS_NUM],files_read=0,number_of_files=0;
   double class_avg_similarity[MAX_CLASS_NUM];
   DIR *class_dir;

@@ -1028,6 +1028,7 @@ void ImageMatrix::Symlet5Transform()
 void ImageMatrix::ChebyshevStatistics(double *coeff, int N, int bins_num)
 {
    if (N<2) N=20;
+   if (N>min(width,height)) N=min(width,height);   
    ChebyshevTransform(N);
    histogram(coeff,bins_num,0);
 }
