@@ -142,7 +142,8 @@ public class ModuleExecutionManager
      *
      * <p>To populate a different set of fields for the returned
      * module execution object, call the version of this method which
-     * takes in a {@link FieldsSpecification} parameter.</p>
+     * takes in a {@link org.openmicroscopy.ds.FieldsSpecification}
+     * parameter.</p>
      */
     public ModuleExecution createMEX(Module module,
                                      String iteratorTag,
@@ -210,7 +211,8 @@ public class ModuleExecutionManager
      *
      * <p>To populate a different set of fields for the returned
      * module execution object, call the version of this method which
-     * takes in a {@link FieldsSpecification} parameter.</p>
+     * takes in a {@link org.openmicroscopy.ds.FieldsSpecification}
+     * parameter.</p>
      */
     public ModuleExecution createMEX(Module module,
                                      Dataset dataset,
@@ -282,7 +284,8 @@ public class ModuleExecutionManager
      *
      * <p>To populate a different set of fields for the returned
      * module execution object, call the version of this method which
-     * takes in a {@link FieldsSpecification} parameter.</p>
+     * takes in a {@link org.openmicroscopy.ds.FieldsSpecification}
+     * parameter.</p>
      */
     public ModuleExecution createMEX(Module module,
                                      Image image,
@@ -346,7 +349,8 @@ public class ModuleExecutionManager
      *
      * <p>To populate a different set of fields for the returned
      * module execution object, call the version of this method which
-     * takes in a {@link FieldsSpecification} parameter.</p>
+     * takes in a {@link org.openmicroscopy.ds.FieldsSpecification}
+     * parameter.</p>
      */
     public ActualInput addActualInput(ModuleExecution outputMEX,
                                       ModuleExecution inputMEX,
@@ -410,7 +414,8 @@ public class ModuleExecutionManager
      *
      * <p>To populate a different set of fields for the returned
      * module execution object, call the version of this method which
-     * takes in a {@link FieldsSpecification} parameter.</p>
+     * takes in a {@link org.openmicroscopy.ds.FieldsSpecification}
+     * parameter.</p>
      *
      * @throws RemoteServerErrorException if <code>inputMEX</code>
      * does not contain a formal input called <code>formalInput</code>

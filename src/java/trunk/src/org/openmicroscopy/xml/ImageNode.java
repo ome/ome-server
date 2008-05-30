@@ -225,16 +225,16 @@ public class ImageNode extends LegacyOMEXMLNode implements Image {
 
   // -- Deprecated methods --
 
-  /** @deprecated {@link Replaced by #getDatasetList()} */
+  /** @deprecated Replaced by {@link #getDatasetList()} */
   public List getDatasets() { return getDatasetList(); }
 
-  /** @deprecated {@link Replaced by #countDatasetList()} */
+  /** @deprecated Replaced by {@link #countDatasetList()} */
   public int countDatasets() { return countDatasetList(); }
 
-  /** @deprecated {@link Replaced by #getFeatureList()} */
+  /** @deprecated Replaced by {@link #getFeatureList()} */
   public List getFeatures() { return getFeatureList(); }
 
-  /** @deprecated {@link Replaced by #countFeatureList()} */
+  /** @deprecated Replaced by {@link #countFeatureList()} */
   public int countFeatures() { return countFeatureList(); }
 
 

@@ -98,10 +98,11 @@ public class AnnotationManager
      * IllegalArgumentException}.</p>
      *
      * <p>All of the attribute objects in the list must be new; i.e.,
-     * created with the {@link DataFactory#createNew} method.  They
-     * cannot be attributes which were loaded in from the data server
-     * via a {@link DataFactory#load} or {@link DataFactory#retrieve}
-     * call.</p>
+     * created * with the
+     * {@link org.openmicroscopy.ds.DataFactory#createNew} method.
+     * They cannot be attributes which were loaded in from the data
+     * server via a {@link org.openmicroscopy.ds.DataFactory#load} or
+     * {@link org.openmicroscopy.ds.DataFactory#retrieve} call.</p>
      *
      * <p>After this method returns, the attributes in the list will
      * no longer be new, and the primary key ID field will be replaced

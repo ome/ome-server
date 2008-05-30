@@ -60,9 +60,11 @@ public class DatasetManager
 
     /**
      * Creates a new <code>DatasetManager</code> which communicates
-     * with a data server using the specified {@link RemoteCaller}.
-     * This {@link RemoteCaller} is first wrapped in an instance of
-     * {@link InstantiatingCaller}.
+     * with a data server using the specified
+     * {@link org.openmicroscopy.ds.RemoteCaller}.
+     * This {@link org.openmicroscopy.ds.RemoteCaller}
+     * is first wrapped in an instance of
+     * {@link org.openmicroscopy.ds.InstantiatingCaller}.
      */
     public DatasetManager(RemoteCaller caller)
     {

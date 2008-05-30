@@ -62,7 +62,7 @@ public class ProjectManager
      * Creates a new <code>ProjectManager</code> which communicates
      * with a data server using the specified {@link RemoteCaller}.
      * This {@link RemoteCaller} is first wrapped in an instance of
-     * {@link InstantiatingCaller}.
+     * {@link org.openmicroscopy.ds.InstantiatingCaller}.
      */
     public ProjectManager(RemoteCaller caller)
     {

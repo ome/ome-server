@@ -400,7 +400,7 @@ public abstract class OMEXMLNode {
 
   /**
    * Gets the given child node's character data.
-   * @see getCData()
+   * @see #getCData(String)
    */
   protected String getStringCData(String name) {
     return getCData(name);

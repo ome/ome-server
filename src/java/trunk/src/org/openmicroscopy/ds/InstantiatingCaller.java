@@ -92,7 +92,7 @@ public class InstantiatingCaller
      * The method can receive an arbitrary number of parameters.  The
      * result is instantiated into an instance of the specified Java
      * DTO interface.  If the result of the remote method call is not
-     * a {@link Map}, a {@link RemoteServerErrorException} is thrown.
+     * a {@link java.util.Map}, a {@link RemoteServerErrorException} is thrown.
      * @param javaClass the {@link Class} object for a DTO interface
      * (not implementing class)
      */
@@ -109,7 +109,7 @@ public class InstantiatingCaller
      * The method can receive an arbitrary number of parameters.  The
      * result is instantiated into an instance of the specified
      * semantic type interface.  If the result of the remote method
-     * call is not a {@link Map}, a {@link
+     * call is not a {@link java.util.Map}, a {@link
      * RemoteServerErrorException} is thrown.
      * @param semanticType the name of the semantic type to
      * instantiate (the name of the type, not the interface or
