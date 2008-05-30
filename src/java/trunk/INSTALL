@@ -1,4 +1,4 @@
-OME Java Library, Installation instructions
+OME-Java Library, Installation instructions
 ===========================================
 
 If you have downloaded a pre-compiled copy of this library,
@@ -13,7 +13,7 @@ Ant tool (available at http://ant.apache.org/).  Ant is a Java-based
 "make" equivalent, and is very easy to install.
 
 Once Ant is installed, the following commands can be run from the base
-OME Java directory:
+OME-Java directory:
 
 
    ant

@@ -1,9 +1,9 @@
-OME Java Library
+OME-Java Library
 ================
 
 This package contains several useful core libraries for creating an
 OME-compliant Java application.  Using the libraries is as simple as
-adding the ome-java-[version].jar file to your classpath.
+adding the ome-java.jar file to your classpath.
 
 
 Contents
@@ -13,10 +13,10 @@ The library is broken down into three major components:
 
 - Data service classes (org.openmicroscopy.ds.*)
 - Image server classes (org.openmicroscopy.is.*)
-- OME-XML classes (org.openmicroscopy.xml.*)
+- OME-XML classes (ome.xml.*)
 
 The data service provides a series of Java interfaces to represent
-each of the basic data types defined by OME.  (An logical overview of
+each of the basic data types defined by OME.  (A logical overview of
 these types is at http://docs.openmicroscopy.org.uk/concepts/ .)
 Included in this are a set of interfaces for the standard OME semantic
 types, along with a tool for automatically generating custom
@@ -53,7 +53,7 @@ the org.openmicroscopy.ds.* packages.
 Requirements
 ------------
 
-The OME Java library requires version 1.4 of the JDK.  Certain classes
+The OME-Java library requires version 1.4 of the JDK.  Certain classes
 in the library also have dependencies on other Java libraries:
 
    - Image server access requires the Apache HTTP client library.
@@ -68,6 +68,6 @@ encoding these dependencies.
 License
 -------
 
-The OME Java libraries are distributed under the GNU Lesser General
+The OME-Java libraries are distributed under the GNU Lesser General
 Public License (LGPL).  More information can be found in the LICENSE
 file.
