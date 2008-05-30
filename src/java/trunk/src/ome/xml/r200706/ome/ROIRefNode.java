@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -73,6 +73,26 @@ public class ROIRefNode extends ReferenceNode
 	{
 		super(DOMUtil.createChild(parent.getDOMElement(),
 		                          "ROIRef", attach));
+	}
+
+	/** 
+	 * Returns the <code>ROINode</code> which this reference
+	 * links to.
+	 */
+	public ROINode getROI()
+	{
+		return (ROINode)
+			getAttrReferencedNode("ROI", "ID");
+	}
+
+	/**
+	 * Sets the active reference node on this node.
+	 * @param node The <code>ROINode</code> to set as a
+	 * reference.
+	 */
+	public void setROINode(ROINode node)
+	{
+		setNodeID(node.getNodeID());
 	}
 
 	// -- ROIRef API methods --

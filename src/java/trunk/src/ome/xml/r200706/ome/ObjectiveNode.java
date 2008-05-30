@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -120,7 +120,18 @@ public class ObjectiveNode extends ManufactSpecNode
 	{
 		setCData("Correction", correction);
 	}
-                                            
+                        
+	// Virtual, inferred back reference OTF_BackReference
+	public int getOTFCount()
+	{
+		return getReferringCount("OTF");
+	}
+
+	public List getOTFList()
+	{
+		return getReferringNodes("OTF");
+	}
+                                                                
 	// Element which is not complex (has only a text node)
 	public Float getLensNA()
 	{

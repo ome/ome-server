@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -101,7 +101,18 @@ public class LightSourceNode extends ManufactSpecNode
 		return (ArcNode)
 			getChildNode("Arc", "Arc");
 	}
-                                                
+                
+	// Virtual, inferred back reference LogicalChannel_BackReference
+	public int getLogicalChannelCount()
+	{
+		return getReferringCount("LogicalChannel");
+	}
+
+	public List getLogicalChannelList()
+	{
+		return getReferringNodes("LogicalChannel");
+	}
+                                                                            
 	// *** WARNING *** Unhandled or skipped property ID
                                         
 	// Element which is complex (has sub-elements)

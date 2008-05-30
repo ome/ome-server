@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -73,6 +73,26 @@ public class PumpNode extends ReferenceNode
 	{
 		super(DOMUtil.createChild(parent.getDOMElement(),
 		                          "Pump", attach));
+	}
+
+	/** 
+	 * Returns the <code>LightSourceNode</code> which this reference
+	 * links to.
+	 */
+	public LightSourceNode getLightSource()
+	{
+		return (LightSourceNode)
+			getAttrReferencedNode("LightSource", "ID");
+	}
+
+	/**
+	 * Sets the active reference node on this node.
+	 * @param node The <code>LightSourceNode</code> to set as a
+	 * reference.
+	 */
+	public void setLightSourceNode(LightSourceNode node)
+	{
+		setNodeID(node.getNodeID());
 	}
 
 	// -- Pump API methods --

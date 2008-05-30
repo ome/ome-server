@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-20 22:13:42-0500
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -76,32 +76,7 @@ public class GroupNode extends OMEXMLNode
 	}
 
 	// -- Group API methods --
-      
-	// Virtual, inferred back reference Experimenter_BackReference
-	public int getExperimenterCount()
-	{
-		return getReferringCount("Experimenter");
-	}
-
-	public List getExperimenterList()
-	{
-		return getReferringNodes("Experimenter");
-	}
-                                                                        
-	// Element which is complex (has sub-elements)
-	public ContactNode getContact()
-	{
-		return (ContactNode)
-			getChildNode("Contact", "Contact");
-	}
-                                            
-	// Element which is complex (has sub-elements)
-	public ExperimenterRefNode getLeader()
-	{
-		return (ExperimenterRefNode)
-			getChildNode("ExperimenterRef", "Leader");
-	}
-                        
+              
 	// Attribute
 	public String getName()
 	{
@@ -112,9 +87,67 @@ public class GroupNode extends OMEXMLNode
 	{
 		setAttribute("Name", name);
 	}
-                                                                    
+                                    
+	// Virtual, inferred back reference Image_BackReference
+	public int getImageCount()
+	{
+		return getReferringCount("Image");
+	}
+
+	public List getImageList()
+	{
+		return getReferringNodes("Image");
+	}
+                                                                            
 	// *** WARNING *** Unhandled or skipped property ID
-      
+            
+	// Virtual, inferred back reference Project_BackReference
+	public int getProjectCount()
+	{
+		return getReferringCount("Project");
+	}
+
+	public List getProjectList()
+	{
+		return getReferringNodes("Project");
+	}
+                                                                        
+	// Element which is complex (has sub-elements)
+	public ContactNode getContact()
+	{
+		return (ContactNode)
+			getChildNode("Contact", "Contact");
+	}
+                
+	// Virtual, inferred back reference Experimenter_BackReference
+	public int getExperimenterCount()
+	{
+		return getReferringCount("Experimenter");
+	}
+
+	public List getExperimenterList()
+	{
+		return getReferringNodes("Experimenter");
+	}
+                                            
+	// Virtual, inferred back reference Dataset_BackReference
+	public int getDatasetCount()
+	{
+		return getReferringCount("Dataset");
+	}
+
+	public List getDatasetList()
+	{
+		return getReferringNodes("Dataset");
+	}
+                                                                        
+	// Element which is complex (has sub-elements)
+	public ExperimenterRefNode getLeader()
+	{
+		return (ExperimenterRefNode)
+			getChildNode("ExperimenterRef", "Leader");
+	}
+          
 	// -- OMEXMLNode API methods --
 
 	public boolean hasID()

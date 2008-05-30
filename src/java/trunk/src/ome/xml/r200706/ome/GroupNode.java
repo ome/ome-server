@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -76,7 +76,60 @@ public class GroupNode extends OMEXMLNode
 	}
 
 	// -- Group API methods --
-      
+              
+	// Attribute
+	public String getName()
+	{
+		return getStringAttribute("Name");
+	}
+
+	public void setName(String name)
+	{
+		setAttribute("Name", name);
+	}
+                                    
+	// Virtual, inferred back reference Image_BackReference
+	public int getImageCount()
+	{
+		return getReferringCount("Image");
+	}
+
+	public List getImageList()
+	{
+		return getReferringNodes("Image");
+	}
+                                                                            
+	// *** WARNING *** Unhandled or skipped property ID
+            
+	// Virtual, inferred back reference Project_BackReference
+	public int getProjectCount()
+	{
+		return getReferringCount("Project");
+	}
+
+	public List getProjectList()
+	{
+		return getReferringNodes("Project");
+	}
+                                                                        
+	// Element which is complex (has sub-elements)
+	public ContactNode getContact()
+	{
+		return (ContactNode)
+			getChildNode("Contact", "Contact");
+	}
+                
+	// Virtual, inferred back reference Experimenter_BackReference
+	public int getExperimenterCount()
+	{
+		return getReferringCount("Experimenter");
+	}
+
+	public List getExperimenterList()
+	{
+		return getReferringNodes("Experimenter");
+	}
+                                            
 	// Virtual, inferred back reference Dataset_BackReference
 	public int getDatasetCount()
 	{
@@ -89,32 +142,12 @@ public class GroupNode extends OMEXMLNode
 	}
                                                                         
 	// Element which is complex (has sub-elements)
-	public ContactNode getContact()
+	public ExperimenterRefNode getLeader()
 	{
-		return (ContactNode)
-			getChildNode("Contact", "Contact");
+		return (ExperimenterRefNode)
+			getChildNode("ExperimenterRef", "Leader");
 	}
-                                            
-	// Element which is complex (has sub-elements)
-	public LeaderNode getLeader()
-	{
-		return (LeaderNode)
-			getChildNode("Leader", "Leader");
-	}
-                        
-	// Attribute
-	public String getName()
-	{
-		return getStringAttribute("Name");
-	}
-
-	public void setName(String name)
-	{
-		setAttribute("Name", name);
-	}
-                                                                    
-	// *** WARNING *** Unhandled or skipped property ID
-      
+          
 	// -- OMEXMLNode API methods --
 
 	public boolean hasID()

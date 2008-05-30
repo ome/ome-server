@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-20 22:13:42-0500
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -90,9 +90,7 @@ public class FilterSetNode extends FilterSpecNode
 		return (FilterNode)
 			getAttrReferencedNode("Filter", "EmFilterRef");
 	}
-                                                                        
-	// *** WARNING *** Unhandled or skipped property ID
-            
+                                        
 	// Virtual, inferred back reference OTF_BackReference
 	public int getOTFCount()
 	{
@@ -110,7 +108,20 @@ public class FilterSetNode extends FilterSpecNode
 		return (DichroicNode)
 			getAttrReferencedNode("Dichroic", "DichroicRef");
 	}
-                                  
+                                        
+	// Virtual, inferred back reference LogicalChannel_BackReference
+	public int getLogicalChannelCount()
+	{
+		return getReferringCount("LogicalChannel");
+	}
+
+	public List getLogicalChannelList()
+	{
+		return getReferringNodes("LogicalChannel");
+	}
+                                                                            
+	// *** WARNING *** Unhandled or skipped property ID
+      
 	// -- OMEXMLNode API methods --
 
 	public boolean hasID()

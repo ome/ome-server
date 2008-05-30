@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-20 22:13:42-0500
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -87,21 +87,40 @@ public class ObjectiveNode extends ManufactSpecNode
 	{
 		setCData("WorkingDistance", workingDistance);
 	}
-                                                    
-	// Element which is complex (has sub-elements)
-	public ImmersionNode getImmersion()
-	{
-		return (ImmersionNode)
-			getChildNode("Immersion", "Immersion");
-	}
                                             
-	// Element which is complex (has sub-elements)
-	public CorrectionNode getCorrection()
+	// Element which is not complex (has only a text node)
+	public String getImmersion()
 	{
-		return (CorrectionNode)
-			getChildNode("Correction", "Correction");
+		return getStringCData("Immersion");
 	}
-                
+
+	public void setImmersion(String immersion)
+	{
+		setCData("Immersion", immersion);
+	}
+                        
+	// Virtual, inferred back reference Image_BackReference
+	public int getImageCount()
+	{
+		return getReferringCount("Image");
+	}
+
+	public List getImageList()
+	{
+		return getReferringNodes("Image");
+	}
+                                                                
+	// Element which is not complex (has only a text node)
+	public String getCorrection()
+	{
+		return getStringCData("Correction");
+	}
+
+	public void setCorrection(String correction)
+	{
+		setCData("Correction", correction);
+	}
+                        
 	// Virtual, inferred back reference OTF_BackReference
 	public int getOTFCount()
 	{

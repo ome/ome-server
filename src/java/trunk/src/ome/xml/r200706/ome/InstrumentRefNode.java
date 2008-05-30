@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -73,6 +73,26 @@ public class InstrumentRefNode extends ReferenceNode
 	{
 		super(DOMUtil.createChild(parent.getDOMElement(),
 		                          "InstrumentRef", attach));
+	}
+
+	/** 
+	 * Returns the <code>InstrumentNode</code> which this reference
+	 * links to.
+	 */
+	public InstrumentNode getInstrument()
+	{
+		return (InstrumentNode)
+			getAttrReferencedNode("Instrument", "ID");
+	}
+
+	/**
+	 * Sets the active reference node on this node.
+	 * @param node The <code>InstrumentNode</code> to set as a
+	 * reference.
+	 */
+	public void setInstrumentNode(InstrumentNode node)
+	{
+		setNodeID(node.getNodeID());
 	}
 
 	// -- InstrumentRef API methods --

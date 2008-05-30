@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -73,6 +73,26 @@ public class MicrobeamManipulationRefNode extends ReferenceNode
 	{
 		super(DOMUtil.createChild(parent.getDOMElement(),
 		                          "MicrobeamManipulationRef", attach));
+	}
+
+	/** 
+	 * Returns the <code>MicrobeamManipulationNode</code> which this reference
+	 * links to.
+	 */
+	public MicrobeamManipulationNode getMicrobeamManipulation()
+	{
+		return (MicrobeamManipulationNode)
+			getAttrReferencedNode("MicrobeamManipulation", "ID");
+	}
+
+	/**
+	 * Sets the active reference node on this node.
+	 * @param node The <code>MicrobeamManipulationNode</code> to set as a
+	 * reference.
+	 */
+	public void setMicrobeamManipulationNode(MicrobeamManipulationNode node)
+	{
+		setNodeID(node.getNodeID());
 	}
 
 	// -- MicrobeamManipulationRef API methods --

@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-20 22:13:42-0500
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -96,20 +96,14 @@ public class ImageNode extends OMEXMLNode
 		return (ExperimenterRefNode)
 			getChildNode("ExperimenterRef", "ExperimenterRef");
 	}
-                                            
-	// Element which is complex and is an OME XML "Ref"
-	public ObjectiveSettingsNode getObjectiveSettings()
+                        
+	// Attribute which is an OME XML "ID"
+	public PixelsNode getDefaultPixels()
 	{
-		return (ObjectiveSettingsNode)
-			getReferencedNode("ObjectiveSettings", "ObjectiveSettingsRef");
+		return (PixelsNode)
+			getAttrReferencedNode("Pixels", "DefaultPixels");
 	}
-
-	public ObjectiveSettingsRefNode getObjectiveSettingsRef()
-	{
-		return (ObjectiveSettingsRefNode)
-			getChildNode("ObjectiveSettingsRef", "ObjectiveSettingsRef");
-	}
-                                        
+                                                            
 	// Element which is not complex (has only a text node)
 	public String getCustomAttributes()
 	{
@@ -193,6 +187,19 @@ public class ImageNode extends OMEXMLNode
 		return (InstrumentRefNode)
 			getChildNode("InstrumentRef", "InstrumentRef");
 	}
+                                            
+	// Element which is complex and is an OME XML "Ref"
+	public ObjectiveNode getObjective()
+	{
+		return (ObjectiveNode)
+			getReferencedNode("Objective", "ObjectiveRef");
+	}
+
+	public ObjectiveRefNode getObjectiveRef()
+	{
+		return (ObjectiveRefNode)
+			getChildNode("ObjectiveRef", "ObjectiveRef");
+	}
                                     
 	// Element which occurs more than once
 	public int getPixelsCount()
@@ -259,14 +266,7 @@ public class ImageNode extends OMEXMLNode
 		return (ExperimentRefNode)
 			getChildNode("ExperimentRef", "ExperimentRef");
 	}
-                        
-	// Attribute which is an OME XML "ID"
-	public PixelsNode getDefaultPixels()
-	{
-		return (PixelsNode)
-			getAttrReferencedNode("Pixels", "DefaultPixels");
-	}
-                                                    
+                                
 	// Element which occurs more than once and is an OME XML "Ref"
 	public int getDatasetCount()
 	{

@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2007-11-24 06:33:32-0600
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -80,12 +80,12 @@ public class OMENode extends OMEXMLNode
 	// Element which occurs more than once
 	public int getPlateCount()
 	{
-		return getChildCount("SPW:Plate");
+		return getChildCount("SPW:Plate"); // CTR - MANUALLY ADDED NAMESPACE
 	}
 
 	public Vector getPlateList()
 	{
-		return getChildNodes("SPW:Plate");
+		return getChildNodes("SPW:Plate"); // CTR - MANUALLY ADDED NAMESPACE
 	}
                                             
 	// Element which occurs more than once
@@ -113,23 +113,28 @@ public class OMENode extends OMEXMLNode
 	// Element which occurs more than once
 	public int getScreenCount()
 	{
-		return getChildCount("SPW:Screen");
+		return getChildCount("SPW:Screen"); // CTR - MANUALLY ADDED NAMESPACE
 	}
 
 	public Vector getScreenList()
 	{
-		return getChildNodes("SPW:Screen");
+		return getChildNodes("SPW:Screen"); // CTR - MANUALLY ADDED NAMESPACE
 	}
 
-  public int getWellCount()
-  {
-    return getChildCount("SPW:Well");
-  }
+  // -- CTR - BEGIN MANUALLY ADDED CODE BLOCK --
 
-  public Vector getWellList()
-  {
-    return getChildNodes("SPW:Well");
-  }
+	// Element which occurs more than once
+	public int getWellCount()
+	{
+		return getChildCount("SPW:Well");
+	}
+
+	public Vector getWellList()
+	{
+		return getChildNodes("SPW:Well");
+	}
+
+  // -- CTR - END MANUALLY ADDED CODE BLOCK --
                                                 
 	// Element which is not complex (has only a text node)
 	public String getAnalysisModuleLibrary()

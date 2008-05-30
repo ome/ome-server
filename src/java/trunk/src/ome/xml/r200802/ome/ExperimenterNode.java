@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-20 22:13:42-0500
+ * Created by curtis via xsd-fu on 2008-05-30 12:57:22-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -120,7 +120,18 @@ public class ExperimenterNode extends OMEXMLNode
 	{
 		setCData("LastName", lastName);
 	}
-                                    
+                        
+	// Virtual, inferred back reference Image_BackReference
+	public int getImageCount()
+	{
+		return getReferringCount("Image");
+	}
+
+	public List getImageList()
+	{
+		return getReferringNodes("Image");
+	}
+                                                        
 	// Element which occurs more than once and is an OME XML "Ref"
 	public int getGroupCount()
 	{
@@ -149,6 +160,28 @@ public class ExperimenterNode extends OMEXMLNode
 	{
 		return getReferringNodes("Project");
 	}
+                                            
+	// Virtual, inferred back reference Experiment_BackReference
+	public int getExperimentCount()
+	{
+		return getReferringCount("Experiment");
+	}
+
+	public List getExperimentList()
+	{
+		return getReferringNodes("Experiment");
+	}
+                                            
+	// Virtual, inferred back reference Dataset_BackReference
+	public int getDatasetCount()
+	{
+		return getReferringCount("Dataset");
+	}
+
+	public List getDatasetList()
+	{
+		return getReferringNodes("Dataset");
+	}
                                                                 
 	// Element which is not complex (has only a text node)
 	public String getInstitution()
@@ -160,7 +193,18 @@ public class ExperimenterNode extends OMEXMLNode
 	{
 		setCData("Institution", institution);
 	}
-                  
+                        
+	// Virtual, inferred back reference MicrobeamManipulation_BackReference
+	public int getMicrobeamManipulationCount()
+	{
+		return getReferringCount("MicrobeamManipulation");
+	}
+
+	public List getMicrobeamManipulationList()
+	{
+		return getReferringNodes("MicrobeamManipulation");
+	}
+                                      
 	// -- OMEXMLNode API methods --
 
 	public boolean hasID()
