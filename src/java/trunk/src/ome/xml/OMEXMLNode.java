@@ -406,17 +406,21 @@ public abstract class OMEXMLNode {
     return getCData(name);
   }
 
-  /** Sets the given child node's character data to the specified value. */
+  /**
+   * Sets the given child node's character data to the specified value,
+   * creating the child node if necessary.
+   */
   protected void setCData(String name, String value) {
-    DOMUtil.setCharacterData(value, getChildElement(name));
+    DOMUtil.setCharacterData(value, getChildElement(name, true));
   }
 
   /**
    * Sets the given child node's character data
-   * to the specified Object's string representation.
+   * to the specified Object's string representation,
+   * creating the child node if necessary.
    */
   protected void setCData(String name, Object value) {
-    DOMUtil.setCharacterData(value, getChildElement(name));
+    DOMUtil.setCharacterData(value, getChildElement(name, true));
   }
 
   /**
@@ -612,7 +616,17 @@ public abstract class OMEXMLNode {
 
   /** Gets the first child DOM element with the specified name. */
   private Element getChildElement(String name) {
-    return DOMUtil.getChildElement(name, element);
+    return getChildElement(name, false);
+  }
+
+  /**
+   * Gets the first child DOM element with the specified name,
+   * creating it if it does not exist and the create flag is set.
+   */
+  private Element getChildElement(String name, boolean create) {
+    Element el = DOMUtil.getChildElement(name, element);
+    if (el == null && create) el = DOMUtil.createChild(element, name);
+    return el;
   }
 
   /** Gets a list of child DOM elements with the specified name. */

@@ -135,7 +135,11 @@ public final class DOMUtil {
   /** Sets the character data corresponding to the given DOM element. */
   public static void setCharacterData(String data, Element el) {
     Text text = getChildTextNode(el);
-    if (text != null) text.setData(data);
+    if (text == null) {
+      text = el.getOwnerDocument().createTextNode(data);
+      el.appendChild(text);
+    }
+    else text.setData(data);
   }
 
   /**
