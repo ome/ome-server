@@ -153,7 +153,22 @@ public class PixelsNode extends OMEXMLNode
 	{
 		setAttribute("BigEndian", bigEndian);
 	}
-                                                    
+
+  // -- CTR - BEGIN MANUALLY ADDED CODE BLOCK --
+
+	// Element which occurs more than once
+	public int getTiffDataCount()
+	{
+		return getChildCount("TiffData");
+	}
+
+	public Vector getTiffDataList()
+	{
+		return getChildNodes("TiffData");
+	}
+
+  // -- CTR - END MANUALLY ADDED CODE BLOCK --
+
 	// Element which occurs more than once
 	public int getBinDataCount()
 	{
