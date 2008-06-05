@@ -1,5 +1,5 @@
 /*
- * ome.xml.r2003fc.GroupNode
+ * ome.xml.r2003fc.ome.GroupNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-17 00:39:37-0500
+ * Created by curtis via xsd-fu on 2008-05-31 10:06:36-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -77,6 +77,41 @@ public class GroupNode extends OMEXMLNode
 
 	// -- Group API methods --
       
+	// Virtual, inferred back reference ExperimenterType_BackReference
+	public int getExperimenterTypeCount()
+	{
+		return getReferringCount("ExperimenterType");
+	}
+
+	public List getExperimenterTypeList()
+	{
+		return getReferringNodes("ExperimenterType");
+	}
+                                                    
+	// Attribute
+	public String getName()
+	{
+		return getStringAttribute("Name");
+	}
+
+	public void setName(String name)
+	{
+		setAttribute("Name", name);
+	}
+                                    
+	// Virtual, inferred back reference Image_BackReference
+	public int getImageCount()
+	{
+		return getReferringCount("Image");
+	}
+
+	public List getImageList()
+	{
+		return getReferringNodes("Image");
+	}
+                                                                            
+	// *** WARNING *** Unhandled or skipped property ID
+            
 	// Virtual, inferred back reference Project_BackReference
 	public int getProjectCount()
 	{
@@ -94,27 +129,25 @@ public class GroupNode extends OMEXMLNode
 		return (ContactNode)
 			getChildNode("Contact", "Contact");
 	}
-                                            
+                
+	// Virtual, inferred back reference Dataset_BackReference
+	public int getDatasetCount()
+	{
+		return getReferringCount("Dataset");
+	}
+
+	public List getDatasetList()
+	{
+		return getReferringNodes("Dataset");
+	}
+                                                                        
 	// Element which is complex (has sub-elements)
 	public ExperimenterRefNode getLeader()
 	{
 		return (ExperimenterRefNode)
 			getChildNode("ExperimenterRef", "Leader");
 	}
-                        
-	// Attribute
-	public String getName()
-	{
-		return getStringAttribute("Name");
-	}
-
-	public void setName(String name)
-	{
-		setAttribute("Name", name);
-	}
-                                                                    
-	// *** WARNING *** Unhandled or skipped property ID
-      
+          
 	// -- OMEXMLNode API methods --
 
 	public boolean hasID()

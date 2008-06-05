@@ -1,5 +1,5 @@
 /*
- * ome.xml.r2003fc.ObjectiveNode
+ * ome.xml.r2003fc.ome.ObjectiveNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-17 00:39:37-0500
+ * Created by curtis via xsd-fu on 2008-05-31 10:06:36-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -101,6 +101,17 @@ public class ObjectiveNode extends ManufactSpecNode
                                                         
 	// *** WARNING *** Unhandled or skipped property ID
             
+	// Virtual, inferred back reference OTF_BackReference
+	public int getOTFCount()
+	{
+		return getReferringCount("OTF");
+	}
+
+	public List getOTFList()
+	{
+		return getReferringNodes("OTF");
+	}
+                                            
 	// Virtual, inferred back reference Image_BackReference
 	public int getImageCount()
 	{

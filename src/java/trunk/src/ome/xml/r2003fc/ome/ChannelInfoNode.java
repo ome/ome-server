@@ -1,5 +1,5 @@
 /*
- * ome.xml.r2003fc.ChannelInfoNode
+ * ome.xml.r2003fc.ome.ChannelInfoNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-17 00:39:37-0500
+ * Created by curtis via xsd-fu on 2008-05-31 10:06:36-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -117,9 +117,9 @@ public class ChannelInfoNode extends OMEXMLNode
 			getReferencedNode("LightSource", "AuxLightSourceRef");
 	}
 
-	public LightSourceRefNode getAuxLightSourceRef()
+	public AuxLightSourceRefNode getAuxLightSourceRef()
 	{
-		return (LightSourceRefNode)
+		return (AuxLightSourceRefNode)
 			getChildNode("LightSourceRef", "AuxLightSourceRef");
 	}
                             

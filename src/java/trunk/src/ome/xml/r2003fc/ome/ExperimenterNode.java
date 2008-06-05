@@ -1,5 +1,5 @@
 /*
- * ome.xml.r2003fc.ExperimenterNode
+ * ome.xml.r2003fc.ome.ExperimenterNode
  *
  *-----------------------------------------------------------------------------
  *
@@ -31,7 +31,7 @@
 /*-----------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by curtis via xsd-fu on 2008-04-17 00:39:37-0500
+ * Created by curtis via xsd-fu on 2008-05-31 10:06:36-0500
  *
  *-----------------------------------------------------------------------------
  */
@@ -86,6 +86,39 @@ public class ExperimenterNode extends ExperimenterTypeNode
 	public List getProjectList()
 	{
 		return getReferringNodes("Project");
+	}
+                                            
+	// Virtual, inferred back reference Image_BackReference
+	public int getImageCount()
+	{
+		return getReferringCount("Image");
+	}
+
+	public List getImageList()
+	{
+		return getReferringNodes("Image");
+	}
+                                            
+	// Virtual, inferred back reference Experiment_BackReference
+	public int getExperimentCount()
+	{
+		return getReferringCount("Experiment");
+	}
+
+	public List getExperimentList()
+	{
+		return getReferringNodes("Experiment");
+	}
+                                            
+	// Virtual, inferred back reference Dataset_BackReference
+	public int getDatasetCount()
+	{
+		return getReferringCount("Dataset");
+	}
+
+	public List getDatasetList()
+	{
+		return getReferringNodes("Dataset");
 	}
                                       
 	// -- OMEXMLNode API methods --
