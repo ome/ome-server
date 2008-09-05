@@ -233,7 +233,7 @@ public class OMENode extends LegacyOMEXMLNode {
   {
     if (omeca) return element.getOwnerDocument();
     if (xsltOMECA2OME == null) {
-      xsltOMECA2OME = DOMUtil.makeTemplates(XSLT_OMECA2OME);
+      xsltOMECA2OME = XSLTUtil.makeTemplates(XSLT_OMECA2OME);
     }
 
     // extract extra elements before they are dropped
@@ -385,10 +385,10 @@ public class OMENode extends LegacyOMEXMLNode {
     else {
       // transform OME-XML into OMECA-XML using XSLT stylesheet
       if (xsltOME2OMECA == null) {
-        xsltOME2OMECA = DOMUtil.makeTemplates(XSLT_OME2OMECA);
+        xsltOME2OMECA = XSLTUtil.makeTemplates(XSLT_OME2OMECA);
       }
       Source xmlSource = new StreamSource(is);
-      return DOMUtil.transform(xmlSource, xsltOME2OMECA);
+      return XSLTUtil.transform(xmlSource, xsltOME2OMECA);
     }
   }
 
@@ -439,7 +439,7 @@ public class OMENode extends LegacyOMEXMLNode {
     byte[] bytes = os.toByteArray();
     Source source = new StreamSource(new ByteArrayInputStream(bytes));
     //Source source = new DOMSource(doc);
-    return DOMUtil.transform(source, t);
+    return XSLTUtil.transform(source, t);
   }
 
   // -- Deprecated methods --
